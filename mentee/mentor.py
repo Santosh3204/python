@@ -1,0 +1,1850 @@
+
+import jwt, json
+from datetime import datetime,timedelta
+from rest_framework.views import APIView
+from rest_framework.decorators import api_view
+from rest_framework.generics import RetrieveAPIView
+from django.views.generic.detail import DetailView
+from rest_framework.response import Response
+import time
+from .models import *
+from .serializers import *
+import re
+from rest_framework import status
+import datetime
+import pytz
+import calendar
+import pandas as pd
+import xlrd
+import razorpay
+import hmac
+import hashlib
+import binascii
+import uuid
+from mentee.agora.src.RtcTokenBuilder import RtcTokenBuilder # agora
+
+def fetch_booked_sessions(request):
+    objects = mentor_schedule.objects.filter(Mentor_id=request['mentor_id'],
+                                             Is_scheduled=request['is_scheduled'],Status=1).order_by('Start_datetime')
+
+    data = []
+
+    for i in range(len(objects)):
+        if objects[i].Start_datetime.date() == datetime.date.today():
+            date = "Today"
+
+        elif objects[i].Start_datetime.date() == datetime.date.today() + timedelta(days=1):
+            date = "Tomorrow"
+        else:
+            date = objects[i].Start_datetime.date().strftime("%d %b")
+
+        sales_ob = sales_order.objects.get(id=objects[i].order_id)
+        mentee_obj = MenteeDetails.objects.get(id=sales_ob.Mentee_id)
+
+
+
+
+        # mentee_name = mentee_obj.user.name
+
+        if mentee_obj.profile == "Student":
+            mentee_dict = {
+                "id_": mentee_obj.id,
+                "Mentee_name": sales_ob.Mentee_name,
+                "session_name": objects[i].Session_name,
+                "session_date": date,
+                "Session_time": objects[i].Start_datetime.time().strftime('%I:%M %p'),
+                # "College_name": mentee_obj.college,
+                "Skills": json.loads(mentee_obj.skills),
+                "degree": mentee_obj.degree,
+                # "course": mentee_obj.course,
+                "Mentee_type": mentee_obj.profile, "avatar": mentee_obj.user.picture,
+                "schedule_id":objects[i].id
+            }
+
+            data.append(mentee_dict)
+
+        else:
+            mentee_dict = {
+                "id_": mentee_obj.id,
+                "Mentee_name": sales_ob.Mentee_name,
+                "session_name": objects[i].Session_name,
+                "session_date": date,
+                "Session_time": objects[i].Start_datetime.time().strftime('%I:%M %p'),
+                # "College_name": mentee_obj.college,
+                "Skills": json.loads(mentee_obj.skills),
+                "degree": mentee_obj.degree,
+                # "company": mentee_obj.company,
+                "Designation": mentee_obj.designation,
+                "Mentee_type": mentee_obj.profile, "avatar": mentee_obj.user.picture,
+                "schedule_id": objects[i].id
+            }
+
+            data.append(mentee_dict)
+
+    return data
+
+"""
+def fetch_booked_sessions(request):
+    objects = mentor_schedule.objects.filter(Mentor_id=request['mentor_id'],
+                                             Is_scheduled=request['is_scheduled']).order_by('Start_datetime')
+
+    data = []
+
+    for i in range(len(objects)):
+        if objects[i].Start_datetime.date() == datetime.date.today():
+            date = "Today"
+
+        elif objects[i].Start_datetime.date() == datetime.date.today() + timedelta(days=1):
+            date = "Tomorrow"
+        else:
+            date = objects[i].Start_datetime.date().strftime("%d %b")
+
+        mentee_obj = MenteeDetails.objects.get(id=objects[i].order_id)
+        # mentee_name = mentee_obj.user.name
+
+        if mentee_obj.profile == "Student":
+            mentee_dict = {
+                "mentee_id": objects[i].order_id,
+                "Mentee_name": mentee_obj.user.name,
+                "session_name": objects[i].Session_name,
+                "session_date": date,
+                "Session_time": objects[i].Start_datetime.time().strftime('%I:%M %p'),
+                #"College_name": mentee_obj.college,
+                "Skills": mentee_obj.skills,
+                "degree": mentee_obj.degree,
+                #"course": mentee_obj.course,
+                "Mentee_type": mentee_obj.profile, "avatar": mentee_obj.user.picture,
+                "schedule_id": mentee_obj.id
+            }
+
+            data.append(mentee_dict)
+
+        else:
+            mentee_dict = {
+                "mentee_id": objects[i].order_id,
+                "Mentee_name": mentee_obj.user.name,
+                "session_name": objects[i].Session_name,
+                "session_date": date,
+                "Session_time": objects[i].Start_datetime.time().strftime('%I:%M %p'),
+                #"College_name": mentee_obj.college,
+                "Skills": mentee_obj.skills,
+                "degree": mentee_obj.degree,
+                #"company": mentee_obj.company,
+                "Designation": mentee_obj.designation,
+                "Mentee_type": mentee_obj.profile, "avatar": mentee_obj.user.picture,
+                "schedule_id": mentee_obj.id
+            }
+
+            data.append(mentee_dict)
+
+    return data
+"""
+
+def single_list(lst):  # this function is used by Mentor_Profile_API_func
+    lst = lst.strip('""')
+    lst = eval(lst)
+
+    return lst
+
+
+def Mentor_Profile_API_func(request):
+    try:
+        object = mentor_profile.objects.get(user=request.data["Mentor_id"])
+    except Exception as e:
+        print("Error occured while fetching data from mentor_profile table")
+        print(e)
+        return Response(json.loads("Error occured while fetching data from mentor_profile table"),
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    try:
+
+        c_name = single_list(object.Company)
+        c_logos = single_list(object.Company_Logo)
+        c_designation = single_list(object.Designation)
+        c_duration = single_list(object.Company_Duration)
+
+        data_dict = {
+            "Mentor_Name": object.Name,
+            "Designation": c_designation[0],
+            "Company": c_name[0],
+            "About me": object.About,
+        }
+
+        professional_details = []
+        educational_details = []
+        position = ""
+
+        for i in range(len(c_name)):
+            company_name = c_name[i]
+            company_logo = c_logos[i]
+            company_details = {
+                "Company_Name": company_name,
+                "Company_Logo": company_logo,
+            }
+
+            if type(c_designation[i]) == list:
+
+                additional_info = []
+                company_designation = []
+                for j in range(len(c_designation[i])):
+                    position = c_designation[i][j]
+
+                    additional_info.append(c_duration[i][j])
+
+                    desig_info = {
+                        "Position": position,
+                        "Additional info": additional_info,
+                    }
+
+                    company_designation.append(desig_info)
+
+                    desig_info_key = {
+                        "Company Designation": company_designation
+
+                    }
+
+                    company_details.update(desig_info_key)
+
+                professional_dict = {
+                    "professional details": company_details
+                }
+
+                professional_details.append(company_details)
+
+            else:
+                position = c_designation[i]
+
+                additional_info = []
+                additional_info.append(c_duration[i])
+                company_designation = []
+                desig_info = {
+                    "Position": position,
+                    "Additional info": additional_info,
+                }
+
+                company_designation.append(desig_info)
+                desig_info_key = {
+                    "Company Designation": desig_info
+
+                }
+                company_details.update(desig_info_key)
+
+                professional_dict = {
+                    "professional details": company_details
+                }
+
+                professional_details.append(company_details)
+
+        p_dict = {
+            "professional_details": professional_details
+        }
+
+        data_dict.update(p_dict)
+        college_names = single_list(object.College)
+        college_degree = single_list(object.Degree)
+        college_course = single_list(object.Course)
+        college_logo = single_list(object.Logo)
+
+        for i in range(len(college_names)):
+            additional_info = []
+            additional_info.append(college_course[i])
+            college_dict = {
+                "Institute_Name": college_names[i],
+                "institute_Logo": college_logo[i],
+                "Additional_info": additional_info
+
+            }
+            educational_details.append(college_dict)
+        edu_dict = {
+            "Educational Details": educational_details
+        }
+        data_dict.update(edu_dict)
+
+        return data_dict
+
+    except Exception as e:
+        print("Error occured while arranging data in Reponse structure format")
+        print(e)
+        return Response(json.loads("Error occured while arranging data in Reponse structure format"),
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def Booking_121_func(request):
+    user_in_db = User.objects.get(email=request.user)
+    mentee_id = user_in_db.id
+
+    try:
+        row = mentor_schedule.objects.get(pk=request.data['Schedule_id'], Status=1, Is_scheduled=0)
+    except Exception as e:
+        print("Error occured while fetching data from mentor_schedule table")
+        print(e)
+        return Response(json.loads("Error occured while fetching data from mentor_schedule table"),
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    booking = sales_order()
+    booking.Mentor_id = row.Mentor_id
+    booking.Mentee_id = mentee_id
+    booking.Schedule_id = request.data['Schedule_id']
+    booking.Session_name = row.Session_name
+    booking.save()
+
+    row.Is_scheduled = 1
+    row.order_id = request.data['mentee_id']
+    row.save()
+
+    mentor_objs = mentor_schedule.objects.filter(Mentor_id=row.Mentor_id,
+                                                 Start_datetime=row.Start_datetime,
+                                                 Status=1, Is_scheduled=0)
+
+    for i in range(len(mentor_objs)):
+        mentor_objs[i].Status = 0
+        mentor_objs[i].save()
+
+        # Required sales_order table "id" to provide order_id
+    data_dict = {
+        "order_id": "DFS%*#VDJJ^#R#HH",
+    }
+
+    return data_dict
+
+
+def Row_Deactivate_API_func(request):
+    try:
+        obj = mentor_schedule.objects.get(id=request.data['Schedule_id'], Status=1)
+    except Exception as e:
+        print("Error occured while fetching data from mentor_schedule table")
+        print(e)
+        return Response(json.loads("Error occured while fetching data from mentor_schedule table"),
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    obj.Status = 0
+    obj.save()
+    # serializer = mentor_schedule_serializer(q_obj)
+    # return Response(serializer.data, status=status.HTTP_200_OK)
+    # return serializer.data
+    return "Deactivated Successfully"
+
+
+def Mentor_Calender_API_func(request):
+    user_in_db = User.objects.get(email=request.user)
+    mentor_id = user_in_db.id
+
+    objects = mentor_schedule.objects.filter(Mentor_id=mentor_id, Status=1).order_by('Start_datetime')
+
+    if len(objects) != 0:
+
+        data = []
+        month = []
+        year = []
+
+        for i in range(len(objects)):
+            dt = objects[i].Start_datetime.date()
+
+            month.append(calendar.month_name[dt.month])
+            year.append(dt.year)
+
+        month = list(dict.fromkeys(month))
+        year = list(dict.fromkeys(year))
+
+        for y in range(len(year)):
+            for i in range(len(month)):
+
+                schedule = []
+                for j in range(len(objects)):
+                    if year[y] == objects[j].Start_datetime.year:
+                        if month[i] == calendar.month_name[objects[j].Start_datetime.month]:
+
+                            schedule.append({
+                                "date": objects[j].Start_datetime.strftime("%d"),
+                                "topic": objects[j].Session_name,
+                                "time": objects[j].Start_datetime.time().strftime("%I:%M %p"),
+                                "schedule_id": objects[j].pk,
+                                "is_scheduled": objects[j].Is_scheduled,
+
+                            })
+                        else:
+                            continue
+                    else:
+                        continue
+
+                if len(schedule) != 0:
+                    title = str(month[i]) + " " + str(year[y])
+                    title_dict = {
+                        "title": title,
+                        "schedule": schedule
+                    }
+                    # title_dict.update(schedule_dict)
+                    data.append(title_dict)
+                    # data_dict = {"data": data}
+                    # resp_dict.update(data_dict)
+
+        return data
+    else:
+        print("No Mentor exists with the provided Mentor_id")
+        return Response(json.loads("No Mentor exists with the provided Mentor_id"),
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def Mentor_Topics_API_func(request):
+    for i in range(len(request.data["Webinar_Topics"])):
+        request.data["Webinar_topics"] = request.data["Webinar_Topics"][i]
+
+        serializer = mentor_topics_serializer(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+
+    return "Topics added successfully"
+
+
+def Mentor_Schedule_API_func(request, mentor_id):  # API to schedule for mentor.
+
+    av_dates = []  # List to store available dates for mentorship
+
+    tdelta = datetime.timedelta(days=1)
+
+    dd, mm, yyyy = map(int, request.data["Start_date"].split("-"))
+
+    dt = datetime.date(yyyy, mm, dd)
+
+    dd, mm, yyyy = map(int, request.data["end_date"].split("-"))
+
+    end_date = datetime.date(yyyy, mm, dd)
+
+    while dt <= end_date:  # Checking dates for given week days
+
+        if dt != end_date:
+
+            for j in range(len(request.data["Days"])):
+                if dt.isoweekday() == request.data["Days"][j]:
+                    av_dates.append(dt)
+
+        else:
+
+            for j in range(len(request.data["Days"])):
+                if dt.isoweekday() == request.data["Days"][j]:
+                    av_dates.append(dt)
+
+        dt = dt + tdelta
+
+    av_dates_count = len(av_dates)
+    n_sessions = av_dates_count * len(request.data["session_names"])
+
+    request.data["Start_datetime"] = av_dates[0]
+
+    hh, mts = map(int, request.data["st_time"].split(":"))
+
+    time_delta = datetime.timedelta(minutes=20)
+
+    for d in range(len(av_dates)):
+
+        Start_datetime = datetime.datetime(av_dates[d].year, av_dates[d].month, av_dates[d].day, hh, mts)
+        start_time = datetime.time(hh, mts)
+        start_date = Start_datetime.date()
+
+        end_datetime = Start_datetime + time_delta  # Adding 20 minutes for the given start date and time.
+
+        request.data["Start_datetime"] = Start_datetime
+        request.data["End_datetime"] = end_datetime
+        # request.data["session_charge"] = request.data["charge"]*2
+        # Start of time parameter checking
+        print(mentor_id, "mentorrrr id")
+        time_check = mentor_schedule.objects.filter(Mentor_id=mentor_id, Status=1)  # fetching objects of the mentor
+        # whose status is active-"1"
+
+        count = 0
+        for t in range(len(time_check)):  # Iterating on objects if input was unable to schedule
+
+            if start_date == time_check[t].Start_datetime.date():
+                # print("date matched object date:", time_check[t].Start_datetime.date())
+                t_20 = datetime.timedelta(minutes=20)
+                obj_start_datetime = time_check[t].Start_datetime - t_20
+                if obj_start_datetime.time() > start_time or time_check[
+                    t].End_datetime.time() < start_time:  # On matching dates, checking on
+                    # print("is start time greater or not(1>2)" ,obj_start_datetime.time(), start_time)           #time duration on that date
+                    # print("is end time or not(1>2)" ,time_check[t].End_datetime.time(), end_datetime.time())
+                    pass
+
+
+                else:
+                    count += 1  # Setting count to 1, if given time is unable to
+                    # schedule
+
+        # End of time parameter chhecking
+
+        # print("count of object:", count)
+        if count == 0:
+
+            for i in range(len(request.data["session_names"])):
+                request.data["Session_name"] = request.data["session_names"][i]
+                n_sessions -= 1
+                request.data["Mentor_id"] = mentor_id
+                if request.data['charge']<=200:
+                    request.data['mentor_charge']=request.data['charge']
+                    request.data['session_charge']=400
+                else:
+                    request.data['mentor_charge']=request.data['charge']
+                    request.data['session_charge']=request.data['charge']*2
+                serializer = mentor_schedule_serializer(data=request.data)
+                if serializer.is_valid():
+                    serializer.save()
+                    # print("serializer data :", serializer.data)
+
+    if n_sessions == 0:
+
+        return "All Dates and Time given are SCHEDULED SUCCESSFULLY !!!"
+    elif n_sessions < av_dates_count * len(request.data["session_names"]):
+        return "Some Sessions are not scheduled due to TIME on particular DATES are coincide with already SCHEDULED SESSIONS !!!"
+    else:
+        return "No Schedule had Created because, TIME on all matching DATES are coincide with already SCHEDULED SESSIONS !!!"
+    return "Created successfully"
+
+
+def Create_Order_API_func(request):
+
+    user_in_db = User.objects.get(email=request.user)                       #server
+    mentee_id = user_in_db.id
+
+
+    #user_in_db=User.objects.get(id=4)                                       #local
+    #mentee_id=user_in_db.id
+
+    try:
+        row = mentor_schedule.objects.get(pk=request.data['Schedule_id'], Status=1, Is_scheduled=0)
+    except Exception as e:
+        print("Error occured while fetching data from mentor_schedule table")
+        print(e)
+        return Response("Error occured while fetching data from mentor_schedule table",
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    mentor_objs = mentor_schedule.objects.filter(Mentor_id=row.Mentor_id,
+                                                 Start_datetime=row.Start_datetime,
+                                                 Status=1, Is_scheduled=0)
+
+    print(len(mentor_objs))
+
+    sales_ord=sales_order.objects.filter(Schedule_id=row.id, Is_active=1, Mentee_id=mentee_id).order_by('-Status_updated_at')
+
+    if len(sales_ord)==0:
+        print("sales_order table doesnot contain matching any row")
+        return Response("sales_order table doesnot contain matching any row",status=500)
+
+
+    wt=wallet.objects.filter(mentee_id=user_in_db).order_by('-updated_at')
+
+    if len(wt)!=0:
+
+        if request.data["use_wallet"] and wt[0].current_balance>=sales_ord[0].final_price:
+            print("went insideeeeeeeeeeeeeeeeeeeeeeeeeee")
+            order_amount = 0
+            order_id = str(uuid.uuid1())
+            # deduct money for this session
+            wall_obj = wallet()
+            wall_obj.mentee_id = user_in_db.id
+            wall_obj.txn_order_id = order_id
+            wall_obj.amount_changed = -sales_ord[0].final_price
+            wall_obj.status = 2  # added money
+            wall_obj.remarks = sales_ord[0].Session_name + " session"
+
+            wall_obj.previous_balance = wt[0].current_balance
+            wall_obj.current_balance = wt[0].current_balance - sales_ord[0].final_price
+
+            wall_obj.save()
+            print(" wallet row deducted")
+            sales_ord[0].User_order_id =order_id
+            sales_ord[0].Status = 1  # payment done
+
+            sales_ord[0].wallet_used = request.data["use_wallet"]
+            sales_ord[0].wallet_amount = sales_ord[0].final_price
+
+            sales_ord[0].save()
+            print("row updated in sales order table")
+
+            for i in range(len(mentor_objs)):
+                mentor_objs[i].Is_scheduled = 0
+                mentor_objs[i].Status = 0
+                mentor_objs[i].order_id = None
+                mentor_objs[i].save()
+
+            row.Is_scheduled = 1
+            row.order_id = sales_ord[0].id
+            row.save()
+            print("2000000000000000000000000")
+            return order_id,order_amount
+
+        elif wt[0].current_balance+request.data['amount_to_add']>=sales_ord[0].final_price:
+            order_amount = request.data['amount_to_add']*100
+        else:
+            amount = sales_ord[0].final_price - wt[0].current_balance
+            order_amount = amount*100
+    else:
+        order_amount = sales_ord[0].final_price*100
+
+    for i in range(len(mentor_objs)):
+        mentor_objs[i].Is_scheduled=2                                     #progress
+        mentor_objs[i].save()
+
+    print("---------------------------------------------")
+    order_currency = 'INR'
+    order_receipt = str(sales_ord[0].id)
+    notes = {'Shipping address': 'Bommanahalli, Bangalore'}  # OPTIONAL
+
+    try:
+
+        # client = razorpay.Client(auth=('rzp_test_JAObx3Y47SmBhB', 'RKxq0NX3rGgEZ3HEKt5cr5BT'))
+        client = razorpay.Client(auth=('rzp_test_A5QQVVWf0eMog1', 'mwIcHdj1fIDGVi44N6BoUX0W'))
+
+        response = client.order.create(
+            dict(amount=order_amount, currency=order_currency, receipt=order_receipt, notes=notes))
+    except Exception as e:
+        print("Error occured in generating order_id from razorpay pay API side")
+        print(e)
+
+        print(len(mentor_objs))
+        for i in range(len(mentor_objs)):
+            mentor_objs[i].Is_scheduled = 0
+            mentor_objs[i].order_id = None
+            mentor_objs[i].save()
+
+        sales_ord[0].Is_active = 0
+
+        return Response("Order ID not generated successfully", status=500)
+
+    sales_ord[0].User_order_id = response['id']
+    sales_ord[0].Status = 0 # payment not done, new row
+    if request.data["use_wallet"]:
+        sales_ord[0].wallet_used = request.data["use_wallet"]
+    sales_ord[0].wallet_amount = order_amount/100
+
+    sales_ord[0].save()
+
+    # print(len(mentor_objs))
+    # for i in range(len(mentor_objs)):
+    #     mentor_objs[i].Is_scheduled=2  # in process
+    #     mentor_objs[i].Status=1
+    #     mentor_objs[i].order_id=None
+    #     mentor_objs[i].save()
+
+
+    row.Status=1
+    row.Is_scheduled = 2  # progress
+    row.order_id = sales_ord[0].Mentee_id
+    row.save()
+
+    return response['id'],order_amount
+
+
+def RP_Sign_Verification_func(request):
+
+    user_in_db = User.objects.get(email=request.user)  # server
+    mentee_id = user_in_db.id
+    
+    try:
+        sales_ord=sales_order.objects.get(User_order_id=request.data['razorpay_order_id'])
+    except Exception as e:
+        print(e)
+        print("Error occured in getting fetching data from sales_order table using order_id")
+        return Response("Error occured in getting fetching data from sales_order table using order_id", status=422)
+
+    try:
+        sch_id=sales_ord.Schedule_id
+        sch_obj=mentor_schedule.objects.get(id=sch_id)
+        objects=mentor_schedule.objects.filter(Mentor_id=sales_ord.Mentor_id,Start_datetime=sch_obj.Start_datetime, Status=1)
+    except Exception as e:
+        print(e)
+        print("Error in mentor_schedule table")
+        return Response("Error in mentor_schedule table while fetching sessions", status=422)
+    
+    try:
+        # generated_signature = hmac_sha256(request.data['razorpay_order_id'] + "|" + request.data['razorpay_payment_id'], 'RKxq0NX3rGgEZ3HEKt5cr5BT')
+        s1 = request.data['razorpay_order_id'] + "|" + request.data['razorpay_payment_id']
+
+        key = 'RKxq0NX3rGgEZ3HEKt5cr5BT'
+        key= 'mwIcHdj1fIDGVi44N6BoUX0W'
+        hex_str = key.encode()
+        message = s1.encode()
+
+        generated_signature = hmac.new(hex_str, message, hashlib.sha256).hexdigest()
+        print(generated_signature)
+        print(request.data['razorpay_signature'])
+        if (generated_signature == request.data['razorpay_signature']):
+            print("Payment is successfull, Data came from authenticated source")
+        
+        else:
+            sch_obj.Is_scheduled=0
+            sch_obj.order_id=None
+            sch_obj.save()
+            for i in range(len(objects)):
+                objects[i].Is_scheduled=0
+                objects[i].order_id=None
+                objects[i].save()
+            sales_ord.Is_active=0
+            print("Data not came from authenticated sources")
+            #return Response("Data not came from authenticated sources, Razorpay signature and generated signature mis-matched",status=422)
+    except Exception as e:
+        print(e)
+        sch_obj.Is_scheduled = 0
+        sch_obj.order_id = None
+        sch_obj.save()
+        for i in range(len(objects)):
+            objects[i].Is_scheduled=0
+            objects[i].order_id=None
+            objects[i].save()
+        sales_ord.Is_active=0
+        print("Data not came from authenticated sources")
+        #return Response("Data not came from authenticated sources, Razorpay signature and generated signature mis-matched",status=422)
+        
+    
+    check=0
+
+    try:
+
+        # client = razorpay.Client(auth=('rzp_test_JAObx3Y47SmBhB', 'RKxq0NX3rGgEZ3HEKt5cr5BT'))
+        client = razorpay.Client(auth=('rzp_test_A5QQVVWf0eMog1', 'mwIcHdj1fIDGVi44N6BoUX0W'))
+        status = client.utility.verify_payment_signature(request.data)
+        print(status,"payment statusssss")
+        check=1
+    
+    except Exception as e:
+    
+        print(e)
+    
+        
+        
+        rz_dict = client.payment.fetch(request.data['razorpay_payment_id'])
+        if rz_dict['status']=="captured" and rz_dict['captured']==True:
+            check=1
+        else:
+            sch_obj.Is_scheduled = 0
+            sch_obj.order_id = None
+            sch_obj.save()
+            for i in range(len(objects)):
+                objects[i].Is_scheduled=0
+                objects[i].order_id=None
+                objects[i].save()
+            sales_ord.Is_active=0
+            print("Razorpay Signature verification Failed")
+            return Response("Razorpay Signature verification Failed",status=422)
+
+    if check==1:
+        
+        try:
+            sales_ord.Payment_id = request.data['razorpay_payment_id']
+            sales_ord.Status = 1  # payment done
+            sales_ord.save()
+        except Exception as e:
+            print(e)
+            return Response("Error occured in sales_order table", status=500)
+
+        try:
+            rz = payment_details()
+            rz.Sales_Order = sales_ord
+            rz.razorpay_order_id = request.data['razorpay_order_id']
+            rz.razorpay_payment_id = request.data['razorpay_payment_id']
+            rz.razorpay_signature = request.data['razorpay_signature']
+            rz.save()
+
+        except Exception as e:
+            print(e)
+            return Response("Error occured in payment_detals table", status=500)
+
+
+        for i in range(len(objects)):
+            objects[i].Is_scheduled = 0
+            objects[i].Status = 0
+            objects[i].order_id = None
+            objects[i].save()
+
+        sch_obj.Is_scheduled = 1
+        sch_obj.order_id = sales_ord.id
+        sch_obj.save()
+
+        ########## add amount in wallet and deduct money
+
+
+        mth = wallet.objects.filter(mentee_id=mentee_id, status=2).order_by('-updated_at')
+
+        row = wallet()
+        row.mentee_id = user_in_db.id
+        row.txn_order_id = request.data['razorpay_order_id']
+        row.amount_changed = sales_ord.wallet_amount
+        row.status = 2  # added money
+        row.remarks = sales_ord.Session_name+ " session"
+        curr_bal = 0
+        if len(mth) != 0:
+            curr_bal = mth[0].current_balance
+            row.previous_balance = mth[0].current_balance
+            row.current_balance = mth[0].current_balance + sales_ord.wallet_amount
+
+        else:
+            row.mentee_id = user_in_db.id
+            row.txn_order_id = request.data['razorpay_order_id']
+            row.previous_balance = curr_bal
+            row.current_balance = sales_ord.wallet_amount
+        row.save()
+
+        # deduct money for this session
+        row = wallet()
+        row.mentee_id = user_in_db.id
+        row.txn_order_id = request.data['razorpay_order_id']
+        row.amount_changed = -sales_ord.final_price
+        row.status = 2  # added money
+        row.remarks = sales_ord.Session_name + " session"
+
+        row.previous_balance = curr_bal + sales_ord.wallet_amount
+        row.current_balance = curr_bal + sales_ord.wallet_amount - sales_ord.final_price
+
+        row.save()
+
+        return "Payment Successfully"
+    else:
+        # print(status)
+        
+        sch_obj.Is_scheduled = 0
+        sch_obj.order_id = None
+        sch_obj.save()
+        for i in range(len(objects)):
+            objects[i].Is_scheduled=0
+            objects[i].order_id=None
+            objects[i].save()
+        sales_ord.Is_active=0
+        print("Payment Failed")
+        sales_ord.save()       
+        return "Payment Failed"
+
+
+def Booked_Sessions_func(request):
+    try:
+        user_det = User.objects.get(email=request.user)
+        Mentor_id = user_det.id
+
+    except Exception as e:
+        print(e)
+        print("User doesn't exist")
+        return Response("User doesn't exist", status=500)
+
+    # Mentor_id = 1
+    objects = mentor_schedule.objects.filter(Mentor_id=Mentor_id, Is_scheduled=request.data['Is_scheduled']).order_by(
+        'Start_datetime')
+
+    data = []
+
+    for i in range(len(objects)):
+        if objects[i].Start_datetime.date() == datetime.date.today():
+            date = "Today"
+
+        elif objects[i].Start_datetime.date() == datetime.date.today() + timedelta(days=1):
+            date = "Tomorrow"
+        else:
+            date = objects[i].Start_datetime.date().strftime("%d %b")
+        try:
+            mentee_obj = MenteeDetails.objects.get(id=objects[i].order_id)
+            # mentee_name = mentee_obj.user.name
+        except Exception as e:
+            print(e)
+            print("Mentee doesnot exist in Mentee Details table")
+            return Response("Mentee doesnot exist in Mentee Details table", status=500)
+
+        if mentee_obj.profile == "Student":
+            mentee_dict = {
+                "mentee_id": objects[i].order_id,
+                "Mentee_name": mentee_obj.user.name,
+                "session_name": objects[i].Session_name,
+                "session_date": date,
+                "Session_time": objects[i].Start_datetime.time().strftime('%I:%M %p'),
+                "College_name": mentee_obj.college,
+                "Skills": mentee_obj.skills,
+                "degree": mentee_obj.degree,
+                "course": mentee_obj.course,
+                "Mentee_type": mentee_obj.profile
+            }
+
+            data.append(mentee_dict)
+
+        else:
+            mentee_dict = {
+                "mentee_id": objects[i].order_id,
+                "Mentee_name": mentee_obj.user.name,
+                "session_name": objects[i].Session_name,
+                "session_date": date,
+                "Session_time": objects[i].Start_datetime.time().strftime('%I:%M %p'),
+                "College_name": mentee_obj.college,
+                "Skills": mentee_obj.skills,
+                "degree": mentee_obj.degree,
+                "company": mentee_obj.company,
+                "Designation": mentee_obj.designation,
+                "Mentee_type": mentee_obj.profile
+            }
+
+            data.append(mentee_dict)
+
+    return data
+
+
+"""    
+    text = request.data['name']
+    text = re.escape(text) 
+    #objects = skills_list.objects.filter(name__contains= request.data['skill'])
+    #objects = skills_list.objects.filter(name__icontains= request.data['skill']))
+    #objects = skills_list.objects.filter(name__startswith= request.data['skill'])
+    #objects = skills_list.objects.filter(name__iregex=r"(^|\s)%s" % text)
+    data_lst = []
+    try:
+        if request.data['type'] == 'skill':
+            objects = skills_list.objects.filter(name__iregex=r"(^|\s)%s" % text)
+            for i in range(10):
+                try:
+                    data_lst.append(objects[i].name)
+                except:
+                    break
+        elif request.data['type'] == 'college':
+            for i in range(10):
+                objects = course_list.objects.filter(College_Name__iregex=r"(^|\s)%s" % text)
+                try:
+                    data_lst.append(objects[i].College_Name)
+                except:
+                    break
+        elif request.data['type'] == 'course':
+            for i in range(10):
+                objects = course_list.objects.filter(Level_of_Course__iregex=r"(^|\s)%s" % text)
+                try:
+                    data_lst.append(objects[i].Level_of_Course)
+                except:
+                    break
+        elif request.data['type'] == 'degree':
+            for i in range(10):
+                objects = course_list.objects.filter(Degree__iregex=r"(^|\s)%s" % text)
+                try:
+                    data_lst.append(objects[i].Degree)
+                except:
+                    break
+        else:
+            raise Exception()
+    except Exception as e:
+        print("Error in Value in key('type')")
+        print(e)
+        return Response(json.loads("Error in Value in key('type')"), status= status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    data_lst= list(dict.fromkeys(data_lst))
+
+    return data_lst
+"""
+
+
+def fetch_mentor_schedule_func(request):
+    try:
+        user_det = User.objects.get(email=request.user)
+        Mentor_id = user_det.id
+
+    except Exception as e:
+        print(e)
+        print("User doesn't exist")
+        return Response("User doesn't exist", status=500)
+
+        objects = mentor_schedule.objects.filter(Mentor_id=Mentor_id,
+                                                 Is_scheduled=request.data["is_scheduled"],
+                                                 Session_name=request.data["Session_name"],
+                                                 Status=1).order_by('Start_datetime')
+
+        response_dict = {
+            "Mentor_id": Mentor_id
+        }
+
+        schedule = []
+        tdelta = datetime.timedelta(days=1)
+        schedule_dates = []
+
+        for i in range(len(objects)):
+            dt = objects[i].Start_datetime.date()
+            schedule_dates.append(dt)
+
+        schedule_dates = list(dict.fromkeys(schedule_dates))
+
+        schedule_dates.sort()
+
+        for i in range(len(schedule_dates)):
+            dt = schedule_dates[i]
+            times = []
+            Schedule_ids = []
+
+            for j in range(len(objects)):
+                dt_obj = objects[j].Start_datetime.date()
+                if dt == dt_obj:
+
+                    if objects[j].Start_datetime.date() == datetime.date.today():
+                        str1 = "Today"
+
+                    elif objects[j].Start_datetime.date() == datetime.date.today() + tdelta:
+                        str1 = "Tomorrow"
+
+                    else:
+                        str1 = [[objects[j].Start_datetime.date().strftime("%d-%m-%Y")]]
+
+                    times.append(objects[j].Start_datetime.time().strftime("%I:%M %p"))
+                    Schedule_ids.append(objects[j].pk)
+
+            schedule.append(
+                {
+                    "date": str1,
+                    "times": times,
+                    "Schedule_ids": Schedule_ids,
+                }
+            )
+
+        schedule_dict = {"schedule": schedule}
+        response_dict.update(schedule_dict)
+
+        return response_dict
+
+
+def add_session_name_to_mentor_profile(sessions, mentor_id):
+    """
+    :param sessions:
+    :param mentor_id:
+    :return:
+    """
+
+    pass
+
+
+def fetch_mentors_schedule(mentor_id, is_scheduled, session_name):
+    """
+    :param mentor_id:
+    :param is_scheduled:
+    :param session_name:
+    :return:
+    """
+    if session_name is not None:
+        objects = mentor_schedule.objects.filter(Mentor_id=mentor_id,
+                                                 Is_scheduled=is_scheduled,
+                                                 Session_name=session_name,
+                                                 Status=1).order_by('Start_datetime')
+    else:
+        objects = mentor_schedule.objects.filter(Mentor_id=mentor_id,
+                                                 Is_scheduled=is_scheduled,
+                                                 Status=1).order_by('Start_datetime')
+
+    date = ""
+    schedule = []
+    # times = []
+    # Schedule_ids = []
+    tdelta = datetime.timedelta(days=1)
+    schedule_dates = []
+    fetch_dates = []
+    charges = []
+
+    for i in range(len(objects)):
+        dt = objects[i].Start_datetime.date()
+        print("dt value", dt)
+        schedule_dates.append(dt)
+    # print(schedule_dates)
+
+    schedule_dates = list(dict.fromkeys(schedule_dates))
+
+    schedule_dates.sort()
+    print("---------------------")
+    print("Sorted dates of list", schedule_dates)
+    print("---------------------")
+    print("length of schedule dates", len(schedule_dates))
+
+    for i in range(len(schedule_dates)):
+        dt = schedule_dates[i]
+        times = []
+        Schedule_ids = []
+        charges = []
+        print("Outer loop date", dt)
+        # same_dt_obj = objects.filter(Start_datetime= )
+        for j in range(len(objects)):
+            dt_obj = objects[j].Start_datetime.date()
+            if dt == dt_obj:
+
+                if objects[j].Start_datetime.date() == datetime.date.today():
+                    str1 = "Today"
+
+                elif objects[j].Start_datetime.date() == datetime.date.today() + tdelta:
+                    str1 = "Tomorrow"
+
+                else:
+                    str1 = objects[j].Start_datetime.date().strftime("%d-%m-%Y")
+
+                times.append(objects[j].Start_datetime.time().strftime("%I:%M %p"))
+                Schedule_ids.append(objects[j].pk)
+                charges.append(int(objects[j].session_charge))
+
+                print("Inner loop date", dt_obj)
+
+        schedule.append(
+            {
+                "date": str1,
+                "times": times,
+                "Schedule_ids": Schedule_ids,
+                "charges": charges
+            }
+        )
+        print(schedule)
+    return schedule
+
+
+def Search_API_func(request):
+    text = request.data['name']
+    text = re.escape(text)
+
+    # objects = skills_list.objects.filter(name__contains= request.data['skill'])
+    # objects = skills_list.objects.filter(name__icontains= request.data['skill']))
+    # objects = skills_list.objects.filter(name__startswith= request.data['skill'])
+    # objects = skills_list.objects.filter(name__iregex=r"(^|\s)%s" % text)
+
+    data_lst = []
+    try:
+        if request.data['type'] == 'skill':
+            objects = skills_list.objects.filter(name__iregex=r"(^|\s)%s" % text)
+            for i in range(10):
+                try:
+                    data_lst.append(objects[i].name)
+                except:
+                    break
+
+        elif request.data['type'] == 'college':
+            objects = course_list.objects.filter(College_Name__iregex=r"(^|\s)%s" % text)
+            for i in range(10):
+                try:
+                    data_lst.append(objects[i].College_Name)
+                except:
+                    break
+
+        elif request.data['type'] == 'course':
+            objects = course_list.objects.filter(Level_of_Course__iregex=r"(^|\s)%s" % text)
+            for i in range(10):
+                try:
+                    data_lst.append(objects[i].Level_of_Course)
+                except:
+                    break
+
+        elif request.data['type'] == 'degree':
+            objects = degree_list.objects.filter(degree_name__iregex=r"(^|\s)%s" % text)
+            for i in range(10):
+                try:
+                    data_lst.append(objects[i].degree_name)
+                except:
+                    break
+        else:
+
+            raise Exception()
+
+    except Exception as e:
+        print("Error in Value in key('type')")
+        print(e)
+        return Response(json.loads("Error in Value in key('type')"), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    data_lst = list(dict.fromkeys(data_lst))
+
+    return data_lst
+
+
+def Mentor_Details_API_func(request):
+    try:
+        objects = mentor_schedule.objects.get(id=request.data['Schedule_id'])
+        print(objects.Mentor_id)
+    except Exception as e:
+        print("Error occured while fetching data in mentor_schedule")
+        print(e)
+        return Response(json.loads("Error occured while fetching data in mentor_schedule"),
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    try:
+        obj_pf = mentor_profile.objects.get(user=objects.Mentor_id)
+        print(obj_pf.user)
+    except Exception as e:
+        print("Error occured while fetching data in mentor_profile table")
+        print(e)
+        return Response(json.loads("Error occured while fetching data in mentor_profile table"),
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    try:
+        obj_us = User.objects.get(id=objects.Mentor_id)
+        print(obj_us.name)
+    except Exception as e:
+        print("Error occured while fetching data in mentor_profile table")
+        print(e)
+        return Response(json.loads("Error occured while fetching data in mentor_profile table"),
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    if objects.Start_datetime.date() == datetime.date.today():
+        date = "Today, " + str(objects.Start_datetime.strftime("%I:%M %p"))
+
+    elif objects.Start_datetime.date() == datetime.date.today() + timedelta(days=1):
+        date = "Tomorrow, " + str(objects.Start_datetime.strftime("%I:%M %p"))
+    else:
+        date = objects.Start_datetime.date().strftime("%d %b, %I:%M %p")  # strftime(", %I:%M %p")
+
+    design_lst = eval(obj_pf.professional_details)
+
+    data_dict = {
+        "name": obj_us.name,
+        "picture": obj_us.picture,
+        "designation": design_lst[0],
+        "session_name": objects.Session_name,
+        "session_datetime": date,
+        "charge": objects.charge
+    }
+
+    return data_dict
+
+
+def Fetch_Session_Names_API_func(request):
+    text = request.data['name']
+    text = re.escape(text)
+    try:
+        objects = mentor_schedule.objects.filter(Status=1, Session_name__iregex=r"(^|\s)%s" % text)
+    except Exception as e:
+        print("Error occured in fetching data from mentor_schedule table")
+        print(e)
+        return Response("No session are there with given name", status=500)
+
+    sessions_list = []
+    for i in range(len(objects)):
+        sessions_list.append(objects[i].Session_name)
+    sessions_list = list(dict.fromkeys(sessions_list))
+
+    return sessions_list
+
+
+def Coupon_API_func(request):
+                                     
+    try:                                                             #server
+        user_det = User.objects.get(email=request.user)
+        mentee_id = user_det.id
+    except Exception as e:
+        print(e)
+        print("User doesn't exist")
+        return Response("User doesn't exist", status=500)
+    
+    try:
+        schedule_obj = mentor_schedule.objects.get(id=request.data['schedule_id'], Status=1, Is_scheduled= 0)
+    except Exception as e:
+        print(e)
+        return Response("Error in mentor schedule table", status=500)
+
+    try:
+        coupon_obj = coupon.objects.get(coupon_code=request.data['coupon_code'], active_status=1)
+    except Exception as e:
+        print(e)
+        
+        data_dict = {
+            "valid":False,
+            "message":"Coupon can't applied"
+        }
+
+        return data_dict
+
+    #mentee_id= 2                                                      #local
+    
+
+    if coupon_obj is not None:
+
+        # if len(new_user)<=3:
+        if coupon_obj.new_user_coupon == 1:
+            new_user = mentor_schedule.objects.filter(order_id=mentee_id)
+            if len(new_user) >= 4:
+                print("Not a New user")
+                data_dict = {
+                    "valid": False,
+                    "message": "This coupon is for new user only who has booked less than 3 sessions, You already booked more than 3 sessions."
+                }
+                return data_dict
+
+        if coupon_obj.coupon_type == "flat":
+            chargeable_amount = schedule_obj.session_charge - coupon_obj.coupon_amount
+            coupon_amount = coupon_obj.coupon_amount
+
+        if coupon_obj.coupon_type == "percentage":
+            discount = ((schedule_obj.session_charge * coupon_obj.coupon_percentage) // 100)
+            chargeable_amount = schedule_obj.session_charge - discount
+            coupon_amount = discount
+        data_dict = {
+            "valid": True,
+            "coupon_amount": coupon_amount,
+            "session_price": schedule_obj.session_charge,
+            "chargeable_amount": chargeable_amount
+        }
+
+        return data_dict
+
+    else:
+        data_dict = {
+            "valid": False,
+            "message": "coupon can't applicable"
+        }
+
+        return data_dict
+
+def Mentee_My_Order_API_func(request):
+
+    
+    try:                                                             #server
+        user_in_db = User.objects.get(email=request.user)
+        mentee_id = user_in_db.id
+    except Exception as e:
+        print(e)
+        print("User doesn't exist")
+        return Response("User doesn't exist", status=500)
+    
+    
+    #mentee_id=3                                                     #local
+    obj=mentor_schedule.objects.filter(order_id=mentee_id, Is_scheduled=1).order_by('-Start_datetime')
+
+    
+    inner_lst=[]
+    
+    client=razorpay.Client(auth=("rzp_test_A5QQVVWf0eMog1", "mwIcHdj1fIDGVi44N6BoUX0W"))
+
+
+    for row in obj:
+        print(row.id)
+        try:
+            sales_ord=sales_order.objects.get(Schedule_id=row.id,Status=2,Is_active=1)
+            
+        except Exception as e:
+            continue
+            print(e)
+            print("error occured in for loop in sales_order table")
+            
+        try:
+            mentor_in_db=User.objects.get(id=row.Mentor_id)
+        except Exception as e:
+            print(e)
+            print("error occured in for loop in User table")
+
+        payment_id=sales_ord.Payment_id
+        resp = client.payment.fetch(payment_id)
+
+
+
+
+        try:
+            fd=mentee_feedback.objects.get(Sales_Order=sales_ord.id)
+            rating=fd.star_rating
+            comments=fd.comments
+        except Exception as e:
+            print("No Feedback given")
+            rating=""
+            comments=""
+        inner_dict={
+            "mentor_name":mentor_in_db.name,
+            "order_id":sales_ord.User_order_id,
+            "star_rating":rating,
+            "comments":comments,
+            "actual_price":row.session_charge,
+            "coupon_id":sales_ord.coupon_id,
+            "coupon_amount":sales_ord.coupon_amount,
+            "payment_mode":resp['method'],
+            "session_name":row.Session_name,
+            "profile_pic":mentor_in_db.picture,
+            "date":row.Start_datetime.strftime("%d %b %Y"),
+            "time":row.Start_datetime.strftime("%I:%M %p"),
+            "paid_amount":sales_ord.final_price
+        }
+
+        
+        inner_lst.append(inner_dict)
+    
+
+    #user_in_db=User.objects.get(id=1)                           #local
+    if user_in_db.is_mentee==True:
+        mentee_status=True
+    else:
+        mentee_status=False
+
+    data_dict={
+        "is_mentee":mentee_status,
+        "inner_data":inner_lst
+    }
+
+    return data_dict
+
+            
+def Mentor_My_Orders_API_func(request):
+
+    
+    try:                                                             #server
+        user_in_db = User.objects.get(email=request.user)
+        mentor_id = user_in_db.id
+    except Exception as e:
+        print(e)
+        print("User doesn't exist")
+        return Response("User doesn't exist", status=500)
+    
+    
+    #mentor_id=2                                                     #local
+    obj=mentor_schedule.objects.filter(Mentor_id=mentor_id, Is_scheduled=1, Status=1).order_by('-Start_datetime')
+
+    lst=[]
+    
+    for row in obj:
+        try:
+            sales_ord=sales_order.objects.get(Schedule_id=row.id,Is_active=1,Status=2)
+        except:
+            continue
+        mentee_in_db=User.objects.get(id=sales_ord.Mentee_id)
+        
+        print(row.id)
+        data_dict={
+            "mentee_name":mentee_in_db.name,
+            "session_name":row.Session_name,
+            "profile_pic":mentee_in_db.picture,
+            "date":row.Start_datetime.strftime("%d %b %Y"),
+            "time":row.Start_datetime.strftime("%I:%M %p"),
+            "paid_amount":sales_ord.final_price
+            
+        }
+
+        
+        lst.append(data_dict)
+    
+
+    #user_in_db=User.objects.get(id=2)                           #local
+    if user_in_db.is_mentee==True:
+        mentee_status=True
+    else:
+        mentee_status=False
+
+    #data_dict={
+    #    "is_mentee":mentee_status,
+    #    "outer_data":outer_lst,
+    #    "inner_data":inner_lst
+    #}
+
+    return lst,mentee_status
+
+
+    
+    
+        
+def Mentor_Payment_History_func(request):
+    
+    try:                                                                       #server
+        user_in_db=User.objects.get(email=request.user)
+        mentor_id=user_in_db.id
+    except Exception as e:
+        print(e)
+        print("Mentor details not found in User table")
+        return Response("Mentor details not found in User table", status=500)
+    
+
+    #mentor_id=2                                                                 #local
+    sales_ord=sales_order.objects.filter(Mentor_id=mentor_id, Status=2)
+
+    month_lst=[]
+    
+    for row in sales_ord:
+        
+        month=row.Mentor_Schedule.Start_datetime.strftime("%B %Y")
+        month_lst.append(month)
+    
+    
+    
+    month_lst=list(dict.fromkeys(month_lst))
+    
+    month_lst.reverse()
+    
+    
+
+    month_payment_history=[]
+    for m in month_lst:
+        aggregated_amount=0
+        for row in sales_ord:            
+            month=row.Mentor_Schedule.Start_datetime.strftime("%B %Y")
+            
+            if month==m:
+                aggregated_amount+=row.final_price
+
+        pay_dict={
+            "month":m,
+            "aggregated_amount":aggregated_amount
+        }
+        month_payment_history.append(pay_dict)
+
+    return month_payment_history
+
+
+
+def Mentee_Feedback_func(request):
+
+    try:
+        sales_ord=sales_order.objects.get(User_order_id=request.data['order_id'])
+    except Exception as e:
+        print(e)
+        print("Order_id doesnot exists in sales_order table")
+        return Response("Order_id doesnot exists in sales_order table", status=500)
+
+    obj=mentee_feedback()
+    obj.Sales_Order=sales_ord
+    obj.mentor_id=sales_ord.Mentor_id
+    obj.star_rating=request.data['star_rating']
+    obj.comments=request.data['comments']
+
+    obj.save()
+
+
+def generate_voice_token(schedule_id,user_id):
+    """
+
+    :param request:
+    :return:
+    """
+
+    sch_obj = mentor_schedule.objects.get(id=schedule_id)
+
+    st_time = sch_obj.Start_datetime
+    ed_time = sch_obj.End_datetime
+    status = sch_obj.Status
+    session_name = sch_obj.Session_name
+    order_id = sch_obj.order_id
+
+    st_time= datetime.datetime(2020, 12, 7, 0, 30, 0)
+    ed_time = datetime.datetime(2020, 12, 7, 0, 40, 0)
+
+    channel_name = str(session_name)+"_"+str(order_id)
+    cr_time = datetime.datetime.now()
+
+    is_call = True
+    sec_left = None
+    voice_token = None
+    message = None
+
+    voice_obj = voice_call()
+    voice_obj.channel_name = channel_name
+    voice_obj.sales_order_id = order_id
+    voice_obj.user_id = user_id
+
+    if (st_time - cr_time).total_seconds() < 15 and (ed_time - cr_time).total_seconds() > 10:
+        print("true")
+        ts = time.mktime(cr_time.timetuple())
+        sec_left = int((ed_time - cr_time).total_seconds())
+        ts = int(ts + sec_left)+ 60 # 60 sec margin
+        print(ts)
+
+        # get voice token for this session
+        voice_token = get_voice_token(channel_name,user_id,ts)
+
+        # save voice details in table
+        voice_obj.token_id = voice_token
+        voice_obj.expiration_time = sec_left
+        voice_obj.request_type = "connect"
+        voice_obj.save()
+
+    elif (st_time - cr_time).total_seconds() > 15:
+        message = "Call again at " + str(st_time)
+        is_call = False
+        voice_obj.request_type = "early"
+
+        print(message)
+    elif (ed_time - cr_time).total_seconds() < 0:
+        message = "Session expired"
+        is_call = False
+        voice_obj.request_type = "expired"
+        print(message)
+    else:
+        print((ed_time - cr_time).total_seconds() < 0)
+
+    voice_obj.save()
+    voice_det = {"is_call":is_call, "channel_name":channel_name,"user_id":user_id,
+    "sec_left":sec_left, "voice_token":voice_token,"message":message}
+
+    return voice_det
+
+
+def get_voice_token(channel_name,uid,privilegeExpiredTs):
+    """
+
+    :param channel_name:
+    :param uid:
+    :param privilegeExpiredTs:
+    :return:
+    """
+    appID = "840e67b9d38c44ee8c975b9338546e69"
+    appCertificate = "8f3fc6f306bd4d53a8063254b1bc5de1"
+    # channelName = "11-10-2020 12:12:12 python mentor_id"  # get channel name
+    # uid = 2882341273  # sales_order_id
+    #
+    # expireTimeInSeconds = 60
+    #
+    # currentTimestamp = int(time.time())
+    # privilegeExpiredTs = currentTimestamp + expireTimeInSeconds
+    role = 1
+
+    token = RtcTokenBuilder.buildTokenWithUid(appID, appCertificate, channel_name, uid, role,
+                                              privilegeExpiredTs)
+
+    return token
+
+
+
+def Wallet_API_func(request):
+    
+    
+    try:                                                        #server
+        user_in_db=User.objects.get(email=request.user)    
+        mentee_id=user_in_db.id
+    except Exception as e:
+        print(e)
+        print("Requested user doesn't exist in db")
+        return Response("Requested user doesn't exist in db", status=500)
+
+    
+    #user_in_db=User.objects.get(id=4)                           #local
+    #mentee_id=user_in_db.id
+    
+    amount=request.data['amount']*100
+
+    order_amount=amount
+    order_currency='INR'
+    order_receipt=str(mentee_id)
+    notes={
+        "name":user_in_db.name,
+        "id":user_in_db.id
+    }
+
+    try:
+        client=razorpay.Client(auth=('rzp_test_A5QQVVWf0eMog1', 'mwIcHdj1fIDGVi44N6BoUX0W'))
+        response=client.order.create(dict(amount=order_amount, currency=order_currency, receipt=order_receipt, notes=notes))
+
+    except Exception as e:
+        print(e)
+        print("Order id not generated")
+        return Response("Order id not generated", status=500)
+
+    
+    
+    mth=wallet.objects.filter(mentee_id=mentee_id,status=2).order_by('-updated_at')
+    
+    row=wallet()
+
+    if len(mth)!=0:
+
+        row.mentee_id=user_in_db.id
+        row.txn_order_id=response['id']
+        row.previous_balance=mth[0].current_balance
+        row.current_balance=mth[0].current_balance
+        row.amount_changed=request.data['amount']
+        row.status=1                                #created
+        row.save()
+
+    else:
+        row.mentee_id=user_in_db.id
+        row.txn_order_id=response['id']
+        row.previous_balance=0
+        row.current_balance=0
+        row.amount_changed=request.data['amount']
+        row.status=1                                #created
+        row.save()
+
+
+    return response['id']
+
+
+
+def wallet_verification_func(request):
+    
+    s1 = request.data['razorpay_order_id'] + "|" + request.data['razorpay_payment_id']
+
+    key = 'RKxq0NX3rGgEZ3HEKt5cr5BT'
+    key= 'mwIcHdj1fIDGVi44N6BoUX0W'
+    hex_str = key.encode()
+    message = s1.encode()
+
+    generated_signature = hmac.new(hex_str, message, hashlib.sha256).hexdigest()
+    
+    print(request.data['razorpay_signature'])
+    if (generated_signature == request.data['razorpay_signature']):
+        print("Payment is successfull, Data came from authenticated source")
+    else:
+        print("Data not came from authenticate sources")
+        return Response("Data not came from authenticate sources", status=500)
+
+
+    try:
+
+        # client = razorpay.Client(auth=('rzp_test_JAObx3Y47SmBhB', 'RKxq0NX3rGgEZ3HEKt5cr5BT'))
+        client = razorpay.Client(auth=('rzp_test_A5QQVVWf0eMog1', 'mwIcHdj1fIDGVi44N6BoUX0W'))
+        status = client.utility.verify_payment_signature(request.data)
+        print(status,"payment statusssss")
+    except Exception as e:
+        print(e)
+        print("signature verification falied at razorpay side")
+        return Response("signature verification falied at razorpay side", status=500)
+
+    if status==None:
+        try:
+            row=wallet.objects.get(txn_order_id=request.data['razorpay_order_id'])
+        except Exception as e:
+            print(e)
+            print("order_id in wallet table doesnot exists")
+            return Response("order_id in wallet table doesnot exists", status=500)
+
+    row.status=2
+    row.current_balance = row.previous_balance+row.amount_changed
+    row.remarks = "Money added"
+    row.save()
+
+    data_dict={
+        "messsage":"Rs."+str(row.amount_changed)+" added sucessfully",
+        "updated_balance":row.current_balance
+    }    
+
+
+    return data_dict
+
+
+
+def wallet_history_func(request):
+    
+
+    try:                                                                    #server
+        user_in_db=User.objects.get(email=request.user)
+    except Exception as e:
+        print(e)
+        print("User doesn't exist in db")
+        return Response("User doesn't exist in db", status=500)
+
+    # user_in_db=User.objects.get(id=4)
+
+    obj=wallet.objects.filter(mentee_id=user_in_db.id, status=2).order_by('-updated_at')
+    
+    data_lst=[]
+    current_balance=obj[0].current_balance
+
+    for row in obj:
+        if row.current_balance>row.previous_balance:
+            str1="Money Added"
+        else:
+            str1="Session for ..."
+        data_dict={
+            "order_id":row.txn_order_id,
+            "message":str1,
+            "amount_changed":row.amount_changed,
+            "remarks":row.remarks,
+            "date":row.updated_at.strftime("%Y-%m-%d %I:%M %p")
+        }
+        data_lst.append(data_dict)
+
+    final_dict={
+        "current_balance":current_balance,
+        "history":data_lst
+    }
+
+    return final_dict
+
+
+def make_payment_func(request):
+
+    try:                                                                        #server
+        user_in_db=User.objects.get(email=request.user)
+    except Exception as e:
+        print(e)
+        print("Current user doesn't exist in db")
+        return Response("Current user doesn't exist in db", status=500)
+
+
+    # user_in_db=User.objects.get(id=4)                                           #local
+
+    try:
+        schedule_obj=mentor_schedule.objects.get(id=request.data['Schedule_id'],Status=1)
+    except Exception as e:
+        print(e)
+        print("session doesn't exists in db")
+        return Response("session doesn't exists in db",status=500)
+
+    chargeable_amount = schedule_obj.session_charge
+
+    sales_ord = sales_order()
+    sales_ord.Schedule_id = schedule_obj.id
+    sales_ord.Mentor_id = schedule_obj.Mentor_id
+    sales_ord.Mentee_id = user_in_db.id
+    sales_ord.Session_name = schedule_obj.Session_name
+    sales_ord.Mentee_name = request.data['name']
+    sales_ord.Mentee_phonenumber = request.data['phone_number']
+    sales_ord.Mentee_email = request.data['email']
+    sales_ord.session_charge = schedule_obj.session_charge
+
+    if request.data['is_coupon_valid']==True:
+        try:
+            coupon_obj=coupon.objects.get(coupon_code=request.data['Coupon_id'])
+            print("11111111111111111111111111111")
+        except Exception as e:
+            print(e)
+            print("Coupon doesn't exists in db")
+            return Response("Coupon doesn't exists in db", status=500)
+
+        #session_charge=
+        
+        
+        # if len(new_user)<=3:
+        #if coupon_obj.new_user_coupon == 1:
+        #    new_user = mentor_schedule.objects.filter(order_id=user_in_db.id) ############################################ whats this??
+        #    if len(new_user) >= 4:
+        #        print("This coupon is for new user who has booked 3 and less than 3 sessions.")
+        #        return Response("This coupon is for new user who has booked 3 and less than 3 sessions.",status=500)
+
+        coupon_amount = 0
+        if coupon_obj.coupon_type == "flat":
+            print("2222222222222222222",coupon_obj.coupon_amount)
+            chargeable_amount = schedule_obj.session_charge - coupon_obj.coupon_amount
+            coupon_amount = coupon_obj.coupon_amount
+
+        if coupon_obj.coupon_type == "percentage":
+            print("33333333333333333")
+            discount = ((schedule_obj.session_charge * coupon_obj.coupon_percentage) // 100)
+            chargeable_amount = schedule_obj.session_charge - discount
+            coupon_amount = discount
+        
+
+
+        sales_ord.coupon_amount=coupon_amount
+        sales_ord.coupon_id=request.data['Coupon_id']
+    print("4444444444444444444",chargeable_amount)
+    sales_ord.final_price = chargeable_amount
+    sales_ord.save()
+
+    wt=wallet.objects.filter(mentee_id=user_in_db.id,status=2).order_by('-updated_at')
+    
+    if len(wt)==0:
+        data_dict = {
+            "wallet_balance": 0,
+            "session_charge": chargeable_amount
+        }
+    else:
+
+        data_dict={
+            "wallet_balance":wt[0].current_balance,
+            "session_charge":chargeable_amount
+        }
+    
+
+    return data_dict
+
+
+
+def favourite_mentor_functions(request):
+    
+        
+    try:                                                                            #server
+        user_in_db=User.objects.get(email=request.user)
+    except Exception as e:
+        print(e)
+        print("Current user not there in db")
+        return Response("Current user not there in db",status=500)
+    
+    #user_in_db=User.objects.get(id=1)                                              #local
+
+    obj=favourite_mentors.objects.filter(mentor_id=request.data['mentor_id'],mentee_id=user_in_db.id)
+    
+    if len(obj)>0:
+        return "Mentor already exists in your Favourite list"
+    else:
+        row=favourite_mentors()
+        row.mentor_id=request.data['mentor_id']
+        row.mentee_id=user_in_db.id
+        row.save()
+
+        return "Added Successfully"
+
+

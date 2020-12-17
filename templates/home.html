@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mentorbox India</title>
+    <script>
+        function getInfo(){
+            let id = document.getElementById("person_id").value;
+            fetch(`/image/${id}`, {
+                method: 'GET',
+            })
+            .then(res_binary => {
+                return res_binary.json();
+            })
+            .then(json_data => {
+                let image = json_data["image"];
+                let name = json_data["mentor_name"];
+
+                document.getElementById("name").innerHTML = name;
+                document.getElementById("image").src = image;
+            })
+            .catch(err => {
+                console.log(err);
+            })
+        }
+    </script>
+</head>
+<body>
+    <input type="text" id="person_id" /> <button onclick="getInfo()">get Info</button>
+    <h1 id="name"></h1>
+    <img id="image" />
+
+
+    <h1>{{mentor.mentor_name}}</h1>
+    <img src="{{mentor.image.url}}" alter="image of mentor" width="250px" height="250px">
+</body>
+</html>

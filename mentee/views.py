@@ -78,7 +78,7 @@ class UserLoginView(RetrieveAPIView):
 
 
         idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(), '191322235073-vgj1avkfgsgmke4gqmlaj0rqr77u3ha1.apps.googleusercontent.com')
-        #idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(),
+        # idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(),
         #                                      '651163372936-adto0ri3mraijr8umjt9dh8c3l5tufc4.apps.googleusercontent.com')
         # print(idinfo, "id info")
         message = 'User already registered'
@@ -1088,7 +1088,7 @@ class Mentee_My_Orders_API(APIView):
 class Mentor_My_Orders_API(APIView):
         
     permission_classes = (IsAuthenticated,)                             #server
-    authentication_classes = JSONWebTokenAuthentication
+    authentication_class = JSONWebTokenAuthentication
         
     #permission_classes = (AllowAny,)                               #local
 
@@ -1332,7 +1332,7 @@ class make_payment(APIView):
 
 class favourite_mentors(APIView):
     permission_classes=(IsAuthenticated,)                   #server
-    authentication_classes=JSONWebTokenAuthentication
+    authentication_class=JSONWebTokenAuthentication
 
     #permission_classes=(AllowAny,)                          #local
 
@@ -1367,7 +1367,7 @@ class favourite_mentors(APIView):
 
 class profile_page(APIView):
     permission_classes=(IsAuthenticated,)                   #server
-    authentication_classes=JSONWebTokenAuthentication
+    authentication_class=JSONWebTokenAuthentication
 
     #permission_classes=(AllowAny,)                          #local
 

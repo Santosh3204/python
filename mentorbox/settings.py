@@ -91,7 +91,6 @@ GP_CLIENT_SECRET = 'N61i7vOEtneXAYVo1k3Pl6UP'
 # }
 
 
-"""
 DATABASES = {
    'default': {
        'ENGINE': 'django.db.backends.mysql',
@@ -105,9 +104,9 @@ DATABASES = {
    },
    }
 }
-"""
 
 
+#
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.mysql',
@@ -123,16 +122,16 @@ DATABASES = {
 # }
 
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'mbox',
-        'USER': 'root',
-        'PASSWORD': 'Santosh@2k',
-        'HOST': 'localhost',
-        'PORT': '3306',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'mbox',
+#         'USER': 'root',
+#         'PASSWORD': 'Santosh@2k',
+#         'HOST': 'localhost',
+#         'PORT': '3306',
+#     }
+# }
 
 
 # Password validation

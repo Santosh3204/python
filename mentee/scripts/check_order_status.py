@@ -134,9 +134,11 @@ def check_sales_order():
                             for k in objs:
                                 k.order_id=None
                                 k.Is_scheduled=1
+                                k.Status=0
                                 
                                 session.commit()
                             sch_obj.order_id=i.id
+                            sch_obj.Status=1
                             session.commit()
 
                         else:

@@ -1364,6 +1364,26 @@ class favourite_mentors(APIView):
         return Response(resp_dict)
 
 
+
+class profile_page(APIView):
+    permission_classes=(IsAuthenticated,)                   #server
+    authentication_classes=JSONWebTokenAuthentication
+
+    #permission_classes=(AllowAny,)                          #local
+
+    def get(self,request):
+
+        data_dict=profile_page_func(request)
+
+        resp_dict={
+            "status":200
+        }
+        resp_dict.update(data_dict)
+
+
+        return Response(resp_dict)
+
+
 """
 class Razorpay_test(APIView):
     permission_classes=(AllowAny,)

@@ -1848,3 +1848,54 @@ def favourite_mentor_functions(request):
         return "Added Successfully"
 
 
+def profile_page_func(request):
+    
+    
+    try:                                                                #server
+        user_in_db=User.objects.get(email=request.user)
+    except Exception as e:
+        print(e)
+        print("Current user not exist in db")
+        return Response("Current user not exist in db",status=500)
+    
+
+    #user_in_db=User.objects.get(id=2)                                   #local
+
+    lst=[]
+
+    obj=mentor_schedule.objects.filter(Mentor_id=user_in_db.id,Status=1,Is_scheduled=1)
+
+    if len(obj)==0:
+        total_sessions=0
+        total_amount=0
+        topics=lst
+
+    else:
+        total_sessions=len(obj)
+        amount=0
+        
+        for row in obj:
+            amount += row.mentor_charge
+            lst.append(row.Session_name)
+
+        lst=list(dict.fromkeys(lst))
+        lst.sort()
+
+        total_amount=amount
+        topics=lst
+
+        data_dict={
+            "name":user_in_db.name,
+            "joined_on":user_in_db.date_joined.strftime("%d-%m-%Y"),
+            "image":user_in_db.picture,
+            "total_sessions":total_sessions,
+            "total_amount":total_amount,
+            "topics":lst
+        }
+
+        return data_dict
+
+        
+
+        
+    

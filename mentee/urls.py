@@ -47,7 +47,7 @@ urlpatterns = [
     path('profile_page/', profile_page.as_view()),
     #path('rz_test/', Razorpay_test.as_view()),
     #path('pay_test/', Pay_test.as_view()),
-    
+    path('get_fav_mentors/', fetch_favourite_mentors.as_view()),
 
 
 ]

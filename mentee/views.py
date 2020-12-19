@@ -1343,7 +1343,7 @@ class favourite_mentors(APIView):
         elif len(request.data) != 1:
             return Response("No. of keys is mis-matched, it should be 1", status=400)
 
-        actual_dict = {"mentor_id":int,
+        actual_dict = {"mentor_id":str,
                        }
 
         for i in actual_dict:
@@ -1353,11 +1353,11 @@ class favourite_mentors(APIView):
             if type(request.data[i]) != actual_dict[i]:
                 return Response("Values datatype in Request body is mis-matched", status=400)
 
-        note=favourite_mentor_functions(request)
+        added_status=favourite_mentor_functions(request)
 
         resp_dict={
             "status":200,
-            "message":note
+            "added":added_status
 
         }
 
@@ -1446,3 +1446,18 @@ class Pay_test(APIView):
 """
 
 
+class fetch_favourite_mentors(APIView):
+    permission_classes=(IsAuthenticated,)           #server
+    authentication_class=JSONWebTokenAuthentication
+
+    def get(self,request):
+        data_list=fetch_favourite_mentors_func(request)
+
+        resp_dict={
+            "status":200,
+             "data": data_list
+        }
+        print(resp_dict)
+        #resp_dict.update(data_dict)
+
+        return Response(resp_dict)

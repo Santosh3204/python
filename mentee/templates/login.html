@@ -1,0 +1,99 @@
+<html>
+<head>
+<!--  <meta name="google-signin-client_id" content="191322235073-vgj1avkfgsgmke4gqmlaj0rqr77u3ha1.apps.googleusercontent.com">-->
+  <meta name="google-signin-client_id" content="651163372936-adto0ri3mraijr8umjt9dh8c3l5tufc4.apps.googleusercontent.com">
+</head>
+<body>
+  <div id="my-signin2"></div>
+  <script>
+    function onSuccess(googleUser) {
+      console.log('Logged in as: ' + googleUser.getBasicProfile().getName());
+      var id_token = googleUser.getAuthResponse().id_token;
+      var xhr = new XMLHttpRequest();
+<!--      xhr.open('POST', 'http://ec2-13-233-21-6.ap-south-1.compute.amazonaws.com:8000/mentee/login/callback');-->
+      xhr.open('POST', 'http://localhost:8000/mentee/login/callback');
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      xhr.onload = function() {
+        console.log('Signed in as: ' + xhr.responseText);
+      };
+      xhr.send('g_token=' + id_token+'&m_token=vduvus');
+    }
+    function onFailure(error) {
+      console.log(error);
+    }
+    function renderButton() {
+      gapi.signin2.render('my-signin2', {
+        'scope': 'profile email',
+        'width': 240,
+        'height': 50,
+        'longtitle': true,
+        'theme': 'dark',
+        'onsuccess': onSuccess,
+        'onfailure': onFailure
+      });
+    }
+  </script>
+  <a href="" onclick="signOut();">Sign out</a>
+<script>
+  function signOut() {
+    var auth2 = gapi.auth2.getAuthInstance();
+    auth2.signOut().then(function () {
+      console.log('User signed out.');
+    });
+  }
+</script>
+
+  <button id="rzp-button1">Pay</button>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+var options = {
+    "key": "rzp_test_A5QQVVWf0eMog1", // Enter the Key ID generated from the Dashboard
+    "amount": "100000", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+    "currency": "INR",
+    "name": "Acme Corp",
+    "description": "Test Transaction",
+    "image": "https://media-exp1.licdn.com/dms/image/C4E03AQGCtp_Myr3I5g/profile-displayphoto-shrink_100_100/0/1600597138364?e=1612396800&v=beta&t=CgLtslnKB3LknIKVtQxux8akqJU94elt8D-XkLrHB80",
+    "order_id": "order_GChkK943YkeW2z", //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+    "handler": function (response){
+        alert(response.razorpay_payment_id);
+        alert(response.razorpay_order_id);
+        alert(response.razorpay_signature)
+    },
+    "prefill": {
+        "name": "Gaurav Kumar",
+        "email": "gaurav.kumar@example.com",
+        "contact": "9999999999"
+    },
+    "notes": {
+        "address": "Razorpay Corporate Office"
+    },
+    "theme": {
+        "color": "#3399cc"
+    }
+};
+var rzp1 = new Razorpay(options)
+ rzp1.on('payment.success', function (response){
+    console.log("lo mai aa gaya")
+     alert(response.razorpay_payment_id);
+       alert(response.razorpay_order_id);
+         alert(response.razorpay_signature)
+         });
+
+rzp1.on('payment.failed', function (response){
+        alert(response.error.code);
+        alert(response.error.description);
+        alert(response.error.source);
+        alert(response.error.step);
+        alert(response.error.reason);
+        alert(response.error.metadata.order_id);
+        alert(response.error.metadata.payment_id);
+});
+document.getElementById('rzp-button1').onclick = function(e){
+    rzp1.open();
+    e.preventDefault();
+}
+</script>
+
+  <script src="https://apis.google.com/js/platform.js?onload=renderButton" async defer></script>
+</body>
+</html>

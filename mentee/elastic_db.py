@@ -60,6 +60,9 @@ class ElasticDB:
             if key=='max_charge' and data[key] is not None:
                 query["query"]["bool"]["filter"].append({"range": {"121_charge": {"lte": data[key]}}})
 
+        if len(query["query"]["bool"]["must"])==0:
+            return None
+
         response = self.es.search(index='mentors', doc_type='_doc', body=query)
 
         profiles = []

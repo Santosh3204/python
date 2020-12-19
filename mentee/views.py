@@ -1398,6 +1398,9 @@ class FindMentors(APIView):
 
         profiles = es_ob.find_mentor(search_data)
 
+        if profiles is None:
+            return Response("Please select profile or skills",status=400)
+
         resp_dict = {
             "status": 200,
             "data":profiles

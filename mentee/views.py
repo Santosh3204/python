@@ -1364,7 +1364,6 @@ class favourite_mentors(APIView):
         return Response(resp_dict)
 
 
-
 class profile_page(APIView):
     permission_classes=(IsAuthenticated,)                   #server
     authentication_class=JSONWebTokenAuthentication
@@ -1380,6 +1379,30 @@ class profile_page(APIView):
         }
         resp_dict.update(data_dict)
 
+
+        return Response(resp_dict)
+
+
+class FindMentors(APIView):
+
+    permission_classes=(AllowAny,)
+
+    def post(self,request):
+
+        search_data = request.data
+
+        mandatory_fileds = {"skills","career_profile","languages","exp","min_charge","max_charge"}
+
+        if len(mandatory_fileds.difference(set(search_data.keys())))>0:
+            return Response("request fields missing",status=400)
+
+        profiles = es_ob.find_mentor(search_data)
+
+        resp_dict = {
+            "status": 200,
+            "data":profiles
+        }
+        # resp_dict.update(data_dict)
 
         return Response(resp_dict)
 

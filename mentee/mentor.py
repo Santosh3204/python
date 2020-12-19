@@ -567,7 +567,7 @@ def Create_Order_API_func(request):
             row.Is_scheduled = 1
             row.order_id = sales_ord[0].id
             row.save()
-            print("2000000000000000000000000")
+
             return order_id,order_amount
 
         elif wt[0].current_balance+request.data['amount_to_add']>=sales_ord[0].final_price:

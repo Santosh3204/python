@@ -8,46 +8,57 @@ class ElasticDB:
     def __init__(self):
         self.es = Elasticsearch("http://localhost:9200/")
 
-    def search_mentor_for_student(self, student_details):
+    def find_mentor(self,data):
         """
 
-        :param student_details:
+        :param data:
         :return:
         """
 
         query = {
             "query": {
                 "bool": {
-                    "should": [
-                        {"terms": {"designation": student_details["fields"]}},
-                        # {"match_phrase": {"college": student_details["College"]}},
-                        {"match_phrase": {"course": student_details["Degree"]}},
-                        # {"match_phrase": {"degree": student_details["Course"]}}
 
-
+                    "must": [
                     ],
-                    "filter": {"bool":{"should":[]}}
+                    "filter": [{"term": {"status": 1}}]
                 }
             },
             "highlight": {
                 "fields": {
                     "one2one_topics": {"type": "plain"},
                     "skills": {"type": "plain"},
-                    # "college": {"type": "plain"},
-                    "degree": {"type": "plain"},
-                    # "course": {"type": "plain"},
-                    # "country": {"type": "plain"},
-                    # "prof_country": {"type": "plain"}
+                    "current_designation": {"type": "plain"},
+                    "designation": {"type": "plain"},
+                    "languages": {"type": "plain"},
 
                 }
             }
         }
-        for skill in student_details["Skills"]:
-            query["query"]["bool"]["should"].append({"match_phrase": {"skills": skill}})
 
-        for field in student_details["fields"]:
-            query["query"]["bool"]["filter"]['bool']['should'].append({"match_phrase": {"one2one_topics": field}})
-            query["query"]["bool"]["filter"]['bool']['should'].append({"term": {"status": 1}})
+        for key in data:
+
+            if key=="skills" and len(data[key])!=0:
+                for ski in data[key]:
+                    query["query"]["bool"]["must"].append({"match_phrase": {"skills": ski}})
+
+            if key=="career_profile" and data[key] is not None:
+                query["query"]["bool"]["must"].append({"bool": {"should": [{"match_phrase": {"one2one_topics": data[key]}},
+                                     {"match_phrase": {"current_designation": data[key]}},
+                                     {"intervals": {"designation": {
+                                         "match": {"query": data[key], "max_gaps": 0}}}}
+                                     ]}})
+            if key=="languages" and len(data[key])!=0:
+                query["query"]["bool"]["must"].append({"terms": {"languages": data[key]}})
+
+            if key=='exp' and data[key] is not None:
+                query["query"]["bool"]["filter"].append({"range": {"industry_exp": {"gte": data[key]}}})
+
+            if key=='min_charge' and data[key] is not None:
+                query["query"]["bool"]["filter"].append({"range": {"121_charge": {"gte": data[key]}}})
+
+            if key=='max_charge' and data[key] is not None:
+                query["query"]["bool"]["filter"].append({"range": {"121_charge": {"lte": data[key]}}})
 
         response = self.es.search(index='mentors', doc_type='_doc', body=query)
 
@@ -63,20 +74,83 @@ class ElasticDB:
             industry_exp = hits["_source"]["industry_exp"]
             mb_charge = hits["_source"]["121_charge"]
 
-            if "highlight" not in hits:
-                continue
-            elif "one2one_topics" not in hits["highlight"]:
-                continue
-
-            one2one_topics = []
-            for topic in hits["highlight"]["one2one_topics"]:
-                one2one_topics.append(ElasticDB.striphtml(topic))
 
             profiles.append({"name": name, "id_": id_, "designation": desgnation, "industry_exp": industry_exp,
-                             "company_name": company_name, "avatar": avatar, "session_names": one2one_topics,
-                             "charge":mb_charge})
+                             "company_name": company_name, "avatar": avatar, "session_names": hits["_source"]["one2one_topics"],
+                             "charge": mb_charge})
 
         return profiles
+
+
+    def search_mentor_for_student(self, student_details):
+            """
+
+            :param student_details:
+            :return:
+            """
+
+            query = {
+                "query": {
+                    "bool": {
+                        "should": [
+                            {"terms": {"designation": student_details["fields"]}},
+                            # {"match_phrase": {"college": student_details["College"]}},
+                            {"match_phrase": {"course": student_details["Degree"]}},
+                            # {"match_phrase": {"degree": student_details["Course"]}}
+
+
+                        ],
+                        "filter": {"bool":{"should":[]}}
+                    }
+                },
+                "highlight": {
+                    "fields": {
+                        "one2one_topics": {"type": "plain"},
+                        "skills": {"type": "plain"},
+                        # "college": {"type": "plain"},
+                        "degree": {"type": "plain"},
+                        # "course": {"type": "plain"},
+                        # "country": {"type": "plain"},
+                        # "prof_country": {"type": "plain"}
+
+                    }
+                }
+            }
+            for skill in student_details["Skills"]:
+                query["query"]["bool"]["should"].append({"match_phrase": {"skills": skill}})
+
+            for field in student_details["fields"]:
+                query["query"]["bool"]["filter"]['bool']['should'].append({"match_phrase": {"one2one_topics": field}})
+                query["query"]["bool"]["filter"]['bool']['should'].append({"term": {"status": 1}})
+
+            response = self.es.search(index='mentors', doc_type='_doc', body=query)
+
+            profiles = []
+            for hits in response["hits"]["hits"]:
+
+                # score = hits['_score']
+                id_ = hits["_id"]
+                company_name = hits["_source"]["current_company"].title()
+                desgnation = hits["_source"]["current_designation"].title()
+                name = hits["_source"]["name"].title()
+                avatar = hits["_source"]["avatar"]
+                industry_exp = hits["_source"]["industry_exp"]
+                mb_charge = hits["_source"]["121_charge"]
+
+                if "highlight" not in hits:
+                    continue
+                elif "one2one_topics" not in hits["highlight"]:
+                    continue
+
+                one2one_topics = []
+                for topic in hits["highlight"]["one2one_topics"]:
+                    one2one_topics.append(ElasticDB.striphtml(topic))
+
+                profiles.append({"name": name, "id_": id_, "designation": desgnation, "industry_exp": industry_exp,
+                                 "company_name": company_name, "avatar": avatar, "session_names": one2one_topics,
+                                 "charge":mb_charge})
+
+            return profiles
 
     @staticmethod
     def striphtml(data):

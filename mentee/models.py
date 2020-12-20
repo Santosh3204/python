@@ -317,8 +317,12 @@ class favourite_mentors(models.Model):
     mentee_id=models.IntegerField()
     mentor_id=models.IntegerField()
 
+class request_sessions(models.Model):
+    mentee_id=models.IntegerField()
+    mentor_id=models.IntegerField()
+    session_name=models.CharField(max_length=50)
+    mentor_notify=models.BooleanField(default=True)
+    mentee_notify=models.BooleanField(default=False,null=True)
+    created_at=models.DateTimeField(auto_now_add=True)
+    updated_at=models.DateTimeField(auto_now=True)
 
-
-
-
-    

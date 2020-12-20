@@ -49,6 +49,11 @@ urlpatterns = [
     #path('rz_test/', Razorpay_test.as_view()),
     #path('pay_test/', Pay_test.as_view()),
     path('get_fav_mentors/', fetch_favourite_mentors.as_view()),
+    path('request_session/', request_session.as_view()),
+    path('mentor_notifications/', mentor_notifications.as_view()),
+    path('notify_mentee/', notify_mentee.as_view()),
+    path('mentee_notifications/', mentee_notifications.as_view()),
+
 
 
 ]

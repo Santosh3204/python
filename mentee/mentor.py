@@ -2179,3 +2179,146 @@ def fetch_favourite_mentors_func(request):
  
     return data_lst
 
+
+def request_session_func(request):
+
+    
+    try:                                                                    #server
+        user_in_db=User.objects.get(email=request.user)
+    except Exception as e:
+        print(e)
+        print("Current user doesn't exists in db")
+        return Response("Current user doesn't exists in db",status=500)
+    
+    #user_in_db=User.objects.get(id=1)                                           #local   mentee
+
+    find_row=request_sessions.objects.filter(mentee_id=user_in_db.id, mentor_id=request.data['mentor_id'], session_name=request.data['session_name']).order_by('-updated_at')
+
+    check=0
+    #print(len(find_row))
+
+    if len(find_row)==0:
+        check=1
+    
+    else:
+        t_24=datetime.timedelta(hours=24)
+        current_time=datetime.datetime.now()
+        if current_time-find_row[0].updated_at>=t_24:
+            print("24 condition")
+            check=1
+        else:
+            check=0
+            return "You have already made %s session request with this Mentor, Please wait for 24 hrs to make request again."%request.data['session_name']
+
+    
+
+    if check==1:
+        row=request_sessions()
+        row.mentee_id=user_in_db
+        row.mentor_id=request.data['mentor_id']
+        row.session_name=request.data['session_name']
+
+        row.save()
+
+
+
+        return "Requested Successfully"
+
+
+def mentor_notifications_func(request):
+
+    
+    try:                                                                    #server
+        user_in_db=User.objects.get(email=request.user)
+    except Exception as e:
+        print(e)
+        print("Current user doesn't exists in db")
+        return Response("Current user doesn't exists in db",status=500)
+    
+
+    #user_in_db=User.objects.get(id=5)                                       #local mentor     
+
+    obj=request_sessions.objects.filter(mentor_id=user_in_db.id,mentor_notify=True).order_by('-updated_at')
+
+    data_lst=[]
+    for row in obj:
+        try:
+            mentee=User.objects.get(id=row.mentee_id)
+        except Exception as e:
+            print(e)
+            print("Requested mentee doesn't exist in db")
+            continue
+
+        data_dict={
+            "mentee_name":mentee.name,
+            "mentee_image":mentee.picture,
+            "session":row.session_name
+        }
+
+        data_lst.append(data_dict)
+
+        return data_lst
+
+        
+def notify_mentee_func(request):                                                    #mentor changing request_session table
+    
+    try:                                                                    #server
+        user_in_db=User.objects.get(email=request.user)
+    except Exception as e:
+        print(e)
+        print("Current user doesn't exists in db")
+        return Response("Current user doesn't exists in db",status=500)
+    
+
+    #user_in_db=User.objects.get(id=2)                                       #local mentor
+
+    try:
+        row=request_sessions.objects.get(mentor_id=user_in_db.id,mentee_id=request.data['mentee_id'],session_name=request.data['session_name'])
+    except Exception as e:
+        print(e)
+        print("No row exists in request_sessions table ")
+        return Response("No row exists in request_sessions table ", status=500)
+
+    row.mentor_notify=False
+    row.mentee_notify=True
+
+    row.save()
+
+    return "Notified Successfully"
+    
+
+def mentee_notifications_func(request):
+
+    
+    try:                                                                    #server
+        user_in_db=User.objects.get(email=request.user)
+    except Exception as e:
+        print(e)
+        print("Current user doesn't exist in db")
+        return Response("Current user doesn't exist in db",status=500)
+    
+
+    #user_in_db=User.objects.get(id=1)                                      #local mentee
+
+    obj=request_sessions.objects.filter(mentee_id=user_in_db.id,mentee_notify=True).order_by("-updated_at")
+
+    data_lst=[]
+
+    for row in obj:
+        try:
+            mentor=User.objects.get(id=row.mentor_id)
+        except Exception as e:
+            print(e)
+            print("Mentor not exits in db with mentor id:", row.mentor_id)
+            continue
+
+        data_dict={
+            "mentor_name":mentor.name,
+            "image":mentor.picture,
+            "id_":mentor.id
+        }
+
+        data_lst.append(data_dict)
+
+    return data_lst
+

@@ -1464,3 +1464,108 @@ class fetch_favourite_mentors(APIView):
         #resp_dict.update(data_dict)
 
         return Response(resp_dict)
+
+class request_session(APIView):
+    
+    permission_classes=(IsAuthenticated,)           #server
+    authentication_classes=JSONWebTokenAuthentication
+
+    #permission_classes=(AllowAny,)                      #local
+
+    def post(self,request):
+        if type(request.data) != dict:
+            return Response("Request body not in Dictionary format", status=400)
+
+        elif len(request.data) != 2:
+            return Response("No. of keys is mis-matched, it should be 1", status=400)
+
+        actual_dict = {"mentor_id":int,
+                        "session_name":str
+                       }
+
+        for i in actual_dict:
+            if i not in request.data:
+                return Response("Keys in Request body mis-matched", status=400)
+
+            if type(request.data[i]) != actual_dict[i]:
+                return Response("Values datatype in Request body is mis-matched", status=400)
+
+        msg=request_session_func(request)
+
+        resp_dict={
+            "status":200,
+            "message":msg
+
+        }
+
+        return Response(resp_dict)
+
+
+class mentor_notifications(APIView):
+    permission_classes=(IsAuthenticated,)                   #server
+    authentication_classes=JSONWebTokenAuthentication
+
+    #permission_classes=(AllowAny,)
+
+
+    def get(self,request):
+        data_lst=mentor_notifications_func(request)
+
+        resp_dict={
+            "status":200,
+            "requested_sessions":data_lst
+        }
+
+        return Response(resp_dict)
+
+class notify_mentee(APIView):
+    permission_classes=(IsAuthenticated,)                   #server
+    authentication_classes=JSONWebTokenAuthentication
+
+    #permission_classes=(AllowAny,)
+
+    def post(self,request):
+        if type(request.data) != dict:
+            return Response("Request body not in Dictionary format", status=400)
+
+        elif len(request.data) != 2:
+            return Response("No. of keys is mis-matched, it should be 1", status=400)
+
+        actual_dict = {"mentee_id":int,
+                        "session_name":str
+                       }
+
+        for i in actual_dict:
+            if i not in request.data:
+                return Response("Keys in Request body mis-matched", status=400)
+
+            if type(request.data[i]) != actual_dict[i]:
+                return Response("Values datatype in Request body is mis-matched", status=400)
+
+        success_msg=notify_mentee_func(request)
+
+        resp_dict={
+            "status":200,
+            "message":success_msg
+
+        }
+
+        return Response(resp_dict)
+
+class mentee_notifications(APIView):
+    permission_classes=(IsAuthenticated,)                   #server
+    authentication_classes=JSONWebTokenAuthentication
+
+    #permission_classes=(AllowAny,)
+
+
+    def get(self,request):
+        data_lst=mentee_notifications_func(request)
+
+        resp_dict={
+            "status":200,
+            "mentors":data_lst
+        }
+
+        return Response(resp_dict)
+

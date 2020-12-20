@@ -79,7 +79,7 @@ class ElasticDB:
 
             if "highlight" not in hits:
                 continue
-            elif "one2one_topics" not in hits["highlight"] or "designation" not in hits["highlight"]:
+            elif "one2one_topics" not in hits["highlight"] and "designation" not in hits["highlight"]:
                 continue
 
             one2one_topics = []

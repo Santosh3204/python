@@ -43,7 +43,7 @@ urlpatterns = [
     path('wallet_verify/', wallet_verification.as_view()),
     path('wallet_history/', wallet_history.as_view()),
     path('make_payment/', make_payment.as_view()),
-    path('favourites/', favourite_mentors.as_view()),
+    path('favourites/', update_favourite_mentors.as_view()),
     path('profile_page/', profile_page.as_view()),
     path('search_mentors/',FindMentors.as_view()),
     #path('rz_test/', Razorpay_test.as_view()),

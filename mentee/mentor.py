@@ -2192,7 +2192,7 @@ def request_session_func(request):
     
     #user_in_db=User.objects.get(id=1)                                           #local   mentee
 
-    find_row=request_sessions.objects.filter(mentee_id=user_in_db.id, mentor_id=request.data['mentor_id'], session_name=request.data['session_name']).order_by('-updated_at')
+    find_row=request_sessions.objects.filter(mentee_id=user_in_db.id, mentor_id=int(request.data['mentor_id']), session_name=request.data['session_name']).order_by('-updated_at')
 
     check=0
     #print(len(find_row))
@@ -2253,6 +2253,7 @@ def mentor_notifications_func(user_id):
             "mentee_name":mentee.name,
             "mentee_image":mentee.picture,
             "session":row.session_name,
+            "req_session_id":row.id,
             "requested_on":str(row.created_at)
         }
 
@@ -2274,7 +2275,7 @@ def notify_mentee_func(request):                                                
     #user_in_db=User.objects.get(id=2)                                       #local mentor
 
     try:
-        row=request_sessions.objects.get(id=request["req_session_id"])
+        row=request_sessions.objects.get(id=request.data["req_session_id"])
 
         mentor_id = row.mentor_id
         session_name = row.session_name
@@ -2289,14 +2290,16 @@ def notify_mentee_func(request):                                                
 
                 row.save()
 
-                return Response("Notified Successfully",status=200)
+                return "Notified Successfully",1
+            else:
+                return "Please, first create atleast 2-3 sessions on - "+session_name,0
         except:
-            return Response(status=204)
+            return None,0
 
     except Exception as e:
         print(e)
         print("No row exists in request_sessions table ")
-        return Response("NO such session request exists", status=500)
+        return "NO such session request exists",1
 
 
 def mentee_notifications_func(mentee_id):
@@ -2305,11 +2308,11 @@ def mentee_notifications_func(mentee_id):
     
 
     #user_in_db=User.objects.get(id=1)                                      #local mentee
-
-    obj=request_sessions.objects.filter(mentee_id=mentee_id,mentee_notify=True).order_by("-updated_at")
+    print(mentee_id,type(mentee_id))
+    obj=request_sessions.objects.filter(mentee_id=mentee_id,mentee_notify=1).order_by("-updated_at")
 
     data_lst=[]
-
+    print(len(obj),"5555555555555555555555555555555555555555555555555555")
     for row in obj:
         try:
             mentor=mentor_profile.objects.get(user_id=row.mentor_id)
@@ -2323,12 +2326,12 @@ def mentee_notifications_func(mentee_id):
             continue
 
         data_dict={
-            "mentor_name":mentor.name,
+            "name":mentor.name,
             "designation":current_designation,
             "company_name":company_name,
-            "image":mentor.avatar,
+            "avatar":mentor.avatar,
             "id_":mentor.id,
-            "session_names":obj.session_name
+            "session_names":[row.session_name]
         }
 
         data_lst.append(data_dict)

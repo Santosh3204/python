@@ -178,11 +178,11 @@ class DashboardView(RetrieveAPIView):
             for row in so_rows:
                 schedule_id = row.Schedule_id
                 mentor_id = row.Mentor_id
-                user_in_db = mentor_profile.objects.get(user_id=row.Mentor_id)
-                avatar = user_in_db.avatar
+                men_prof = mentor_profile.objects.get(user_id=row.Mentor_id)
+                avatar = user_in_db.picture
                 name = user_in_db.name
-                industry_exp = user_in_db.industry_exp
-                position = json.loads(user_in_db.professional_details)[0]['position']
+                industry_exp = men_prof.industry_exp
+                position = json.loads(men_prof.professional_details)[0]['position']
                 session_name = row.Session_name
                 schedule_tab = mentor_schedule.objects.get(id=schedule_id)
                 start_time = schedule_tab.Start_datetime
@@ -192,9 +192,9 @@ class DashboardView(RetrieveAPIView):
             upcoming_sessions.sort(key=lambda x: x['session_at'],reverse=True)
 
             response["data"] = {'recommended_mentors': mentors,"upcoming_sessions":upcoming_sessions}
-
+            #print(user_in_db.pk,user_in_db.id,"-------------------------")
             req_sessions = mentee_notifications_func(user_in_db.id)
-
+            print(req_sessions,"req_sessions")
             response["data"].update({"requested_sessions":req_sessions})
             # print(user_detail_dict)
 
@@ -205,7 +205,7 @@ class DashboardView(RetrieveAPIView):
             response["data"] = {"upcoming_sessions": upcoming_sessions}
             message = "success"
             request_sessions = mentor_notifications_func(user_in_db.id)
-            response["req_sessions"] = request_sessions
+            response["data"].update({"requested_sessions":request_sessions})
         else:
             status_code = status.HTTP_201_CREATED
             message = "User has to fill registraion info"
@@ -1347,7 +1347,7 @@ class make_payment(APIView):
         return Response(resp_dict)
 
 
-class favourite_mentors(APIView):
+class update_favourite_mentors(APIView):
     permission_classes=(IsAuthenticated,)                   #server
     authentication_class=JSONWebTokenAuthentication
 
@@ -1496,7 +1496,7 @@ class request_session(APIView):
         elif len(request.data) != 2:
             return Response("No. of keys is mis-matched, it should be 1", status=400)
 
-        actual_dict = {"mentor_id":int,
+        actual_dict = {"mentor_id":str,
                         "session_name":str
                        }
 
@@ -1568,13 +1568,21 @@ class notify_mentee(APIView):
             if type(request.data[i]) != actual_dict[i]:
                 return Response("Values datatype in Request body is mis-matched", status=400)
 
-        success_msg=notify_mentee_func(request)
-
+        success_msg,reload_status=notify_mentee_func(request)
         resp_dict={
             "status":200,
-            "message":success_msg
+            "message":success_msg,
+            "reload_status":reload_status
 
         }
+
+        if success_msg is None:
+           resp_dict={
+            "status":200,
+            "message":"Please schedule session first"
+
+           }
+        
 
         return Response(resp_dict)
 

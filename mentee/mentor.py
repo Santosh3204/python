@@ -2207,12 +2207,11 @@ def request_session_func(request):
             print("24 condition")
             check=1
         else:
-            check=0
             return "You have already made %s session request with this Mentor, Please wait for 24 hrs to make request again."%request.data['session_name']
 
     
 
-    if check==1:
+    if check:
         row=request_sessions()
         row.mentee_id=user_in_db
         row.mentor_id=request.data['mentor_id']
@@ -2225,20 +2224,20 @@ def request_session_func(request):
         return "Requested Successfully"
 
 
-def mentor_notifications_func(request):
+def mentor_notifications_func(user_id):
 
     
-    try:                                                                    #server
-        user_in_db=User.objects.get(email=request.user)
-    except Exception as e:
-        print(e)
-        print("Current user doesn't exists in db")
-        return Response("Current user doesn't exists in db",status=500)
-    
+    # try:                                                                    #server
+    #     user_in_db=User.objects.get(email=request.user)
+    # except Exception as e:
+    #     print(e)
+    #     print("Current user doesn't exists in db")
+    #     return Response("Current user doesn't exists in db",status=500)
+    #
 
     #user_in_db=User.objects.get(id=5)                                       #local mentor     
 
-    obj=request_sessions.objects.filter(mentor_id=user_in_db.id,mentor_notify=True).order_by('-updated_at')
+    obj=request_sessions.objects.filter(mentor_id=user_id,mentor_notify=True).order_by('-updated_at')
 
     data_lst=[]
     for row in obj:
@@ -2250,63 +2249,74 @@ def mentor_notifications_func(request):
             continue
 
         data_dict={
+            "mentee_id":mentee.id,
             "mentee_name":mentee.name,
             "mentee_image":mentee.picture,
-            "session":row.session_name
+            "session":row.session_name,
+            "requested_on":str(row.created_at)
         }
 
         data_lst.append(data_dict)
 
-        return data_lst
+    return data_lst
 
         
 def notify_mentee_func(request):                                                    #mentor changing request_session table
-    
-    try:                                                                    #server
-        user_in_db=User.objects.get(email=request.user)
-    except Exception as e:
-        print(e)
-        print("Current user doesn't exists in db")
-        return Response("Current user doesn't exists in db",status=500)
+    #
+    # try:                                                                    #server
+    #     user_in_db=User.objects.get(email=request.user)
+    # except Exception as e:
+    #     print(e)
+    #     print("Current user doesn't exists in db")
+    #     return Response("Current user doesn't exists in db",status=500)
     
 
     #user_in_db=User.objects.get(id=2)                                       #local mentor
 
     try:
-        row=request_sessions.objects.get(mentor_id=user_in_db.id,mentee_id=request.data['mentee_id'],session_name=request.data['session_name'])
+        row=request_sessions.objects.get(id=request["req_session_id"])
+
+        mentor_id = row.mentor_id
+        session_name = row.session_name
+
+        try:
+            ms_rows = mentor_schedule.objects.filter(Mentor_id=mentor_id,Status=1,Is_scheduled=0,Session_name=session_name)
+
+            if len(ms_rows)>0:
+
+                row.mentor_notify = False
+                row.mentee_notify = True
+
+                row.save()
+
+                return Response("Notified Successfully",status=200)
+        except:
+            return Response(status=204)
+
     except Exception as e:
         print(e)
         print("No row exists in request_sessions table ")
-        return Response("No row exists in request_sessions table ", status=500)
+        return Response("NO such session request exists", status=500)
 
-    row.mentor_notify=False
-    row.mentee_notify=True
 
-    row.save()
+def mentee_notifications_func(mentee_id):
 
-    return "Notified Successfully"
-    
-
-def mentee_notifications_func(request):
-
-    
-    try:                                                                    #server
-        user_in_db=User.objects.get(email=request.user)
-    except Exception as e:
-        print(e)
-        print("Current user doesn't exist in db")
-        return Response("Current user doesn't exist in db",status=500)
+    #
     
 
     #user_in_db=User.objects.get(id=1)                                      #local mentee
 
-    obj=request_sessions.objects.filter(mentee_id=user_in_db.id,mentee_notify=True).order_by("-updated_at")
+    obj=request_sessions.objects.filter(mentee_id=mentee_id,mentee_notify=True).order_by("-updated_at")
 
     data_lst=[]
 
     for row in obj:
         try:
-            mentor=User.objects.get(id=row.mentor_id)
+            mentor=mentor_profile.objects.get(user_id=row.mentor_id)
+            prof_det = json.loads(mentor.professional_details)
+
+            current_designation = prof_det[0]["position"]
+            company_name = prof_det[0]["company_name"]
         except Exception as e:
             print(e)
             print("Mentor not exits in db with mentor id:", row.mentor_id)
@@ -2314,8 +2324,11 @@ def mentee_notifications_func(request):
 
         data_dict={
             "mentor_name":mentor.name,
-            "image":mentor.picture,
-            "id_":mentor.id
+            "designation":current_designation,
+            "company_name":company_name,
+            "image":mentor.avatar,
+            "id_":mentor.id,
+            "session_names":obj.session_name
         }
 
         data_lst.append(data_dict)

@@ -193,6 +193,9 @@ class DashboardView(RetrieveAPIView):
 
             response["data"] = {'recommended_mentors': mentors,"upcoming_sessions":upcoming_sessions}
 
+            req_sessions = mentee_notifications_func(user_in_db.id)
+
+            response["data"].update({"requested_sessions":req_sessions})
             # print(user_detail_dict)
 
         elif is_mentor:
@@ -201,6 +204,8 @@ class DashboardView(RetrieveAPIView):
             response["is_mentee"] = False
             response["data"] = {"upcoming_sessions": upcoming_sessions}
             message = "success"
+            request_sessions = mentor_notifications_func(user_in_db.id)
+            response["req_sessions"] = request_sessions
         else:
             status_code = status.HTTP_201_CREATED
             message = "User has to fill registraion info"
@@ -479,7 +484,9 @@ class Mentor_Topics_API(APIView):                                           # Ad
 
 
 class FetchMentorProfile(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
+    authentication_class = JSONWebTokenAuthentication
+    # permission_classes = (AllowAny,)
 
     def get(self, request):
 
@@ -508,6 +515,15 @@ class FetchMentorProfile(APIView):
 
         languages = json.loads(data.languages)
 
+        user_in_db = User.objects.get(email=request.user)
+        mentee_id = user_in_db.id
+
+        fav_ment_ob = favourite_mentors.objects.filter(mentee_id=mentee_id,mentor_id=mentor_id)
+
+        fav = 0
+        if len(fav_ment_ob)>0:
+            fav=1
+
         current_company = None
         current_designation = None
 
@@ -529,7 +545,8 @@ class FetchMentorProfile(APIView):
                 "languages": languages,
                 "professional_details": prof_details,
                 "educational_details": edu_details,
-                "schedule":schedule}
+                "schedule":schedule,
+                "fav":fav}
 
         return JsonResponse(resp, status=200)
 
@@ -581,6 +598,7 @@ class Fetch_Mentor_Schedule_Api(APIView):
 
 
 class Mentor_Calender_API(APIView):
+
     permission_classes = (IsAuthenticated,)
     authentication_class = JSONWebTokenAuthentication
 
@@ -593,7 +611,6 @@ class Mentor_Calender_API(APIView):
             "data": resp_list
         }
         return Response(resp_dict)
-
 
 
 class Row_Deactivate_API(APIView):
@@ -620,6 +637,7 @@ class Row_Deactivate_API(APIView):
 
         data = Row_Deactivate_API_func(request)
         return Response(data=data, status=status.HTTP_200_OK)
+
 
 class Booking_121(APIView):
     permission_classes = (IsAuthenticated,)
@@ -689,7 +707,6 @@ class Mentor_Profile_API(APIView):
 
 class Mentor_Schedule_API(APIView):  # API to schedule for mentor.
 
-        
     permission_classes = (IsAuthenticated,)                             #server
     authentication_class = JSONWebTokenAuthentication
     
@@ -1468,7 +1485,7 @@ class fetch_favourite_mentors(APIView):
 class request_session(APIView):
     
     permission_classes=(IsAuthenticated,)           #server
-    authentication_classes=JSONWebTokenAuthentication
+    authentication_class=JSONWebTokenAuthentication
 
     #permission_classes=(AllowAny,)                      #local
 
@@ -1502,14 +1519,24 @@ class request_session(APIView):
 
 
 class mentor_notifications(APIView):
+
     permission_classes=(IsAuthenticated,)                   #server
-    authentication_classes=JSONWebTokenAuthentication
+    authentication_class=JSONWebTokenAuthentication
 
     #permission_classes=(AllowAny,)
 
 
     def get(self,request):
-        data_lst=mentor_notifications_func(request)
+
+        try:  # server
+            user_in_db = User.objects.get(email=request.user)
+
+        except Exception as e:
+            print(e)
+            print("Requested user doesn't exist in db")
+            return Response("Requested user doesn't exist in db", status=500)
+
+        data_lst=mentor_notifications_func(user_in_db.id)
 
         resp_dict={
             "status":200,
@@ -1520,7 +1547,7 @@ class mentor_notifications(APIView):
 
 class notify_mentee(APIView):
     permission_classes=(IsAuthenticated,)                   #server
-    authentication_classes=JSONWebTokenAuthentication
+    authentication_class=JSONWebTokenAuthentication
 
     #permission_classes=(AllowAny,)
 
@@ -1528,11 +1555,10 @@ class notify_mentee(APIView):
         if type(request.data) != dict:
             return Response("Request body not in Dictionary format", status=400)
 
-        elif len(request.data) != 2:
+        elif len(request.data) != 1:
             return Response("No. of keys is mis-matched, it should be 1", status=400)
 
-        actual_dict = {"mentee_id":int,
-                        "session_name":str
+        actual_dict = {"req_session_id":int,
                        }
 
         for i in actual_dict:
@@ -1554,13 +1580,20 @@ class notify_mentee(APIView):
 
 class mentee_notifications(APIView):
     permission_classes=(IsAuthenticated,)                   #server
-    authentication_classes=JSONWebTokenAuthentication
+    authentication_class=JSONWebTokenAuthentication
 
     #permission_classes=(AllowAny,)
 
 
     def get(self,request):
-        data_lst=mentee_notifications_func(request)
+        try:                                                                    #server
+            user_in_db=User.objects.get(email=request.user)
+        except Exception as e:
+            print(e)
+            print("Current user doesn't exist in db")
+            return Response("Current user doesn't exist in db",status=500)
+
+        data_lst=mentee_notifications_func(user_in_db.id)
 
         resp_dict={
             "status":200,

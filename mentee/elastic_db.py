@@ -77,9 +77,17 @@ class ElasticDB:
             industry_exp = hits["_source"]["industry_exp"]
             mb_charge = hits["_source"]["121_charge"]
 
+            if "highlight" not in hits:
+                continue
+            elif "one2one_topics" not in hits["highlight"] or "designation" not in hits["highlight"]:
+                continue
 
-            profiles.append({"name": name, "id_": id_, "designation": desgnation, "industry_exp": industry_exp,
-                             "company_name": company_name, "avatar": avatar, "session_names": hits["_source"]["one2one_topics"],
+            one2one_topics = []
+            for topic in hits["highlight"]["one2one_topics"]:
+                one2one_topics.append(ElasticDB.striphtml(topic))
+
+            profiles.append({"name": name, "id_": id_, "designation": desgnation, "industry_exp": industry_exp,"topics":hits["_source"]["one2one_topics"],
+                             "company_name": company_name, "avatar": avatar, "session_names": one2one_topics,
                              "charge": mb_charge})
 
         return profiles

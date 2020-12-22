@@ -635,22 +635,23 @@ def Create_Order_API_func(request):
 
     user_in_db = User.objects.get(email=request.user)                       #server
     mentee_id = user_in_db.id
-
+    print(mentee_id,request.data['Schedule_id'],"00000")
     sales_ord = sales_order.objects.filter(Schedule_id=request.data['Schedule_id'],Status=0,
                                            Is_active=1, Mentee_id=mentee_id).order_by('-Status_updated_at')
-
+    print(len(sales_ord),"sales ord 111111111111")
     if len(sales_ord) != 0:
         try:
-            row = mentor_schedule.objects.get(pk=request.data['Schedule_id'], Status=1, Is_scheduled=2)
+            print("222222222222222")
+            row = mentor_schedule.objects.get(id=request.data['Schedule_id'], Status=1, Is_scheduled__in=[0,2])
         except Exception as e:
             print("Error occured while fetching data from mentor_schedule table")
             print(e)
             return Response("Error occured while fetching data from mentor_schedule table",
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+        print("3333333333333")
         mentor_objs = mentor_schedule.objects.filter(Mentor_id=row.Mentor_id,
                                                      Start_datetime=row.Start_datetime,
-                                                     Status=1, Is_scheduled=2)
+                                                     Status=1, Is_scheduled__in=[0,2])
 
         wt = wallet.objects.filter(mentee_id=user_in_db).order_by('-updated_at')
 
@@ -733,10 +734,11 @@ def Create_Order_API_func(request):
     else:
     
         try:
+            print("else 55555555555555555555555")
             row = mentor_schedule.objects.get(pk=request.data['Schedule_id'], Status=1, Is_scheduled=0)
         except Exception as e:
             print("Error occured while fetching data from mentor_schedule table")
-            print(e)
+            print(e,"-----------66666666")
             return Response("Error occured while fetching data from mentor_schedule table",
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
@@ -1739,7 +1741,11 @@ def generate_voice_token(schedule_id,user_id):
     voice_obj.channel_name = channel_name
     voice_obj.sales_order_id = order_id
     voice_obj.user_id = user_id
-
+    import time
+    aa = int(time.time()+600)
+    sec_left = 600
+    voice_token = get_voice_token(channel_name, user_id,aa)
+    """
     if (st_time - cr_time).total_seconds() < 15 and (ed_time - cr_time).total_seconds() > 10:
         print("true")
         ts = time.mktime(cr_time.timetuple())
@@ -1769,11 +1775,11 @@ def generate_voice_token(schedule_id,user_id):
         print(message)
     else:
         print((ed_time - cr_time).total_seconds() < 0)
-
+    """
     voice_obj.save()
     voice_det = {"is_call":is_call, "channel_name":channel_name,"user_id":user_id,
     "sec_left":sec_left, "voice_token":voice_token,"message":message}
-
+    print(voice_det)
     return voice_det
 
 

@@ -38,7 +38,7 @@ urlpatterns = [
     path('pay_history/', Mentor_Payment_History.as_view()),
     path('mentee_feedback/', Mentee_Feedback.as_view()),
     path('get_call_token',VoiceCalling.as_view()),
-    path('disconnect_call',DisconnectCall.as_view()),
+    path('disconnect_call/',DisconnectCall.as_view()),
     path('wallet/', Wallet_API.as_view()),
     path('wallet_verify/', wallet_verification.as_view()),
     path('wallet_history/', wallet_history.as_view()),
@@ -53,6 +53,7 @@ urlpatterns = [
     path('mentor_notifications/', mentor_notifications.as_view()),
     path('notify_mentee/', notify_mentee.as_view()),  # 2
     path('mentee_notifications/', mentee_notifications.as_view()),
+path('channel_listener/', ChannelEventListener.as_view()),
 
 
 

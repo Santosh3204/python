@@ -1,6 +1,7 @@
 
 import math,re
 from .mentor import *
+from mentee.agora.call import *
 from django.db import connection
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
@@ -1186,15 +1187,13 @@ class VoiceCalling(APIView):
 
         schedule_id = data["schedule_id"]
 
-        user = User.objects.get(email=request.user)
-
-        user_id = user.pk
-
-        voice_det = generate_voice_token(schedule_id,user_id)
+        voice_det = generate_voice_token(schedule_id,request)
 
         return Response(voice_det,status=status.HTTP_200_OK)
 
+
 class DisconnectCall(APIView):
+
     permission_classes = (IsAuthenticated,)
     authentication_class = JSONWebTokenAuthentication
 
@@ -1202,18 +1201,37 @@ class DisconnectCall(APIView):
     def post(self,request):
         data = request.data
 
-        if "schedule_id" not in data:
-            return Response("schedule_id not present", status=400)
+        request_struc = {"schedule_id":int,"channel_name":str,"call_completed":bool}
 
-        schedule_id = data["schedule_id"]
+        for req_key in request_struc:
+            if req_key not in data:
+                return Response(req_key+" not present", status=400)
 
-        user = User.objects.get(email=request.user)
+        disconnect_call(request,data)
 
-        user_id = user.pk
-
-
+        return Response(status=200)
 
 
+class ChannelEventListener(APIView):
+
+    permission_classes = (IsAuthenticated,)
+    authentication_class = JSONWebTokenAuthentication
+
+    # permission_classes = [AllowAny, ]
+
+    def post(self,request):
+
+        data = request.data
+
+        request_struc = {"schedule_id": int, "channel_name": str, "callback_status": bool}
+
+        for req_key in request_struc:
+            if req_key not in data:
+                return Response(req_key + " not present", status=400)
+
+        channel_event_listener(request, data)
+
+        return Response(status=200)
 
 
 class Wallet_API(APIView):

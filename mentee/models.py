@@ -326,3 +326,17 @@ class request_sessions(models.Model):
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
 
+
+class CallHistory(models.Model):
+    id = models.AutoField(primary_key=True)
+    user_id = models.PositiveIntegerField()
+    channel_name = models.CharField(max_length=100)
+    status = models.IntegerField()
+    is_mentee = models.BooleanField()
+    schedule_id = models.IntegerField(null=True)
+    reason = models.IntegerField(null=True)
+    remarks = models.CharField(max_length=100,null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+

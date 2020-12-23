@@ -2250,3 +2250,34 @@ def mentee_notifications_func(mentee_id):
 
     return data_lst
 
+def remove_session_request(request,req_session_id):
+    """
+
+    :param req_session_id:
+    :return:
+    """
+
+    try:                                                                    #server
+        user_in_db=User.objects.get(email=request.user)
+    except Exception as e:
+        print(e)
+        print("Current user doesn't exists in db")
+        return Response("Current user doesn't exists in db",status=500)
+
+    row = request_sessions.objects.get(id=req_session_id)
+
+
+    if user_in_db.is_mentee:
+        row.mentee_notify = False
+        row.save()
+    else:
+        row.mentor_notify = False
+        row.save()
+
+
+
+
+
+
+
+

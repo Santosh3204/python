@@ -1604,6 +1604,27 @@ class notify_mentee(APIView):
 
         return Response(resp_dict)
 
+
+class CancelSessionRequest(APIView):
+    permission_classes = (IsAuthenticated,)  # server
+    authentication_class = JSONWebTokenAuthentication
+
+    # permission_classes=(AllowAny,)
+
+    def post(self,request):
+
+        data = request.data
+
+        actual_dict = {"req_session_id": int,
+                       }
+
+        if 'req_session_id' not in data:
+            return Response("req_session_id not present in request data", status=400)
+
+        remove_session_request(request,data["req_session_id"])
+
+        return Response(status=200)
+
 class mentee_notifications(APIView):
     permission_classes=(IsAuthenticated,)                   #server
     authentication_class=JSONWebTokenAuthentication

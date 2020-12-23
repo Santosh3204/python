@@ -54,7 +54,7 @@ urlpatterns = [
     path('notify_mentee/', notify_mentee.as_view()),  # 2
     path('mentee_notifications/', mentee_notifications.as_view()),
     path('channel_listener/', ChannelEventListener.as_view()),
-    # path('channel_listener/', ChannelEventListener.as_view()),
+    path('cancel_sess_req/', CancelSessionRequest.as_view()),
 
 
 

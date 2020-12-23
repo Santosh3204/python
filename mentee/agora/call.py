@@ -74,7 +74,7 @@ def generate_voice_token(schedule_id,request):
 
     if (st_time - cr_time).total_seconds() < 15: # 15 sec limit
         print("true")
-        if len(next_sch_obs > 0):
+        if len(next_sch_obs) > 0:
             next_call_at = next_sch_obs[0].Start_datetime
             sec_left = int((next_call_at - cr_time).total_seconds())
             print(sec_left / 60, "mins left")
@@ -189,9 +189,15 @@ def disconnect_call(request,data):
         remarks = "Call completed"
 
         # sch_obj = mentor_schedule.objects.get(id=data["schedule_id"])
-        sales_ord_ob = sales_order.objects.get(Schedule_id=data["schedule_id"]).order_by("-Status_updated_at")
-        sales_ord_ob.Status=2  # call completed
-        sales_ord_ob.save()
+        sales_ord_ob = sales_order.objects.filter(Schedule_id=data["schedule_id"]).order_by("-Status_updated_at")
+
+        sales_ord_ob[0].Status=2  # call completed
+        sales_ord_ob[0].save()
+
+        ms_ob = mentor_schedule.objects.get(id=data["schedule_id"])
+        ms_ob.Is_scheduled = 4 # session completed
+        ms_ob.Status=0
+        ms_ob.save()
 
     call_ob.channel_name = data["channel_name"]
     call_ob.user_id = user_id

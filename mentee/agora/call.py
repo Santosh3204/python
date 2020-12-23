@@ -42,7 +42,7 @@ def generate_voice_token(schedule_id,request):
     # Check if this session is marked completed by one of the user
     sales_ob = sales_order.objects.get(id=order_id)
 
-    if sales_ob.Status == 1:  # Status field is not boolean
+    if sales_ob.Status == 2:  # Status field is not boolean
 
         if is_mentee:
             message = "Mentor has marked this session as completed"

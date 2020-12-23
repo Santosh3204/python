@@ -188,6 +188,11 @@ def disconnect_call(request,data):
         leave_status = 35
         remarks = "Call completed"
 
+        # sch_obj = mentor_schedule.objects.get(id=data["schedule_id"])
+        sales_ord_ob = sales_order.objects.get(Schedule_id=data["schedule_id"]).order_by("-Status_updated_at")
+        sales_ord_ob.Status=2  # call completed
+        sales_ord_ob.save()
+
     call_ob.channel_name = data["channel_name"]
     call_ob.user_id = user_id
     call_ob.is_mentee = is_mentee

@@ -8,7 +8,7 @@ import datetime
 import pytz
 import json
 from mentee.agora.src.RtcTokenBuilder import RtcTokenBuilder # agora
-
+import requests
 
 def generate_voice_token(schedule_id,request):
     """
@@ -192,12 +192,33 @@ def disconnect_call(request,data):
         sales_ord_ob = sales_order.objects.filter(Schedule_id=data["schedule_id"]).order_by("-Status_updated_at")
 
         sales_ord_ob[0].Status=2  # call completed
-        sales_ord_ob[0].save()
+        #sales_ord_ob[0].save()
 
         ms_ob = mentor_schedule.objects.get(id=data["schedule_id"])
         ms_ob.Is_scheduled = 4 # session completed
         ms_ob.Status=0
-        ms_ob.save()
+        #ms_ob.save()
+        fcm_key = "AAAALIuxoME:APA91bEkyslF0vrmIGX14kwS2wAGEvb8PGCdKnvNgC7JUTwrXZkAyZv-0MrPQ0kMHKd6vzceErzHlz76i4MPF8icPtMux1GSckZoFfjDhX9M89rRZiTds0fxm-5lKTy0WqVlHtBP_HiJ"
+        headers = {"Content-Type": "application/json",
+                   "Authorization":"key="+fcm_key}
+        
+        if is_mentee:
+            message = "Mentor has marked the session as completed"
+        else:
+            message = "Mentee has marked the session as completed"
+
+        data = {
+            "to": user.mobile_token,
+            "notification": {
+                "body": message,
+                "title":"Session completed" ,
+                "content_available": True,
+                "priority": "high"
+            },
+            "data":{"notification_id":5}
+        }
+
+        requests.post('https://fcm.googleapis.com/fcm/send',data=json.dumps(data),headers=headers)
 
     call_ob.channel_name = data["channel_name"]
     call_ob.user_id = user_id

@@ -1696,15 +1696,15 @@ def Mentor_Payment_History_func(request):
 def Mentee_Feedback_func(request):
 
     try:
-        sales_ord=sales_order.objects.get(User_order_id=request.data['order_id'])
+        sales_ord=sales_order.objects.filter(Schedule_id=request.data['schedule_id']).order_by("-Status_updated_at")
     except Exception as e:
         print(e)
         print("Order_id doesnot exists in sales_order table")
         return Response("Order_id doesnot exists in sales_order table", status=500)
 
     obj=mentee_feedback()
-    obj.Sales_Order=sales_ord
-    obj.mentor_id=sales_ord.Mentor_id
+    obj.Sales_Order=sales_ord[0]
+    obj.mentor_id=sales_ord[0].Mentor_id
     obj.star_rating=request.data['star_rating']
     obj.comments=request.data['comments']
 

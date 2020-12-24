@@ -1156,8 +1156,8 @@ class Mentee_Feedback(APIView):
         elif len(request.data) != 3:
             return Response("No. of keys is mis-matched, it should be 3", status=400)
 
-        actual_dict = {"order_id":str,
-                       "star_rating": float,
+        actual_dict = {"schedule_id":int,
+                       "star_rating": int,
                        "comments": str
                        }
 

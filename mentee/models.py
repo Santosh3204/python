@@ -278,7 +278,7 @@ class coupon(models.Model):
 class mentee_feedback(models.Model):
     Sales_Order=models.OneToOneField(sales_order, on_delete=models.CASCADE, null=True)
     mentor_id=models.IntegerField()
-    star_rating=models.FloatField(null=True)
+    star_rating=models.SmallIntegerField(null=True)
     comments=models.TextField(null=True)
 
     def __str__(self):

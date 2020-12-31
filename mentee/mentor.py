@@ -2243,7 +2243,8 @@ def mentee_notifications_func(mentee_id):
             "company_name":company_name,
             "avatar":mentor.avatar,
             "id_":mentor.id,
-            "session_names":[row.session_name]
+            "session_names":[row.session_name],
+            "req_session_id":row.id
         }
 
         data_lst.append(data_dict)

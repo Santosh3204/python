@@ -192,12 +192,12 @@ def disconnect_call(request,data):
         sales_ord_ob = sales_order.objects.filter(Schedule_id=data["schedule_id"]).order_by("-Status_updated_at")
 
         sales_ord_ob[0].Status=2  # call completed
-        #sales_ord_ob[0].save()
-
+        sales_ord_ob[0].save()
+        print(sales_ord_ob[0],"---------------call completed",data["schedule_id"],sales_ord_ob[0].Schedule_id,sales_ord_ob[0].id)
         ms_ob = mentor_schedule.objects.get(id=data["schedule_id"])
         ms_ob.Is_scheduled = 4 # session completed
         ms_ob.Status=0
-        #ms_ob.save()
+        ms_ob.save()
         fcm_key = "AAAALIuxoME:APA91bEkyslF0vrmIGX14kwS2wAGEvb8PGCdKnvNgC7JUTwrXZkAyZv-0MrPQ0kMHKd6vzceErzHlz76i4MPF8icPtMux1GSckZoFfjDhX9M89rRZiTds0fxm-5lKTy0WqVlHtBP_HiJ"
         headers = {"Content-Type": "application/json",
                    "Authorization":"key="+fcm_key}
@@ -207,7 +207,7 @@ def disconnect_call(request,data):
         else:
             message = "Mentee has marked the session as completed"
 
-        data = {
+        notify_data = {
             "to": user.mobile_token,
             "notification": {
                 "body": message,
@@ -215,10 +215,10 @@ def disconnect_call(request,data):
                 "content_available": True,
                 "priority": "high"
             },
-            "data":{"notification_id":5}
+            "data":{"notification_id":5,"message":message}
         }
 
-        requests.post('https://fcm.googleapis.com/fcm/send',data=json.dumps(data),headers=headers)
+        requests.post('https://fcm.googleapis.com/fcm/send',data=json.dumps(notify_data),headers=headers)
 
     call_ob.channel_name = data["channel_name"]
     call_ob.user_id = user_id

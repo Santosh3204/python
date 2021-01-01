@@ -203,12 +203,15 @@ def disconnect_call(request,data):
                    "Authorization":"key="+fcm_key}
         
         if is_mentee:
-            message = "Mentor has marked the session as completed"
-        else:
             message = "Mentee has marked the session as completed"
+            notify_id = sales_ord_ob[0].Mentor_id
+        else:
+            message = "Mentor has marked the session as completed"
+            notify_id = sales_ord_ob[0].Mentee_id
 
+        user_ob = User.objects.get(id=notify_id)
         notify_data = {
-            "to": user.mobile_token,
+            "to": user_ob.mobile_token,
             "notification": {
                 "body": message,
                 "title":"Session completed" ,

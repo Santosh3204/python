@@ -1087,7 +1087,7 @@ class Coupon_API(APIView):
 class Mentee_My_Orders_API(APIView):
         
     permission_classes = (IsAuthenticated,)                             #server
-    authentication_classes = JSONWebTokenAuthentication
+    authentication_class = JSONWebTokenAuthentication
 
     #permission_classes = (AllowAny,)                               #local
 
@@ -1127,7 +1127,7 @@ class Mentor_My_Orders_API(APIView):
 class Mentor_Payment_History(APIView):
 
     permission_classes=(IsAuthenticated,)                                   #server
-    authentication_classes=JSONWebTokenAuthentication
+    authentication_class=JSONWebTokenAuthentication
 
     #permission_classes=(AllowAny,)                                          #local
 

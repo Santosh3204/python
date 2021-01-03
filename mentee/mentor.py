@@ -1303,23 +1303,24 @@ def fetch_mentors_schedule(mentor_id, is_scheduled, session_name):
         print("Outer loop date", dt)
         # same_dt_obj = objects.filter(Start_datetime= )
         for j in range(len(objects)):
-            dt_obj = objects[j].Start_datetime.date()
-            if dt == dt_obj:
+            if objects[j].Start_datetime > datetime.datetime.now():
+                dt_obj = objects[j].Start_datetime.date()
+                if dt == dt_obj:
 
-                if objects[j].Start_datetime.date() == datetime.date.today():
-                    str1 = "Today"
+                    if objects[j].Start_datetime.date() == datetime.date.today():
+                        str1 = "Today"
 
-                elif objects[j].Start_datetime.date() == datetime.date.today() + tdelta:
-                    str1 = "Tomorrow"
+                    elif objects[j].Start_datetime.date() == datetime.date.today() + tdelta:
+                        str1 = "Tomorrow"
 
-                else:
-                    str1 = objects[j].Start_datetime.date().strftime("%d-%m-%Y")
+                    else:
+                        str1 = objects[j].Start_datetime.date().strftime("%d-%m-%Y")
 
-                times.append(objects[j].Start_datetime.time().strftime("%I:%M %p"))
-                Schedule_ids.append(objects[j].pk)
-                charges.append(int(objects[j].session_charge))
+                    times.append(objects[j].Start_datetime.time().strftime("%I:%M %p"))
+                    Schedule_ids.append(objects[j].pk)
+                    charges.append(int(objects[j].session_charge))
 
-                print("Inner loop date", dt_obj)
+                    print("Inner loop date", dt_obj)
 
         schedule.append(
             {

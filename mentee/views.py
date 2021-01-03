@@ -378,6 +378,8 @@ def insert_mentor_data(request):
 
     user_row = User.objects.get(pk=int(mentor_data["mentor_id"]))
 
+
+
     mentor_flow = MentorFlow.objects.get(user_id=user_row.pk)
 
     skills = json.loads(mentor_flow.skills)
@@ -392,6 +394,9 @@ def insert_mentor_data(request):
                              professional_details=json.dumps(mentor_data["professional_details"]), status=1,
                              educational_details=json.dumps(mentor_data["educational_details"]),
                              skills=json.dumps(mentor_data["skills"]), user_id=user_row.pk)
+
+    user_row.picture = mentor_data["avatar"]
+    user_row.save()
 
     men_pro.save()
     mentor_flow.details_filled = 1

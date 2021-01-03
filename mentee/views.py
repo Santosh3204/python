@@ -180,8 +180,8 @@ class DashboardView(RetrieveAPIView):
                 schedule_id = row.Schedule_id
                 mentor_id = row.Mentor_id
                 men_prof = mentor_profile.objects.get(user_id=row.Mentor_id)
-                avatar = user_in_db.picture
-                name = user_in_db.name
+                avatar = men_prof.avatar
+                name = men_prof.name
                 industry_exp = men_prof.industry_exp
                 position = json.loads(men_prof.professional_details)[0]['position']
                 session_name = row.Session_name

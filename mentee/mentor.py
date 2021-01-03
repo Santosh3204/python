@@ -1259,9 +1259,10 @@ def fetch_mentors_schedule(mentor_id, is_scheduled, session_name):
     charges = []
 
     for i in range(len(objects)):
-        dt = objects[i].Start_datetime.date()
-        print("dt value", dt)
-        schedule_dates.append(dt)
+        if datetime.datetime.now()<objects[i].Start_datetime:
+           dt = objects[i].Start_datetime.date()
+           print("dt value", dt)
+           schedule_dates.append(dt)
     # print(schedule_dates)
 
     schedule_dates = list(dict.fromkeys(schedule_dates))

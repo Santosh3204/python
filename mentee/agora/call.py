@@ -208,8 +208,9 @@ def disconnect_call(request,data):
         else:
             message = "Mentor has marked the session as completed"
             notify_id = sales_ord_ob[0].Mentee_id
-
+        print(notify_id,is_mentee,"------------------------- call cut gayi 35")
         user_ob = User.objects.get(id=notify_id)
+        print(user_ob.name,"=================")
         notify_data = {
             "to": user_ob.mobile_token,
             "notification": {

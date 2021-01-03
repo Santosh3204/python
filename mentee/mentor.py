@@ -1527,9 +1527,16 @@ def Coupon_API_func(request):
 
         return data_dict
 
+
 def Mentee_My_Order_API_func(request):
 
-    
+    inner_list = []
+
+    data_dict = {
+        "is_mentee": True,
+        "inner_data": []
+    }
+
     try:                                                             #server
         user_in_db = User.objects.get(email=request.user)
     except Exception as e:
@@ -1538,71 +1545,86 @@ def Mentee_My_Order_API_func(request):
         return Response("User doesn't exist", status=500)
 
     if user_in_db.is_mentee:
-        mentee_status = True
+
         sales_ord_objs = sales_order.objects.filter(Mentee_id=user_in_db.id, Status__in=[1,2], Is_active=1)
+
+        client = razorpay.Client(auth=("rzp_test_A5QQVVWf0eMog1", "mwIcHdj1fIDGVi44N6BoUX0W"))
+
+        for row in sales_ord_objs:
+            mentor_in_db = None
+            try:
+                mentor_in_db = User.objects.get(id=row.Mentor_id)
+            except Exception as e:
+                print(e)
+                print("error occured in for loop in User table")
+
+            payment_id = row.Payment_id
+            payment_mode = "Wallet"
+            if payment_id is not None:
+                resp = client.payment.fetch(payment_id)
+                payment_mode = resp['method']
+
+            try:
+                fd = mentee_feedback.objects.get(Sales_Order=row.id)
+                rating = fd.star_rating
+                comments = fd.comments
+            except Exception as e:
+                print("No Feedback given")
+                rating = ""
+                comments = ""
+
+            sch_obj = mentor_schedule.objects.get(id=row.Schedule_id)
+
+            inner_dict = {
+                "mentor_name": mentor_in_db.name,
+                "order_id": row.User_order_id,
+                "star_rating": rating,
+                "comments": comments,
+                "actual_price": row.session_charge,
+                "coupon_id": row.coupon_id,
+                "coupon_amount": row.coupon_amount,
+                "payment_mode": payment_mode,
+                "session_name": row.Session_name,
+                "profile_pic": mentor_in_db.picture,
+                "date": sch_obj.Start_datetime.strftime("%d %b %Y"),
+                "time": sch_obj.Start_datetime.strftime("%I:%M %p"),
+                "paid_amount": row.final_price,
+                "created_at": row.Created_at
+            }
+
+            inner_list.append(inner_dict)
+        data_dict["inner_data"] = inner_list
+
     else:
         mentee_status = False
+
         sales_ord_objs = sales_order.objects.filter(Mentor_id=user_in_db.id, Status__in=[1,2], Is_active=1)
 
-    
-    inner_lst=[]
-    
-    client=razorpay.Client(auth=("rzp_test_A5QQVVWf0eMog1", "mwIcHdj1fIDGVi44N6BoUX0W"))
+        for row in sales_ord_objs:
 
-    for row in sales_ord_objs:
-        mentor_in_db = None
-        try:
-            mentor_in_db=User.objects.get(id=row.Mentor_id)
-        except Exception as e:
-            print(e)
-            print("error occured in for loop in User table")
+            try:
+                mentee_in_db = User.objects.get(id=row.Mentee_id)
+            except Exception as e:
+                print(e)
+                print("error occured in for loop in User table")
 
-        payment_id=row.Payment_id
-        payment_mode = "Wallet"
-        if payment_id is not None:
-            resp = client.payment.fetch(payment_id)
-            payment_mode = resp['method']
+            sch_obj = mentor_schedule.objects.get(id=row.Schedule_id)
 
-        try:
-            fd=mentee_feedback.objects.get(Sales_Order=row.id)
-            rating=fd.star_rating
-            comments=fd.comments
-        except Exception as e:
-            print("No Feedback given")
-            rating=""
-            comments=""
+            data_di = {
+                "mentee_name": mentee_in_db.name,
+                "session_name": row.Session_name,
+                "profile_pic": mentee_in_db.picture,
+                "date": sch_obj.Start_datetime.strftime("%d %b %Y"),
+                "time": sch_obj.Start_datetime.strftime("%I:%M %p"),
+                "paid_amount": row.mentor_charge
 
-        sch_obj = mentor_schedule.objects.get(id=row.Schedule_id)
+            }
 
-        inner_dict={
-            "mentor_name":mentor_in_db.name,
-            "order_id":row.User_order_id,
-            "star_rating":rating,
-            "comments":comments,
-            "actual_price":row.session_charge,
-            "coupon_id":row.coupon_id,
-            "coupon_amount":row.coupon_amount,
-            "payment_mode":payment_mode,
-            "session_name":row.Session_name,
-            "profile_pic":mentor_in_db.picture,
-            "date":sch_obj.Start_datetime.strftime("%d %b %Y"),
-            "time":sch_obj.Start_datetime.strftime("%I:%M %p"),
-            "paid_amount":row.final_price,
-            "created_at":row.Created_at
-        }
-
-        
-        inner_lst.append(inner_dict)
-    
-
-    #user_in_db=User.objects.get(id=1)                           #local
+            inner_list.append(data_di)
+        data_dict["is_mentee"] = mentee_status
+        data_dict["data"] = inner_list
 
 
-    data_dict={
-        "is_mentee":mentee_status,
-        "inner_data":inner_lst
-    }
-    print(data_dict,"-----------------")
     return data_dict
 
             

@@ -189,11 +189,11 @@ def disconnect_call(request,data):
         remarks = "Call completed"
 
         # sch_obj = mentor_schedule.objects.get(id=data["schedule_id"])
-        sales_ord_ob = sales_order.objects.filter(Schedule_id=data["schedule_id"]).order_by("-Status_updated_at")
+        sales_ord_ob = sales_order.objects.get(Schedule_id=data["schedule_id"],Status=1)
 
-        sales_ord_ob[0].Status=2  # call completed
-        sales_ord_ob[0].save()
-        print(sales_ord_ob[0],"---------------call completed",data["schedule_id"],sales_ord_ob[0].Schedule_id,sales_ord_ob[0].id)
+        sales_ord_ob.Status=2  # call completed
+        sales_ord_ob.save()
+        print(sales_ord_ob,"---------------call completed",data["schedule_id"],sales_ord_ob.Schedule_id,sales_ord_ob.id)
         ms_ob = mentor_schedule.objects.get(id=data["schedule_id"])
         ms_ob.Is_scheduled = 4 # session completed
         ms_ob.Status=0
@@ -204,10 +204,10 @@ def disconnect_call(request,data):
         
         if is_mentee:
             message = "Mentee has marked the session as completed"
-            notify_id = sales_ord_ob[0].Mentor_id
+            notify_id = sales_ord_ob.Mentor_id
         else:
             message = "Mentor has marked the session as completed"
-            notify_id = sales_ord_ob[0].Mentee_id
+            notify_id = sales_ord_ob.Mentee_id
         print(notify_id,is_mentee,"------------------------- call cut gayi 35")
         user_ob = User.objects.get(id=notify_id)
         print(user_ob.name,"=================")

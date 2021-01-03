@@ -2105,7 +2105,8 @@ def request_session_func(request):
     
     #user_in_db=User.objects.get(id=1)                                           #local   mentee
 
-    find_row=request_sessions.objects.filter(mentee_id=user_in_db.id, mentor_id=int(request.data['mentor_id']), session_name=request.data['session_name']).order_by('-updated_at')
+    find_row=request_sessions.objects.filter(mentee_id=user_in_db.id, mentor_id=int(request.data['mentor_id']),
+                    session_name=request.data['session_name']).order_by('-updated_at')
 
     check=0
     #print(len(find_row))
@@ -2194,8 +2195,9 @@ def notify_mentee_func(request):                                                
         session_name = row.session_name
 
         try:
-            ms_rows = mentor_schedule.objects.filter(Mentor_id=mentor_id,Status=1,Is_scheduled=0,Session_name=session_name)
-
+            ms_rows = mentor_schedule.objects.filter(Mentor_id=mentor_id,Status=1,
+                                     Is_scheduled=0,Session_name=session_name,Start_datetime__gt=datetime.datetime.now())
+            print(len(ms_rows),"================")
             if len(ms_rows)>0:
 
                 row.mentor_notify = False
@@ -2206,7 +2208,8 @@ def notify_mentee_func(request):                                                
                 return "Notified Successfully",1
             else:
                 return "Please, first create atleast 2-3 sessions on - "+session_name,0
-        except:
+        except Exception as e:
+            print(e,"eeeeeeeeeeeeee")
             return None,0
 
     except Exception as e:

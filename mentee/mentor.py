@@ -1539,10 +1539,10 @@ def Mentee_My_Order_API_func(request):
 
     if user_in_db.is_mentee:
         mentee_status = True
-        sales_ord_objs = sales_order.objects.filter(Mentee_id=user_in_db.id, Status=2, Is_active=1)
+        sales_ord_objs = sales_order.objects.filter(Mentee_id=user_in_db.id, Status__in=[1,2], Is_active=1)
     else:
         mentee_status = False
-        sales_ord_objs = sales_order.objects.filter(Mentor_id=user_in_db.id, Status=2, Is_active=1)
+        sales_ord_objs = sales_order.objects.filter(Mentor_id=user_in_db.id, Status__in=[1,2], Is_active=1)
 
     
     inner_lst=[]
@@ -1571,6 +1571,9 @@ def Mentee_My_Order_API_func(request):
             print("No Feedback given")
             rating=""
             comments=""
+
+        sch_obj = mentor_schedule.objects.get(id=row.Schedule_id)
+
         inner_dict={
             "mentor_name":mentor_in_db.name,
             "order_id":row.User_order_id,
@@ -1582,9 +1585,10 @@ def Mentee_My_Order_API_func(request):
             "payment_mode":payment_mode,
             "session_name":row.Session_name,
             "profile_pic":mentor_in_db.picture,
-            "date":row.Start_datetime.strftime("%d %b %Y"),
-            "time":row.Start_datetime.strftime("%I:%M %p"),
-            "paid_amount":row.final_price
+            "date":sch_obj.Start_datetime.strftime("%d %b %Y"),
+            "time":sch_obj.Start_datetime.strftime("%I:%M %p"),
+            "paid_amount":row.final_price,
+            "created_at":row.Created_at
         }
 
         

@@ -428,15 +428,24 @@ def Mentor_Schedule_API_func(request, mentor_id):  # API to schedule for mentor.
     av_dates_count = len(av_dates)
     n_sessions = av_dates_count * len(request.data["session_names"])
 
+    if len(av_dates) == 0:
+        print("Given weekdays does't matches with given dates.Please check and try again!!!")
+        return "Given weekdays does't matches with given dates.Please check and try again!!!"
+
     request.data["Start_datetime"] = av_dates[0]
 
     hh, mts = map(int, request.data["st_time"].split(":"))
 
-    time_delta = datetime.timedelta(minutes=20)
+    time_delta = datetime.timedelta(minutes=30)
 
     for d in range(len(av_dates)):
 
         Start_datetime = datetime.datetime(av_dates[d].year, av_dates[d].month, av_dates[d].day, hh, mts)
+
+        if Start_datetime < datetime.datetime.now():  # not allowing past dates and time to schedule
+            print("not scheduled because of past date and time given as input")
+            continue
+
         start_time = datetime.time(hh, mts)
         start_date = Start_datetime.date()
 
@@ -446,27 +455,38 @@ def Mentor_Schedule_API_func(request, mentor_id):  # API to schedule for mentor.
         request.data["End_datetime"] = end_datetime
         # request.data["session_charge"] = request.data["charge"]*2
         # Start of time parameter checking
-        print(mentor_id, "mentorrrr id")
+        # print(mentor_id, "mentorrrr id")
         time_check = mentor_schedule.objects.filter(Mentor_id=mentor_id, Status=1)  # fetching objects of the mentor
         # whose status is active-"1"
 
         count = 0
         for t in range(len(time_check)):  # Iterating on objects if input was unable to schedule
 
-            if start_date == time_check[t].Start_datetime.date():
+            if start_date == time_check[t].Start_datetime.date():  # not considering past sessions
                 # print("date matched object date:", time_check[t].Start_datetime.date())
-                t_20 = datetime.timedelta(minutes=20)
-                obj_start_datetime = time_check[t].Start_datetime - t_20
-                if obj_start_datetime.time() > start_time or time_check[
-                    t].End_datetime.time() < start_time:  # On matching dates, checking on
-                    # print("is start time greater or not(1>2)" ,obj_start_datetime.time(), start_time)           #time duration on that date
-                    # print("is end time or not(1>2)" ,time_check[t].End_datetime.time(), end_datetime.time())
-                    pass
+                t_30 = datetime.timedelta(minutes=40)
 
+                consider = 0
+
+                if time_check[t].Start_datetime < datetime.datetime.now():
+                    if time_check[t].Is_scheduled == 1 or time_check[t].Is_scheduled == 2:
+                        consider = 1
 
                 else:
-                    count += 1  # Setting count to 1, if given time is unable to
-                    # schedule
+                    consider = 1
+
+                if consider == 1:
+                    obj_start_datetime = time_check[t].Start_datetime - t_30
+                    obj_start_datetime_2 = time_check[t].Start_datetime + t_30
+                    if obj_start_datetime.time() >= start_time or obj_start_datetime_2.time() <= start_time:  # On matching dates, checking on
+                        # print("is start time greater or not(1>2)" ,obj_start_datetime.time(), start_time)           #time duration on that date
+                        # print("is end time or not(1>2)" ,time_check[t].End_datetime.time(), end_datetime.time())
+                        pass
+
+
+                    else:
+                        count += 1  # Setting count to 1, if given time is unable to schedule
+                        break
 
         # End of time parameter chhecking
 
@@ -477,12 +497,12 @@ def Mentor_Schedule_API_func(request, mentor_id):  # API to schedule for mentor.
                 request.data["Session_name"] = request.data["session_names"][i]
                 n_sessions -= 1
                 request.data["Mentor_id"] = mentor_id
-                if request.data['charge']<=200:
-                    request.data['mentor_charge']=request.data['charge']
-                    request.data['session_charge']=400
+                if request.data['charge'] <= 200:
+                    request.data['mentor_charge'] = request.data['charge']
+                    request.data['session_charge'] = 400
                 else:
-                    request.data['mentor_charge']=request.data['charge']
-                    request.data['session_charge']=request.data['charge']*2
+                    request.data['mentor_charge'] = request.data['charge']
+                    request.data['session_charge'] = request.data['charge'] * 2
                 serializer = mentor_schedule_serializer(data=request.data)
                 if serializer.is_valid():
                     serializer.save()
@@ -492,10 +512,12 @@ def Mentor_Schedule_API_func(request, mentor_id):  # API to schedule for mentor.
 
         return "All Dates and Time given are SCHEDULED SUCCESSFULLY !!!"
     elif n_sessions < av_dates_count * len(request.data["session_names"]):
-        return "Some Sessions are not scheduled due to TIME on particular DATES are coincide with already SCHEDULED SESSIONS !!!"
+        return "Some Sessions are not scheduled due to TIME on particular DATES are either coincide with already SCHEDULED SESSIONS or given past time or sessions are under booking!!!"
     else:
-        return "No Schedule had Created because, TIME on all matching DATES are coincide with already SCHEDULED SESSIONS !!!"
+        return "No Schedule had Created because, TIME on all matching DATES are coincide with already SCHEDULED SESSIONS or given past time or sessions are under booking!!!"
     return "Created successfully"
+
+
 '''
 
 def Create_Order_API_func(request):

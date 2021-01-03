@@ -1532,46 +1532,36 @@ def Mentee_My_Order_API_func(request):
     
     try:                                                             #server
         user_in_db = User.objects.get(email=request.user)
-        mentee_id = user_in_db.id
     except Exception as e:
         print(e)
         print("User doesn't exist")
         return Response("User doesn't exist", status=500)
-    
-    
-    #mentee_id=3                                                     #local
-    obj=mentor_schedule.objects.filter(order_id=mentee_id, Is_scheduled=1).order_by('-Start_datetime')
+
+    if user_in_db.is_mentee:
+        mentee_status = True
+        sales_ord_objs = sales_order.objects.filter(Mentee_id=user_in_db.id, Status=2, Is_active=1)
+    else:
+        mentee_status = False
+        sales_ord_objs = sales_order.objects.filter(Mentor_id=user_in_db.id, Status=2, Is_active=1)
 
     
     inner_lst=[]
     
     client=razorpay.Client(auth=("rzp_test_A5QQVVWf0eMog1", "mwIcHdj1fIDGVi44N6BoUX0W"))
 
-
-    for row in obj:
-        print(row.id)
-        try:
-            sales_ord=sales_order.objects.get(Schedule_id=row.id,Status=2,Is_active=1)
-            
-        except Exception as e:
-            continue
-            print(e)
-            print("error occured in for loop in sales_order table")
-            
+    for row in sales_ord_objs:
+        mentor_in_db = None
         try:
             mentor_in_db=User.objects.get(id=row.Mentor_id)
         except Exception as e:
             print(e)
             print("error occured in for loop in User table")
 
-        payment_id=sales_ord.Payment_id
+        payment_id=row.Payment_id
         resp = client.payment.fetch(payment_id)
 
-
-
-
         try:
-            fd=mentee_feedback.objects.get(Sales_Order=sales_ord.id)
+            fd=mentee_feedback.objects.get(Sales_Order=row.id)
             rating=fd.star_rating
             comments=fd.comments
         except Exception as e:
@@ -1580,18 +1570,18 @@ def Mentee_My_Order_API_func(request):
             comments=""
         inner_dict={
             "mentor_name":mentor_in_db.name,
-            "order_id":sales_ord.User_order_id,
+            "order_id":row.User_order_id,
             "star_rating":rating,
             "comments":comments,
             "actual_price":row.session_charge,
-            "coupon_id":sales_ord.coupon_id,
-            "coupon_amount":sales_ord.coupon_amount,
+            "coupon_id":row.coupon_id,
+            "coupon_amount":row.coupon_amount,
             "payment_mode":resp['method'],
             "session_name":row.Session_name,
             "profile_pic":mentor_in_db.picture,
             "date":row.Start_datetime.strftime("%d %b %Y"),
             "time":row.Start_datetime.strftime("%I:%M %p"),
-            "paid_amount":sales_ord.final_price
+            "paid_amount":row.final_price
         }
 
         
@@ -1599,10 +1589,7 @@ def Mentee_My_Order_API_func(request):
     
 
     #user_in_db=User.objects.get(id=1)                           #local
-    if user_in_db.is_mentee==True:
-        mentee_status=True
-    else:
-        mentee_status=False
+
 
     data_dict={
         "is_mentee":mentee_status,

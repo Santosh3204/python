@@ -133,11 +133,12 @@ class DashboardView(RetrieveAPIView):
     authentication_class = JSONWebTokenAuthentication
 
     def get(self, request):
-        # print(request.user, "requestrequest")
+
         user_in_db = User.objects.get(email=request.user)
         print(user_in_db.id, "user det", user_in_db.email)
         is_mentee = user_in_db.is_mentee
         is_mentor = user_in_db.is_mentor
+
 
         response = {
             'success': True,
@@ -214,6 +215,7 @@ class DashboardView(RetrieveAPIView):
         response["message"] = message
         response["user_email"] = user_in_db.email
         response["user_name"] = user_in_db.name
+        response["user_profile_pic"] = user_in_db.picture
 
         return HttpResponse(json.dumps(response), status=status_code)
 
@@ -850,15 +852,13 @@ class Create_Order_API(APIView):
 
     #permission_classes=(AllowAny,)                                           #local
 
-
-
     def post(self, request):
 
         if type(request.data) != dict:
             return Response("Request body not in Dictionary format", status=400)
 
         elif len(request.data) != 3:
-            return Response("No. of keys is mis-matched, it should be 5", status=400)
+            return Response("No. of keys is mis-matched, it should be 3", status=400)
 
         actual_dict = {
             "Schedule_id": int,

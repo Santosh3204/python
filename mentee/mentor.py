@@ -1558,7 +1558,10 @@ def Mentee_My_Order_API_func(request):
             print("error occured in for loop in User table")
 
         payment_id=row.Payment_id
-        resp = client.payment.fetch(payment_id)
+        payment_mode = "Wallet"
+        if payment_id is not None:
+            resp = client.payment.fetch(payment_id)
+            payment_mode = resp['method']
 
         try:
             fd=mentee_feedback.objects.get(Sales_Order=row.id)
@@ -1576,7 +1579,7 @@ def Mentee_My_Order_API_func(request):
             "actual_price":row.session_charge,
             "coupon_id":row.coupon_id,
             "coupon_amount":row.coupon_amount,
-            "payment_mode":resp['method'],
+            "payment_mode":payment_mode,
             "session_name":row.Session_name,
             "profile_pic":mentor_in_db.picture,
             "date":row.Start_datetime.strftime("%d %b %Y"),

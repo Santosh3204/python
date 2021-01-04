@@ -136,7 +136,7 @@ def generate_voice_token(schedule_id,request):
 
     voice_obj.save()
 
-    ed_time_st = int(ed_time.timestamp()*100)
+    ed_time_st = int(ed_time.timestamp()*1000)
     voice_det = {"is_call":is_call, "channel_name":channel_name,"user_id":user_id,
     "sec_left":sec_left, "voice_token":voice_token,"message":message,"end_time":ed_time_st}
 
@@ -196,12 +196,12 @@ def disconnect_call(request,data):
 
         sales_ord_ob.Status=2  # call completed
         sales_ord_ob.save()
-
+        print("sales order status 2")
         ms_ob = mentor_schedule.objects.get(id=data["schedule_id"])
         ms_ob.Is_scheduled = 4 # session completed
         ms_ob.Status=0
         ms_ob.save()
-
+        print("mentor schedule is schedyle = 4 ")
         # sending push notification for call completion
 
         if is_mentee:

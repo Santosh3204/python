@@ -158,6 +158,7 @@ class mentor_schedule(models.Model):
     mentor_charge = models.IntegerField(default=0)
     session_charge = models.IntegerField()
     order_id = models.IntegerField(default=None, null=True)
+    mentee_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         a = str(self.Mentor_id)

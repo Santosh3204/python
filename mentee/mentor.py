@@ -532,7 +532,8 @@ def Create_Order_API_func(request):
             # row = mentor_schedule.objects.get(id=request.data['Schedule_id'], Status=1, Is_scheduled=0)
             row = mentor_schedule.objects.get(id=request.data['Schedule_id'], Status=1, Is_scheduled__in=[0,2])
 
-            if row.Is_scheduled==2 and sales_ord[0].id!=row.order_id:
+            if row.Is_scheduled==2 and row.mentee_id != sales_ord[0].Mentee_id:
+
                 print("some one already booking")
                 return None,None
         except Exception as e:
@@ -554,6 +555,7 @@ def Create_Order_API_func(request):
 
                 row.Is_scheduled = 1
                 row.order_id = sales_ord[0].id
+                row.mentee_id = user_in_db.id
                 row.save()
 
                 print("row updated in sales order table")
@@ -609,6 +611,7 @@ def Create_Order_API_func(request):
 
         row.Is_scheduled = 2  # booking in progress
         row.order_id = sales_ord[0].id
+        row.mentee_id = user_in_db.id
         row.save()
 
         for i in range(len(mentor_objs)):

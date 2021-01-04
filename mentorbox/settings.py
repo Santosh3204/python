@@ -91,35 +91,35 @@ GP_CLIENT_SECRET = 'N61i7vOEtneXAYVo1k3Pl6UP'
 # }
 
 
-DATABASES = {
-   'default': {
-       'ENGINE': 'django.db.backends.mysql',
-       'NAME': 'mbox',
-       'USER': 'root',
-       'PASSWORD': 'Atushi@123',
-       'HOST': '127.0.0.1',
-       'PORT': '3306',
-       'OPTIONS': {
-               'isolation_level': None,
-   },
-   }
-}
-
-
-
 # DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'mbox',
-#         'USER': 'root',
-#         'PASSWORD': 'root',
-#         'HOST': '127.0.0.1',
-#         'PORT': '3306',
-#         'OPTIONS': {
-#                 'isolation_level': None,
-#     },
-#     }
+#    'default': {
+#        'ENGINE': 'django.db.backends.mysql',
+#        'NAME': 'mbox',
+#        'USER': 'root',
+#        'PASSWORD': 'Atushi@123',
+#        'HOST': '127.0.0.1',
+#        'PORT': '3306',
+#        'OPTIONS': {
+#                'isolation_level': None,
+#    },
+#    }
 # }
+
+
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'mbox',
+        'USER': 'root',
+        'PASSWORD': 'root',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+        'OPTIONS': {
+                'isolation_level': None,
+    },
+    }
+}
 
 
 # DATABASES = {

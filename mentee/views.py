@@ -189,9 +189,9 @@ class DashboardView(RetrieveAPIView):
                 schedule_tab = mentor_schedule.objects.get(id=schedule_id)
                 start_time = schedule_tab.Start_datetime
                 upcoming_sessions.append({"schedule_id":schedule_id,"id_":mentor_id,"name":name,"industry_exp":industry_exp,"avatar":avatar,
-                 "position":position,"session_at":str(start_time),"session_name":session_name})
+                 "position":position,"session_at":start_time.strftime("%d %b, %I:%M %p"),"session_name":session_name,"sort_key":start_time})
 
-            upcoming_sessions.sort(key=lambda x: x['session_at'],reverse=True)
+            upcoming_sessions.sort(key=lambda x: x['sort_key'],reverse=True)
 
             response["data"] = {'recommended_mentors': mentors,"upcoming_sessions":upcoming_sessions}
             #print(user_in_db.pk,user_in_db.id,"-------------------------")

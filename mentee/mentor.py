@@ -22,6 +22,7 @@ import hashlib
 import binascii
 import uuid
 from mentee.agora.src.RtcTokenBuilder import RtcTokenBuilder # agora
+from mentee.agora.call import send_push_notification
 
 def fetch_booked_sessions(request):
     objects = mentor_schedule.objects.filter(Mentor_id=request['mentor_id'],
@@ -517,142 +518,6 @@ def Mentor_Schedule_API_func(request, mentor_id):  # API to schedule for mentor.
     return "Created successfully"
 
 
-'''
-
-def Create_Order_API_func(request):
-
-    user_in_db = User.objects.get(email=request.user)                       #server
-    mentee_id = user_in_db.id
-
-
-    #user_in_db=User.objects.get(id=4)                                       #local
-    #mentee_id=user_in_db.id
-
-    try:
-        row = mentor_schedule.objects.get(pk=request.data['Schedule_id'], Status=1, Is_scheduled=0)
-    except Exception as e:
-        print("Error occured while fetching data from mentor_schedule table")
-        print(e)
-        return Response("Error occured while fetching data from mentor_schedule table",
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    mentor_objs = mentor_schedule.objects.filter(Mentor_id=row.Mentor_id,
-                                                 Start_datetime=row.Start_datetime,
-                                                 Status=1, Is_scheduled=0)
-
-    print(len(mentor_objs))
-
-    sales_ord=sales_order.objects.filter(Schedule_id=row.id, Is_active=1, Mentee_id=mentee_id).order_by('-Status_updated_at')
-
-    if len(sales_ord)==0:
-        print("sales_order table doesnot contain matching any row")
-        return Response("sales_order table doesnot contain matching any row",status=500)
-
-
-    wt=wallet.objects.filter(mentee_id=user_in_db).order_by('-updated_at')
-
-    if len(wt)!=0:
-
-        if request.data["use_wallet"] and wt[0].current_balance>=sales_ord[0].final_price:
-            print("went insideeeeeeeeeeeeeeeeeeeeeeeeeee")
-            order_amount = 0
-            order_id = str(uuid.uuid1())
-            # deduct money for this session
-            wall_obj = wallet()
-            wall_obj.mentee_id = user_in_db.id
-            wall_obj.txn_order_id = order_id
-            wall_obj.amount_changed = -sales_ord[0].final_price
-            wall_obj.status = 2  # added money
-            wall_obj.remarks = sales_ord[0].Session_name + " session"
-
-            wall_obj.previous_balance = wt[0].current_balance
-            wall_obj.current_balance = wt[0].current_balance - sales_ord[0].final_price
-
-            wall_obj.save()
-            print(" wallet row deducted")
-            sales_ord[0].User_order_id =order_id
-            sales_ord[0].Status = 1  # payment done
-
-            sales_ord[0].wallet_used = request.data["use_wallet"]
-            sales_ord[0].wallet_amount = sales_ord[0].final_price
-
-            sales_ord[0].save()
-            print("row updated in sales order table")
-
-            for i in range(len(mentor_objs)):
-                mentor_objs[i].Is_scheduled = 0
-                mentor_objs[i].Status = 0
-                mentor_objs[i].order_id = None
-                mentor_objs[i].save()
-
-            row.Is_scheduled = 1
-            row.order_id = sales_ord[0].id
-            row.save()
-
-            return order_id,order_amount
-
-        elif wt[0].current_balance+request.data['amount_to_add']>=sales_ord[0].final_price:
-            order_amount = request.data['amount_to_add']*100
-        else:
-            amount = sales_ord[0].final_price - wt[0].current_balance
-            order_amount = amount*100
-    else:
-        order_amount = sales_ord[0].final_price*100
-
-    for i in range(len(mentor_objs)):
-        mentor_objs[i].Is_scheduled=2                                     #progress
-        mentor_objs[i].save()
-
-    print("---------------------------------------------")
-    order_currency = 'INR'
-    order_receipt = str(sales_ord[0].id)
-    notes = {'Shipping address': 'Bommanahalli, Bangalore'}  # OPTIONAL
-
-    try:
-
-        # client = razorpay.Client(auth=('rzp_test_JAObx3Y47SmBhB', 'RKxq0NX3rGgEZ3HEKt5cr5BT'))
-        client = razorpay.Client(auth=('rzp_test_A5QQVVWf0eMog1', 'mwIcHdj1fIDGVi44N6BoUX0W'))
-
-        response = client.order.create(
-            dict(amount=order_amount, currency=order_currency, receipt=order_receipt, notes=notes))
-    except Exception as e:
-        print("Error occured in generating order_id from razorpay pay API side")
-        print(e)
-
-        print(len(mentor_objs))
-        for i in range(len(mentor_objs)):
-            mentor_objs[i].Is_scheduled = 0
-            mentor_objs[i].order_id = None
-            mentor_objs[i].save()
-
-        sales_ord[0].Is_active = 0
-
-        return Response("Order ID not generated successfully", status=500)
-
-    sales_ord[0].User_order_id = response['id']
-    sales_ord[0].Status = 0 # payment not done, new row
-    if request.data["use_wallet"]:
-        sales_ord[0].wallet_used = request.data["use_wallet"]
-    sales_ord[0].wallet_amount = order_amount/100
-
-    sales_ord[0].save()
-
-    # print(len(mentor_objs))
-    # for i in range(len(mentor_objs)):
-    #     mentor_objs[i].Is_scheduled=2  # in process
-    #     mentor_objs[i].Status=1
-    #     mentor_objs[i].order_id=None
-    #     mentor_objs[i].save()
-
-
-    row.Status=1
-    row.Is_scheduled = 2  # progress
-    row.order_id = sales_ord[0].Mentee_id
-    row.save()
-
-    return response['id'],order_amount
-'''
-
 def Create_Order_API_func(request):
 
     user_in_db = User.objects.get(email=request.user)                       #server
@@ -724,6 +589,14 @@ def Create_Order_API_func(request):
                 print(" wallet row deducted")
 
                 print("2000000000000000000000000")
+
+                mentor_user = User.objects.get(pk=sales_ord[0].Mentor_id)
+                mobile_token = mentor_user.mobile_token
+                message = user_in_db.name+" has booked a session with you"
+                title = "Session booked"
+
+                send_push_notification(mobile_token,message,title)
+
                 return order_id, order_amount
 
             elif wt[0].current_balance + request.data['amount_to_add'] >= sales_ord[0].final_price:
@@ -1059,6 +932,13 @@ def RP_Sign_Verification_func(request):
         row.current_balance = curr_bal + sales_ord.wallet_amount - sales_ord.final_price
 
         row.save()
+
+        mentor_user = User.objects.get(pk=sales_ord[0].Mentor_id)
+        mobile_token = mentor_user.mobile_token
+        message = user_in_db.name + " has booked a session with you"
+        title = "Session booked"
+
+        send_push_notification(mobile_token, message, title)
 
         return "Payment Successfully"
     else:

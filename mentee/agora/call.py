@@ -276,13 +276,13 @@ def send_push_notification(mobile_token, message, title):
 
     notify_data = {
         "to": mobile_token,
-        "notification": {
-            "body": message,
-            "title": title,
-            "content_available": True,
-            "priority": "high"
-        },
-        "data": {"notification_id": 5, "message": message}
+        # "notification": {
+        #     "body": message,
+        #     "title": title,
+        #     "content_available": True,
+        #     "priority": "high"
+        # },
+        "data": {"notification_id": 5, "message": message,"title":title,"priority": "high","body":message}
     }
 
     requests.post('https://fcm.googleapis.com/fcm/send', data=json.dumps(notify_data), headers=headers)

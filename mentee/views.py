@@ -895,7 +895,7 @@ class Create_Order_API(APIView):
 
         }
 
-        return Response(resp_dict)
+        return Response(resp_dict,status=status_code)
 
 
 class RP_Sign_Verification(APIView):

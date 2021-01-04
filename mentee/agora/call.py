@@ -136,8 +136,9 @@ def generate_voice_token(schedule_id,request):
 
     voice_obj.save()
 
+    ed_time_st = time.mktime(ed_time.timetuple())
     voice_det = {"is_call":is_call, "channel_name":channel_name,"user_id":user_id,
-    "sec_left":sec_left, "voice_token":voice_token,"message":message,"end_time":ed_time}
+    "sec_left":sec_left, "voice_token":voice_token,"message":message,"end_time":ed_time_st}
 
     print(voice_det)
     return voice_det

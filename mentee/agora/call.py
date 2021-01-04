@@ -10,6 +10,7 @@ import json
 from mentee.agora.src.RtcTokenBuilder import RtcTokenBuilder # agora
 import requests
 
+
 def generate_voice_token(schedule_id,request):
     """
 
@@ -141,6 +142,7 @@ def generate_voice_token(schedule_id,request):
     print(voice_det)
     return voice_det
 
+
 def get_voice_token(channel_name,uid,privilegeExpiredTs):
     """
 
@@ -193,36 +195,24 @@ def disconnect_call(request,data):
 
         sales_ord_ob.Status=2  # call completed
         sales_ord_ob.save()
-        print(sales_ord_ob,"---------------call completed",data["schedule_id"],sales_ord_ob.Schedule_id,sales_ord_ob.id)
+
         ms_ob = mentor_schedule.objects.get(id=data["schedule_id"])
         ms_ob.Is_scheduled = 4 # session completed
         ms_ob.Status=0
         ms_ob.save()
-        fcm_key = "AAAALIuxoME:APA91bEkyslF0vrmIGX14kwS2wAGEvb8PGCdKnvNgC7JUTwrXZkAyZv-0MrPQ0kMHKd6vzceErzHlz76i4MPF8icPtMux1GSckZoFfjDhX9M89rRZiTds0fxm-5lKTy0WqVlHtBP_HiJ"
-        headers = {"Content-Type": "application/json",
-                   "Authorization":"key="+fcm_key}
-        
+
+        # sending push notification for call completion
+
         if is_mentee:
             message = "Mentee has marked the session as completed"
             notify_id = sales_ord_ob.Mentor_id
         else:
             message = "Mentor has marked the session as completed"
             notify_id = sales_ord_ob.Mentee_id
-        print(notify_id,is_mentee,"------------------------- call cut gayi 35")
-        user_ob = User.objects.get(id=notify_id)
-        print(user_ob.name,"=================")
-        notify_data = {
-            "to": user_ob.mobile_token,
-            "notification": {
-                "body": message,
-                "title":"Session completed" ,
-                "content_available": True,
-                "priority": "high"
-            },
-            "data":{"notification_id":5,"message":message}
-        }
 
-        requests.post('https://fcm.googleapis.com/fcm/send',data=json.dumps(notify_data),headers=headers)
+        user_ob = User.objects.get(id=notify_id)
+
+        send_push_notification(user_ob.mobile_token, message, "Session completed")
 
     call_ob.channel_name = data["channel_name"]
     call_ob.user_id = user_id
@@ -271,7 +261,30 @@ def channel_event_listener(request, data):
     call_ob.save()
 
 
+def send_push_notification(mobile_token, message, title):
+    """
 
+    :param mobile_token:
+    :param message:
+    :param title:
+    :return:
+    """
+    # sending push notification for call completion
+    fcm_key = "AAAALIuxoME:APA91bEkyslF0vrmIGX14kwS2wAGEvb8PGCdKnvNgC7JUTwrXZkAyZv-0MrPQ0kMHKd6vzceErzHlz76i4MPF8icPtMux1GSckZoFfjDhX9M89rRZiTds0fxm-5lKTy0WqVlHtBP_HiJ"
+    headers = {"Content-Type": "application/json",
+               "Authorization": "key=" + fcm_key}
 
+    notify_data = {
+        "to": mobile_token,
+        "notification": {
+            "body": message,
+            "title": title,
+            "content_available": True,
+            "priority": "high"
+        },
+        "data": {"notification_id": 5, "message": message}
+    }
+
+    requests.post('https://fcm.googleapis.com/fcm/send', data=json.dumps(notify_data), headers=headers)
 
 

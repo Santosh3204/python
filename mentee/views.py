@@ -880,14 +880,20 @@ class Create_Order_API(APIView):
 
         order_id,order_amount = Create_Order_API_func(request)
 
-        
+        message = "Success"
+        status_code = status.HTTP_200_OK
+
+        if order_id is None:
+            message = "Someone already booking session, please try again after 10 minutes"
+            status_code = status.HTTP_208_ALREADY_REPORTED
+
         resp_dict = {
-        "status": status.HTTP_200_OK,
+        "status": status_code,
         "order_amount": order_amount,
-        "order_id":order_id
+        "order_id":order_id,
+            "message":message
 
         }
-
 
         return Response(resp_dict)
 

@@ -652,6 +652,7 @@ def Create_Order_API_func(request):
 
     return response['id'],order_amount
 '''
+
 def Create_Order_API_func(request):
 
     user_in_db = User.objects.get(email=request.user)                       #server
@@ -663,7 +664,12 @@ def Create_Order_API_func(request):
     if len(sales_ord) != 0:
         try:
             print("222222222222222")
+            # row = mentor_schedule.objects.get(id=request.data['Schedule_id'], Status=1, Is_scheduled=0)
             row = mentor_schedule.objects.get(id=request.data['Schedule_id'], Status=1, Is_scheduled__in=[0,2])
+
+            if row.Is_scheduled==2 and sales_ord[0].id!=row.order_id:
+                print("some one already booking")
+                return None,None
         except Exception as e:
             print("Error occured while fetching data from mentor_schedule table")
             print(e)
@@ -680,8 +686,29 @@ def Create_Order_API_func(request):
 
             if request.data["use_wallet"] and wt[0].current_balance >= sales_ord[0].final_price:
                 print("went insideeeeeeeeeeeeeeeeeeeeeeeeeee")
-                order_amount = 0
+
+                row.Is_scheduled = 1
+                row.order_id = sales_ord[0].id
+                row.save()
+
+                print("row updated in sales order table")
+                for i in range(len(mentor_objs)):
+                    mentor_objs[i].Is_scheduled = 0
+                    mentor_objs[i].Status = 0
+                    mentor_objs[i].order_id = None
+                    mentor_objs[i].save()
+
                 order_id = str(uuid.uuid1())
+                sales_ord[0].User_order_id = order_id
+                sales_ord[0].Status = 1  # payment done
+
+                sales_ord[0].wallet_used = request.data["use_wallet"]
+                sales_ord[0].wallet_amount = sales_ord[0].final_price
+
+                sales_ord[0].save()
+
+                order_amount = 0
+
                 # deduct money for this session
                 wall_obj = wallet()
                 wall_obj.mentee_id = user_in_db.id
@@ -695,23 +722,7 @@ def Create_Order_API_func(request):
 
                 wall_obj.save()
                 print(" wallet row deducted")
-                sales_ord[0].User_order_id = order_id
-                sales_ord[0].Status = 1  # payment done
 
-                sales_ord[0].wallet_used = request.data["use_wallet"]
-                sales_ord[0].wallet_amount = sales_ord[0].final_price
-
-                sales_ord[0].save()
-                print("row updated in sales order table")
-                for i in range(len(mentor_objs)):
-                    mentor_objs[i].Is_scheduled = 0
-                    mentor_objs[i].Status = 0
-                    mentor_objs[i].order_id = None
-                    mentor_objs[i].save()
-
-                row.Is_scheduled = 1
-                row.order_id = sales_ord[0].id
-                row.save()
                 print("2000000000000000000000000")
                 return order_id, order_amount
 
@@ -722,6 +733,14 @@ def Create_Order_API_func(request):
                 order_amount = amount * 100
         else:
             order_amount = sales_ord[0].final_price * 100
+
+        row.Is_scheduled = 2  # booking in progress
+        row.order_id = sales_ord[0].id
+        row.save()
+
+        for i in range(len(mentor_objs)):
+            mentor_objs[i].Is_scheduled=2                                     #progress
+            mentor_objs[i].save()
 
         order_currency = 'INR'
         order_receipt = str(sales_ord[0].id)
@@ -745,139 +764,138 @@ def Create_Order_API_func(request):
 
         sales_ord[0].User_order_id = response['id']
 
-
         if request.data["use_wallet"]:
             sales_ord[0].wallet_used = request.data["use_wallet"]
         sales_ord[0].wallet_amount = order_amount/100
         sales_ord[0].save()
 
         return response["id"],order_amount
-    else:
-    
-        try:
-            print("else 55555555555555555555555")
-            row = mentor_schedule.objects.get(pk=request.data['Schedule_id'], Status=1, Is_scheduled=0)
-        except Exception as e:
-            print("Error occured while fetching data from mentor_schedule table")
-            print(e,"-----------66666666")
-            return Response("Error occured while fetching data from mentor_schedule table",
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-        mentor_objs = mentor_schedule.objects.filter(Mentor_id=row.Mentor_id,
-                                                     Start_datetime=row.Start_datetime,
-                                                     Status=1, Is_scheduled=0)
-    
-        print(len(mentor_objs))
-    
-        sales_ord=sales_order.objects.filter(Schedule_id=row.id, Is_active=1, Mentee_id=mentee_id).order_by('-Status_updated_at')
-    
-        if len(sales_ord)==0:
-            print("sales_order table doesnot contain matching any row")
-            return Response("sales_order table doesnot contain matching any row",status=500)
-    
-    
-        wt=wallet.objects.filter(mentee_id=user_in_db).order_by('-updated_at')
-    
-        if len(wt)!=0:
-    
-            if request.data["use_wallet"] and wt[0].current_balance>=sales_ord[0].final_price:
-                print("went insideeeeeeeeeeeeeeeeeeeeeeeeeee")
-                order_amount = 0
-                order_id = str(uuid.uuid1())
-                # deduct money for this session
-                wall_obj = wallet()
-                wall_obj.mentee_id = user_in_db.id
-                wall_obj.txn_order_id = order_id
-                wall_obj.amount_changed = -sales_ord[0].final_price
-                wall_obj.status = 2  # added money
-                wall_obj.remarks = sales_ord[0].Session_name + " session"
-    
-                wall_obj.previous_balance = wt[0].current_balance
-                wall_obj.current_balance = wt[0].current_balance - sales_ord[0].final_price
-    
-                wall_obj.save()
-                print(" wallet row deducted")
-                sales_ord[0].User_order_id =order_id
-                sales_ord[0].Status = 1  # payment done
-    
-                sales_ord[0].wallet_used = request.data["use_wallet"]
-                sales_ord[0].wallet_amount = sales_ord[0].final_price
-    
-                sales_ord[0].save()
-                print("row updated in sales order table")
-    
-                for i in range(len(mentor_objs)):
-                    mentor_objs[i].Is_scheduled = 0
-                    mentor_objs[i].Status = 0
-                    mentor_objs[i].order_id = None
-                    mentor_objs[i].save()
-    
-                row.Is_scheduled = 1
-                row.order_id = sales_ord[0].id
-                row.save()
-                print("2000000000000000000000000")
-                return order_id,order_amount
-    
-            elif wt[0].current_balance+request.data['amount_to_add']>=sales_ord[0].final_price:
-                order_amount = request.data['amount_to_add']*100
-            else:
-                amount = sales_ord[0].final_price - wt[0].current_balance
-                order_amount = amount*100
-        else:
-            order_amount = sales_ord[0].final_price*100
-    
-        for i in range(len(mentor_objs)):
-            mentor_objs[i].Is_scheduled=2                                     #progress
-            mentor_objs[i].save()
-    
-        print("---------------------------------------------")
-        order_currency = 'INR'
-        order_receipt = str(sales_ord[0].id)
-        notes = {'Shipping address': 'Bommanahalli, Bangalore'}  # OPTIONAL
-    
-        try:
-    
-            # client = razorpay.Client(auth=('rzp_test_JAObx3Y47SmBhB', 'RKxq0NX3rGgEZ3HEKt5cr5BT'))
-            client = razorpay.Client(auth=('rzp_test_A5QQVVWf0eMog1', 'mwIcHdj1fIDGVi44N6BoUX0W'))
-    
-            response = client.order.create(
-                dict(amount=order_amount, currency=order_currency, receipt=order_receipt, notes=notes))
-        except Exception as e:
-            print("Error occured in generating order_id from razorpay pay API side")
-            print(e)
-    
-            print(len(mentor_objs))
-            for i in range(len(mentor_objs)):
-                mentor_objs[i].Is_scheduled = 0
-                mentor_objs[i].order_id = None
-                mentor_objs[i].save()
-    
-            sales_ord[0].Is_active = 0
-    
-            return Response("Order ID not generated successfully", status=500)
-        print("haan bhai 00000000000")    
-        sales_ord[0].User_order_id = response['id']
-        sales_ord[0].Status = 0 # payment not done, new row
-        if request.data["use_wallet"]:
-            sales_ord[0].wallet_used = request.data["use_wallet"]
-        sales_ord[0].wallet_amount = order_amount/100
-        print("haan bhai 11111111111111111")
-        sales_ord[0].save()
-    
-        # print(len(mentor_objs))
-        # for i in range(len(mentor_objs)):
-        #     mentor_objs[i].Is_scheduled=2  # in process
-        #     mentor_objs[i].Status=1
-        #     mentor_objs[i].order_id=None
-        #     mentor_objs[i].save()
-    
-    
-        row.Status=1
-        row.Is_scheduled = 2  # progress
-        row.order_id = sales_ord[0].Mentee_id
-        row.save()
-    
-        return response['id'],order_amount
+    # else:
+    #
+    #     try:
+    #         print("else 55555555555555555555555")
+    #         row = mentor_schedule.objects.get(pk=request.data['Schedule_id'], Status=1, Is_scheduled=0)
+    #     except Exception as e:
+    #         print("Error occured while fetching data from mentor_schedule table")
+    #         print(e,"-----------66666666")
+    #         return Response("Error occured while fetching data from mentor_schedule table",
+    #                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    #
+    #     mentor_objs = mentor_schedule.objects.filter(Mentor_id=row.Mentor_id,
+    #                                                  Start_datetime=row.Start_datetime,
+    #                                                  Status=1, Is_scheduled=0)
+    #
+    #     print(len(mentor_objs))
+    #
+    #     sales_ord=sales_order.objects.filter(Schedule_id=row.id, Is_active=1, Mentee_id=mentee_id).order_by('-Status_updated_at')
+    #
+    #     if len(sales_ord)==0:
+    #         print("sales_order table doesnot contain matching any row")
+    #         return Response("sales_order table doesnot contain matching any row",status=500)
+    #
+    #
+    #     wt=wallet.objects.filter(mentee_id=user_in_db).order_by('-updated_at')
+    #
+    #     if len(wt)!=0:
+    #
+    #         if request.data["use_wallet"] and wt[0].current_balance>=sales_ord[0].final_price:
+    #             print("went insideeeeeeeeeeeeeeeeeeeeeeeeeee")
+    #             order_amount = 0
+    #             order_id = str(uuid.uuid1())
+    #             # deduct money for this session
+    #             wall_obj = wallet()
+    #             wall_obj.mentee_id = user_in_db.id
+    #             wall_obj.txn_order_id = order_id
+    #             wall_obj.amount_changed = -sales_ord[0].final_price
+    #             wall_obj.status = 2  # added money
+    #             wall_obj.remarks = sales_ord[0].Session_name + " session"
+    #
+    #             wall_obj.previous_balance = wt[0].current_balance
+    #             wall_obj.current_balance = wt[0].current_balance - sales_ord[0].final_price
+    #
+    #             wall_obj.save()
+    #             print(" wallet row deducted")
+    #             sales_ord[0].User_order_id =order_id
+    #             sales_ord[0].Status = 1  # payment done
+    #
+    #             sales_ord[0].wallet_used = request.data["use_wallet"]
+    #             sales_ord[0].wallet_amount = sales_ord[0].final_price
+    #
+    #             sales_ord[0].save()
+    #             print("row updated in sales order table")
+    #
+    #             for i in range(len(mentor_objs)):
+    #                 mentor_objs[i].Is_scheduled = 0
+    #                 mentor_objs[i].Status = 0
+    #                 mentor_objs[i].order_id = None
+    #                 mentor_objs[i].save()
+    #
+    #             row.Is_scheduled = 1
+    #             row.order_id = sales_ord[0].id
+    #             row.save()
+    #             print("2000000000000000000000000")
+    #             return order_id,order_amount
+    #
+    #         elif wt[0].current_balance+request.data['amount_to_add']>=sales_ord[0].final_price:
+    #             order_amount = request.data['amount_to_add']*100
+    #         else:
+    #             amount = sales_ord[0].final_price - wt[0].current_balance
+    #             order_amount = amount*100
+    #     else:
+    #         order_amount = sales_ord[0].final_price*100
+    #
+    #     for i in range(len(mentor_objs)):
+    #         mentor_objs[i].Is_scheduled=2                                     #progress
+    #         mentor_objs[i].save()
+    #
+    #     print("---------------------------------------------")
+    #     order_currency = 'INR'
+    #     order_receipt = str(sales_ord[0].id)
+    #     notes = {'Shipping address': 'Bommanahalli, Bangalore'}  # OPTIONAL
+    #
+    #     try:
+    #
+    #         # client = razorpay.Client(auth=('rzp_test_JAObx3Y47SmBhB', 'RKxq0NX3rGgEZ3HEKt5cr5BT'))
+    #         client = razorpay.Client(auth=('rzp_test_A5QQVVWf0eMog1', 'mwIcHdj1fIDGVi44N6BoUX0W'))
+    #
+    #         response = client.order.create(
+    #             dict(amount=order_amount, currency=order_currency, receipt=order_receipt, notes=notes))
+    #     except Exception as e:
+    #         print("Error occured in generating order_id from razorpay pay API side")
+    #         print(e)
+    #
+    #         print(len(mentor_objs))
+    #         for i in range(len(mentor_objs)):
+    #             mentor_objs[i].Is_scheduled = 0
+    #             mentor_objs[i].order_id = None
+    #             mentor_objs[i].save()
+    #
+    #         sales_ord[0].Is_active = 0
+    #
+    #         return Response("Order ID not generated successfully", status=500)
+    #     print("haan bhai 00000000000")
+    #     sales_ord[0].User_order_id = response['id']
+    #     sales_ord[0].Status = 0 # payment not done, new row
+    #     if request.data["use_wallet"]:
+    #         sales_ord[0].wallet_used = request.data["use_wallet"]
+    #     sales_ord[0].wallet_amount = order_amount/100
+    #     print("haan bhai 11111111111111111")
+    #     sales_ord[0].save()
+    #
+    #     # print(len(mentor_objs))
+    #     # for i in range(len(mentor_objs)):
+    #     #     mentor_objs[i].Is_scheduled=2  # in process
+    #     #     mentor_objs[i].Status=1
+    #     #     mentor_objs[i].order_id=None
+    #     #     mentor_objs[i].save()
+    #
+    #
+    #     row.Status=1
+    #     row.Is_scheduled = 2  # progress
+    #     row.order_id = sales_ord[0].Mentee_id
+    #     row.save()
+    #
+    #     return response['id'],order_amount
 
 
 def RP_Sign_Verification_func(request):

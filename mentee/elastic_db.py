@@ -27,7 +27,7 @@ class ElasticDB:
             "highlight": {
                 "fields": {
                     "one2one_topics": {"type": "plain"},
-                    "skills": {"type": "plain"},
+                    #"skills": {"type": "plain"},
                     "current_designation": {"type": "plain"},
                     "designation": {"type": "plain"},
                     "languages": {"type": "plain"},
@@ -38,9 +38,9 @@ class ElasticDB:
 
         for key in data:
 
-            if key=="skills" and len(data[key])!=0:
-                for ski in data[key]:
-                    query["query"]["bool"]["must"].append({"match_phrase": {"skills": ski}})
+            #if key=="skills" and len(data[key])!=0:
+            #    for ski in data[key]:
+            #        query["query"]["bool"]["must"].append({"match_phrase": {"skills": ski}})
 
             if key=="career_profile" and data[key] is not None:
                 query["query"]["bool"]["must"].append({"bool": {"should": [{"match_phrase": {"one2one_topics": data[key]}},
@@ -206,7 +206,7 @@ class ElasticDB:
         for field in prof_details["fields"]:
             query["query"]["bool"]["filter"]['bool']['should'].append({"match_phrase": {"one2one_topics": field}})
             query["query"]["bool"]["filter"]['bool']['should'].append({"term": {"status": 1}})
-
+        print(query,"query                                      ")
         response = self.es.search(index='mentors', body=query)
 
         profiles = []

@@ -1431,7 +1431,7 @@ class FindMentors(APIView):
 
         search_data = request.data
 
-        mandatory_fileds = {"skills","career_profile","languages","exp","min_charge","max_charge"}
+        mandatory_fileds = {"career_profile","languages","exp","min_charge","max_charge"}
 
         if len(mandatory_fileds.difference(set(search_data.keys())))>0:
             return Response("request fields missing",status=400)

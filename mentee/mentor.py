@@ -378,9 +378,8 @@ def Mentor_Calender_API_func(request):
 
         return data
     else:
-        print("No Mentor exists with the provided Mentor_id")
-        return Response(json.loads("No Mentor exists with the provided Mentor_id"),
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        #print("No Mentor exists with the provided Mentor_id")
+        return []
 
 
 def Mentor_Topics_API_func(request):
@@ -1562,17 +1561,23 @@ def Mentee_My_Order_API_func(request):
             payment_mode = "Wallet"
             if payment_id is not None:
                 resp = client.payment.fetch(payment_id)
-                payment_mode = resp['method']
-
+                #print(resp,"--------------------------------------------------")
+                #payment_mode = resp['method']
+                if 'method' in resp:
+                    payment_mode = resp['method']
+                else:
+                    payment_mode = "--"
+            is_feedback = False
             try:
-                fd = mentee_feedback.objects.get(Sales_Order=row.id)
+                fd = mentee_feedback.objects.get(Sales_Order=row)
                 rating = fd.star_rating
                 comments = fd.comments
+                is_feedback = True
             except Exception as e:
                 print("No Feedback given")
                 rating = ""
                 comments = ""
-
+              
             sch_obj = mentor_schedule.objects.get(id=row.Schedule_id)
 
             inner_dict = {
@@ -1589,7 +1594,9 @@ def Mentee_My_Order_API_func(request):
                 "date": sch_obj.Start_datetime.strftime("%d %b %Y"),
                 "time": sch_obj.Start_datetime.strftime("%I:%M %p"),
                 "paid_amount": row.final_price,
-                "created_at": row.Created_at
+                "created_at": row.Created_at,
+                "is_feedback":is_feedback,
+                "schedule_id":sch_obj.id
             }
 
             inner_list.append(inner_dict)
@@ -1616,7 +1623,7 @@ def Mentee_My_Order_API_func(request):
                 "profile_pic": mentee_in_db.picture,
                 "date": sch_obj.Start_datetime.strftime("%d %b %Y"),
                 "time": sch_obj.Start_datetime.strftime("%I:%M %p"),
-                "paid_amount": row.mentor_charge
+                "paid_amount": sch_obj.mentor_charge
 
             }
 
@@ -1887,6 +1894,8 @@ def wallet_history_func(request):
     obj=wallet.objects.filter(mentee_id=user_in_db.id, status=2).order_by('-updated_at')
     
     data_lst=[]
+    if len(obj)==0:
+        return {"current_balance":0,"history":data_lst}
     current_balance=obj[0].current_balance
 
     for row in obj:

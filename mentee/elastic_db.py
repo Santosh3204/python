@@ -1,7 +1,7 @@
 from elasticsearch import Elasticsearch
 import uuid
 import math,re
-
+from mentee.models import mentor_profile_clicks
 
 class ElasticDB:
 
@@ -157,9 +157,12 @@ class ElasticDB:
                 for topic in hits["highlight"]["one2one_topics"]:
                     one2one_topics.append(ElasticDB.striphtml(topic))
 
+                view_count = mentor_profile_clicks.objects.filter(mentor_id=id_).values_list(
+                    'mentee_id').distinct().count()
+
                 profiles.append({"name": name, "id_": id_, "designation": desgnation, "industry_exp": industry_exp,
                                  "company_name": company_name, "avatar": avatar, "session_names": one2one_topics,
-                                 "charge":mb_charge})
+                                 "charge":mb_charge,"view_count":view_count})
 
             return profiles
 
@@ -214,6 +217,7 @@ class ElasticDB:
 
             # score = hits['_score']
             id_ = hits["_id"]
+
             company_name = hits["_source"]["current_company"].title()
             designation = hits["_source"]["current_designation"].title()
             name = hits["_source"]["name"].title()
@@ -230,8 +234,11 @@ class ElasticDB:
             for topic in hits["highlight"]["one2one_topics"]:
                 one2one_topics.append(ElasticDB.striphtml(topic))
 
+            view_count = mentor_profile_clicks.objects.filter(mentor_id=id_).values_list(
+                'mentee_id').distinct().count()
             profiles.append({"name": name, "id_": id_, "designation": designation, "industry_exp": industry_exp,
-                             "company_name": company_name, "avatar": avatar,"session_names":one2one_topics,"charge":mb_charge})
+                             "company_name": company_name, "avatar": avatar,"session_names":one2one_topics,"charge":mb_charge,
+                             "view_count":view_count})
 
         return profiles
 

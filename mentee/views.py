@@ -511,7 +511,17 @@ class FetchMentorProfile(APIView):
         mentor_id = request_data["mentor_id"]
         one2one_topics = request_data["session_names"]
 
+        user_in_db = User.objects.get(email=request.user)
+        mentee_id = user_in_db.id
+
+        mpc_obj = mentor_profile_clicks()
+        mpc_obj.mentee_id = mentee_id
+        mpc_obj.mentor_id = mentor_id
+        mpc_obj.session_name = one2one_topics[0]
+        mpc_obj.save()
+
         data = mentor_profile.objects.get(user_id=mentor_id)
+
 
         prof_details = json.loads(data.professional_details)
         edu_details = json.loads(data.educational_details)
@@ -522,9 +532,6 @@ class FetchMentorProfile(APIView):
         about = data.about
 
         languages = json.loads(data.languages)
-
-        user_in_db = User.objects.get(email=request.user)
-        mentee_id = user_in_db.id
 
         fav_ment_ob = favourite_mentors.objects.filter(mentee_id=mentee_id,mentor_id=mentor_id)
 
@@ -541,7 +548,8 @@ class FetchMentorProfile(APIView):
             break
 
         schedule = fetch_mentors_schedule(mentor_id,0,one2one_topics[0])
-
+        view_count = mentor_profile_clicks.objects.filter(mentor_id=mentor_id).values_list(
+            'mentee_id').distinct().count()
         resp = {"mentor_id": mentor_id,
                 "mentor_name": name,
                 "designation": current_designation,
@@ -554,7 +562,8 @@ class FetchMentorProfile(APIView):
                 "professional_details": prof_details,
                 "educational_details": edu_details,
                 "schedule":schedule,
-                "fav":fav}
+                "fav":fav,
+                "view_count":view_count}
 
         return JsonResponse(resp, status=200)
 
@@ -601,6 +610,7 @@ class Fetch_Mentor_Schedule_Api(APIView):
         schedule = fetch_mentors_schedule(mentor_id, is_scheduled, session_name)
 
         response_dict.update({"schedule": schedule})
+
 
         return Response(response_dict)
 

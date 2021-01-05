@@ -340,4 +340,10 @@ class CallHistory(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+class mentor_profile_clicks(models.Model):
+    mentee_id = models.IntegerField()
+    mentor_id = models.IntegerField()
+    session_name = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+
 

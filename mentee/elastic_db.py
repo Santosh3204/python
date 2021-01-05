@@ -86,9 +86,13 @@ class ElasticDB:
             for topic in hits["highlight"]["one2one_topics"]:
                 one2one_topics.append(ElasticDB.striphtml(topic))
 
+            view_count = mentor_profile_clicks.objects.filter(mentor_id=id_).values_list(
+                'mentee_id').distinct().count()
+
             profiles.append({"name": name, "id_": id_, "designation": desgnation, "industry_exp": industry_exp,"topics":hits["_source"]["one2one_topics"],
                              "company_name": company_name, "avatar": avatar, "session_names": one2one_topics,
-                             "charge": mb_charge})
+                             "charge": mb_charge,"view_count":view_count})
+
 
         return profiles
 

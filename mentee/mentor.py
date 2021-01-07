@@ -24,6 +24,7 @@ import uuid
 from mentee.agora.src.RtcTokenBuilder import RtcTokenBuilder # agora
 from mentee.agora.call import send_push_notification
 
+
 def fetch_booked_sessions(request):
     objects = mentor_schedule.objects.filter(Mentor_id=request['mentor_id'],
                                              Is_scheduled=request['is_scheduled'],Status=1).order_by('Start_datetime')
@@ -2088,7 +2089,10 @@ def request_session_func(request):
 
         row.save()
 
-
+        mentor_ob = User.objects.get(id=request.data['mentor_id'])
+        title = "You have received a session request"
+        message = "Topic : "+request.data['session_name']
+        send_push_notification(mentor_ob.mobile_token,message,title)
 
         return "Requested Successfully"
 
@@ -2159,6 +2163,12 @@ def notify_mentee_func(request):                                                
                 row.mentee_notify = True
 
                 row.save()
+
+                mentee_ob = User.objects.get(id=row.mentee_id)
+
+                message = "Your requested session is now available to book"
+                title = "A session on "+row.session_name+" has been created"
+                send_push_notification(mentee_ob.mobile_token,message,title)
 
                 return "Notified Successfully",1
             else:

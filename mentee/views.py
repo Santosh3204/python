@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from django.core.exceptions import ObjectDoesNotExist
 from .models import User
-
+import datetime
 from django.shortcuts import render
 import uuid
 # Create your views here.
@@ -188,10 +188,16 @@ class DashboardView(RetrieveAPIView):
                 session_name = row.Session_name
                 schedule_tab = mentor_schedule.objects.get(id=schedule_id)
                 start_time = schedule_tab.Start_datetime
+
+                diff_time = datetime.datetime.now() - start_time
+                minutes_diff = diff_time.seconds / 60
+                if minutes_diff >= 60:
+                    print("skipped some older sessions")
+                    continue
                 upcoming_sessions.append({"schedule_id":schedule_id,"id_":mentor_id,"name":name,"industry_exp":industry_exp,"avatar":avatar,
                  "position":position,"session_at":start_time.strftime("%d %b, %I:%M %p"),"session_name":session_name,"sort_key":str(start_time)})
 
-            upcoming_sessions.sort(key=lambda x: x['sort_key'],reverse=True)
+            upcoming_sessions.sort(key=lambda x: x['sort_key'],reverse=False)
 
             response["data"] = {'recommended_mentors': mentors,"upcoming_sessions":upcoming_sessions}
             #print(user_in_db.pk,user_in_db.id,"-------------------------")
@@ -1529,13 +1535,14 @@ class request_session(APIView):
     #permission_classes=(AllowAny,)                      #local
 
     def post(self,request):
+        print(request.data,"request dataaaaaaaa")
         if type(request.data) != dict:
             return Response("Request body not in Dictionary format", status=400)
 
         elif len(request.data) != 2:
             return Response("No. of keys is mis-matched, it should be 1", status=400)
 
-        actual_dict = {"mentor_id":str,
+        actual_dict = {"mentor_id":int,
                         "session_name":str
                        }
 

@@ -42,7 +42,11 @@ def fetch_booked_sessions(request):
         sales_ob = sales_order.objects.get(id=objects[i].order_id)
         mentee_obj = MenteeDetails.objects.get(id=sales_ob.Mentee_id)
 
-
+        diff_time = datetime.datetime.now() - objects[i].Start_datetime
+        minutes_diff = diff_time.seconds/60
+        if minutes_diff>=60:
+            print("skipped session")
+            continue
 
 
         # mentee_name = mentee_obj.user.name
@@ -590,7 +594,7 @@ def Create_Order_API_func(request):
                 wall_obj.save()
                 print(" wallet row deducted")
 
-                print("2000000000000000000000000")
+                print("fetching mentor details for notificaton")
 
                 mentor_user = User.objects.get(pk=sales_ord[0].Mentor_id)
                 mobile_token = mentor_user.mobile_token
@@ -935,8 +939,8 @@ def RP_Sign_Verification_func(request):
         row.current_balance = curr_bal + sales_ord.wallet_amount - sales_ord.final_price
 
         row.save()
-
-        mentor_user = User.objects.get(pk=sales_ord[0].Mentor_id)
+        print("fetchig mentors detaisl for notification")
+        mentor_user = User.objects.get(pk=sales_ord.Mentor_id)
         mobile_token = mentor_user.mobile_token
         message = user_in_db.name + " has booked a session with you"
         title = "Session booked"
@@ -2015,13 +2019,14 @@ def fetch_favourite_mentors_func(request):
         sessions=[]
         sch_obj=mentor_schedule.objects.filter(Mentor_id=mentor.id,Status=1)
  
-        for row in sch_obj:
-            sessions.append(row.Session_name)
+        for roww in sch_obj:
+            sessions.append(roww.Session_name)
  
         sessions=list(dict.fromkeys(sessions))
         sessions.sort()
  
- 
+        view_count = mentor_profile_clicks.objects.filter(mentor_id=row.mentor_id).values_list(
+            'mentee_id').distinct().count()
  
  
         company_name=json.loads(m_profile.professional_details)[0]["company_name"]
@@ -2034,7 +2039,8 @@ def fetch_favourite_mentors_func(request):
             "id_":mentor.id,
             "company_name":company_name,
             "designation":designation,
-            "session_names":sessions
+            "session_names":sessions,
+            "view_count":view_count
         }
  
         data_lst.append(data_dict)

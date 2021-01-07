@@ -321,12 +321,22 @@ def Row_Deactivate_API_func(request):
         print(e)
         return Response(json.loads("Error occured while fetching data from mentor_schedule table"),
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    obj.Status = 0
-    obj.save()
+
+    check=0
+    msg="Can't delete this slot"
+
+    if obj.Is_scheduled==0:
+        check=1
+        msg="Deactivated Successfully"
+
+    if check:
+
+        obj.Status = 0
+        obj.save()
     # serializer = mentor_schedule_serializer(q_obj)
     # return Response(serializer.data, status=status.HTTP_200_OK)
     # return serializer.data
-    return "Deactivated Successfully"
+    return msg
 
 
 def Mentor_Calender_API_func(request):

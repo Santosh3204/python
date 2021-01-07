@@ -2084,12 +2084,12 @@ def request_session_func(request):
     if check:
         row=request_sessions()
         row.mentee_id=user_in_db
-        row.mentor_id=request.data['mentor_id']
+        row.mentor_id=int(request.data['mentor_id'])
         row.session_name=request.data['session_name']
 
         row.save()
 
-        mentor_ob = User.objects.get(id=request.data['mentor_id'])
+        mentor_ob = User.objects.get(id=int(request.data['mentor_id']))
         title = "You have received a session request"
         message = "Topic : "+request.data['session_name']
         send_push_notification(mentor_ob.mobile_token,message,title)

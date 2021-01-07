@@ -1550,8 +1550,8 @@ class request_session(APIView):
             if i not in request.data:
                 return Response("Keys in Request body mis-matched", status=400)
 
-            if type(request.data[i]) != actual_dict[i]:
-                return Response("Values datatype in Request body is mis-matched", status=400)
+            # if type(request.data[i]) != actual_dict[i]:
+            #     return Response("Values datatype in Request body is mis-matched", status=400)
 
         msg=request_session_func(request)
 

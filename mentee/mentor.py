@@ -1281,6 +1281,13 @@ def Search_API_func(request):
                     data_lst.append(objects[i].degree_name)
                 except:
                     break
+        elif request.data['type'] == 'skills_career':
+            objects = skills_career.objects.filter(name__iregex=r"(^|\s)%s" % text)
+            for i in range(10):
+                try:
+                    data_lst.append(objects[i].degree_name)
+                except:
+                    break
         else:
 
             raise Exception()
@@ -1293,7 +1300,6 @@ def Search_API_func(request):
     data_lst = list(dict.fromkeys(data_lst))
 
     return data_lst
-
 
 def Mentor_Details_API_func(request):
     try:
@@ -1451,7 +1457,7 @@ def Mentee_My_Order_API_func(request):
 
     if user_in_db.is_mentee:
 
-        sales_ord_objs = sales_order.objects.filter(Mentee_id=user_in_db.id, Status__in=[1,2], Is_active=1)
+        sales_ord_objs = sales_order.objects.filter(Mentee_id=user_in_db.id, Status__in=[1,2], Is_active=1).order_by('-Created_at')
 
         client = razorpay.Client(auth=("rzp_test_A5QQVVWf0eMog1", "mwIcHdj1fIDGVi44N6BoUX0W"))
 
@@ -1504,6 +1510,23 @@ def Mentee_My_Order_API_func(request):
                 "is_feedback":is_feedback,
                 "schedule_id":sch_obj.id
             }
+
+            msg = False
+            t_30 = datetime.timedelta(minutes=30)
+
+            allowed_time = sch_obj.End_datetime + t_30
+
+            if row.Status == 2:
+
+                msg = True
+            elif datetime.datetime.now() >= allowed_time:
+
+                msg = True
+            else:
+
+                msg = False
+
+            inner_dict.update({"feedback_status": msg})
 
             inner_list.append(inner_dict)
         data_dict["inner_data"] = inner_list

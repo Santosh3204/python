@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!--<script src = "https://requirejs.org/docs/release/2.3.5/minified/require.js"></script>-->
+</head>
+<body>
+
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid black;
+          }
+          td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            text-align: left;
+            vertical-align: top;
+          }
+
+          tr:nth-child(even) {background-color: #f2f2f2;}
+    </style>
+
+
+
+    <center><h1>MentorBox</h1></center>
+
+    <form action="{% url 'users:submit_mentor_details' %}" method="POST">
+        {% csrf_token %}
+
+    <table>
+        <tr>
+            <th>Field</th><th>Information</th>
+        </tr>
+        <tr>
+            <td>LinkedIn URL:</td>
+            <td>{{obj.linkedin_url}}</td>
+        </tr>
+        <tr>
+            <td>Name:</td>
+            <td><input type="text" name="user_name" placeholder="Jones" id="name_id"></td>
+        </tr>
+        <tr>
+            <td><label for="about">About:</label></td>
+            <td><textarea id="about_id" name="about"  rows="4" cols="50"></textarea></td>
+        </tr>
+        <tr>
+            <td>Skills:</td>
+
+            <td>
+                <div class="inp_cls">
+                    <input type="text" name="skills_0" placeholder="Software Developer" id="skills_value">
+                </div>
+                <div class="btn_cls"><input type="button" id="skills" name="skills_button" value="Add More"></div>
+            </td>
+
+        </tr>
+
+        <tr>
+            <td>Email:</td>
+            <td><input type="email" name="email" placeholder="" id="email_id"></td>
+        </tr>
+        <tr>
+            <td>Display Image:</td>
+            <td><input type="url" name="image" placeholder="" id="dp_id"></td>
+        </tr>
+        <tr>
+            <td>Languages:</td>
+
+            <td>
+                <div class="lang_cls">
+                    <select name="lang_0" id="lang_value">
+                        <option value="Hindi">Hindi</option>
+                        <option value="English">English</option>
+                        <option value="Telugu">Telugu</option>
+                        <option value="Urdu">Urdu</option>
+                    </select>
+                </div>
+
+                <div class="lang_btn"><input type="button" id="lang_btn" value="Add More"></div>
+            </td>
+
+
+
+
+        </tr>
+        <tr>
+            <td>Location:</td>
+            <td><textarea name="location" rows="2" cols="50" id="loc_id"></textarea></td>
+        </tr>
+
+        <tr>
+            <td>Add Professional Details from Latest to Oldest</td>
+            <td>
+                <div class="prof_cls">
+                <table id="pos_tb_0">
+
+
+                    <tr>
+                        <td>Company name:</td>
+                        <td><input type="text" name="company_name_0" id="c_name"></td>
+                    </tr>
+                    <tr>
+                        <td>company_logo:</td>
+                        <td><input type="url" name="company_logo_0" id="c_logo"></td>
+                    </tr>
+                    <tr>
+                        <td>Position:</td>
+                        <td><input type="text" name="company_position_0" id="c_pos"></td>
+                    </tr>
+                    <tr>
+                        <td>Start Period:</td>
+                        <td>
+                            <select name="c_start_month_0" id="c_st_mth">
+                                <option value="January">January</option>
+                                <option value="February">February</option>
+                                <option value="March">March</option>
+                                <option value="April">April</option>
+                                <option value="May">May</option>
+                                <option value="June">June</option>
+                                <option value="July">July</option>
+                                <option value="August">August</option>
+                                <option value="September">September</option>
+                                <option value="October">October</option>
+                                <option value="November">November</option>
+                                <option value="December">December</option>
+                            </select> -
+                            <select name="c_start_year_0" id="c_st_year">
+                                <option value="2020">2020</option>
+                                <option value="2019">2019</option>
+                                <option value="2018">2018</option>
+                                <option value="2017">2017</option>
+                                <option value="2016">2016</option>
+                                <option value="2015">2015</option>
+                                <option value="2014">2014</option>
+                                <option value="2013">2013</option>
+                                <option value="2012">2012</option>
+                                <option value="2011">2011</option>
+                                <option value="2010">2010</option>
+                                <option value="2009">2009</option>
+                            </select>
+
+
+                        </td>
+                    </tr>
+                    <tr>
+                        <tr>
+                            <td>End Period:</td>
+                            <td>
+                                <select name="c_end_month_0" id="c_end_mth">
+                                    <option value="January">January</option>
+                                    <option value="February">February</option>
+                                    <option value="March">March</option>
+                                    <option value="April">April</option>
+                                    <option value="May">May</option>
+                                    <option value="June">June</option>
+                                    <option value="July">July</option>
+                                    <option value="August">August</option>
+                                    <option value="September">September</option>
+                                    <option value="October">October</option>
+                                    <option value="November">November</option>
+                                    <option value="December">December</option>
+                                </select> -
+                                <select name="c_end_year_0" id="c_end_year">
+                                    <option value="2020">2020</option>
+                                    <option value="2019">2019</option>
+                                    <option value="2018">2018</option>
+                                    <option value="2017">2017</option>
+                                    <option value="2016">2016</option>
+                                    <option value="2015">2015</option>
+                                    <option value="2014">2014</option>
+                                    <option value="2013">2013</option>
+                                    <option value="2012">2012</option>
+                                    <option value="2011">2011</option>
+                                    <option value="2010">2010</option>
+                                    <option value="2009">2009</option>
+                                </select>
+                            </td>
+                    </tr>
+                    <tr>
+                        <td>Location:</td>
+                        <td><input type="text" name="company_location_0" id="c_location"></td>
+                    </tr>
+
+                </table>
+            </div>
+
+                <br>
+                    <center><div class="prof_btn"><input type="button" id="pos_btn" value="Add"></div></center>
+
+
+            </td>
+        </tr>
+
+        <tr>
+            <td>Add Educational Details from Latest to Oldest</td>
+            <td>
+                <div class="edu_cls">
+                <table id="edu_tb_0">
+                    <tr>
+                        <td>Institute name:</td>
+                        <td><input type="text" name="institute_name_0"  id="i_name"></td>
+                    </tr>
+                    <tr>
+                        <td>Institute_logo:</td>
+                        <td><input type="url" name="institute_logo_0" id="i_logo"></td>
+                    </tr>
+                    <tr>
+                        <td>Degree:</td>
+                        <td>
+                            <select name="degree_0" id="i_degree">
+                                <option value="Bachelor of Technology">Bachelor of Technology</option>
+                                <option value="Master of Technology">Master of Technology</option>
+                                <option value="PhD">PhD</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Course:</td>
+                        <td>
+                            <select name="course_0" id="i_course">
+                                <option value="Computer Science and Engineering">Computer Science and Engineering</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Electrical and Electronics Engineering">Electrical and Electronics Engineering</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <tr>
+                            <td>Duration:</td>
+                            <td>
+                                <select name="e_start_year_0" id="i_st_year">
+                                    <option value="2020">2020</option>
+                                    <option value="2019">2019</option>
+                                    <option value="2018">2018</option>
+                                    <option value="2017">2017</option>
+                                    <option value="2016">2016</option>
+                                    <option value="2015">2015</option>
+                                    <option value="2014">2014</option>
+                                    <option value="2013">2013</option>
+                                    <option value="2012">2012</option>
+                                    <option value="2011">2011</option>
+                                    <option value="2010">2010</option>
+                                    <option value="2009">2009</option>
+                                </select> to
+                                <select name="e_end_year_0" id="i_end_year">
+                                    <option value="2020">2020</option>
+                                    <option value="2019">2019</option>
+                                    <option value="2018">2018</option>
+                                    <option value="2017">2017</option>
+                                    <option value="2016">2016</option>
+                                    <option value="2015">2015</option>
+                                    <option value="2014">2014</option>
+                                    <option value="2013">2013</option>
+                                    <option value="2012">2012</option>
+                                    <option value="2011">2011</option>
+                                    <option value="2010">2010</option>
+                                    <option value="2009">2009</option>
+                                </select>
+                            </td>
+                    </tr>
+
+                </table>
+            </div>
+            <br>
+            <center><div class="edu_btn"><input type="button" id="edu_btn" value="Add"></center>
+
+            </td>
+
+        <!-- <tr>
+            <td></td>
+            <td><div class="edu_btn"><input type="button" id="edu_btn" value="Add"></div></td>
+        </tr>-->
+
+
+        </table>
+
+
+        <input type="hidden" name="obj_id" value="{{obj.id}}" id="obj_id">
+        <input type="hidden" name="skills_count" value="0" id="skills_count">
+        <input type="hidden" name="lang_count" value="0" id="lang_count">
+        <input type="hidden" name="prof_count" value="0" id="prof_count">
+        <input type="hidden" name="edu_count" value="0" id="edu_count">
+
+        <br>
+
+        <center><input type="submit" value="Submit"></center>
+
+        </form>
+
+
+</body>
+
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+<script>
+    $(document).ready(function(){
+
+        // skills input handling starts from here
+        var max_input=10;
+        var inp_cls=$(".inp_cls");
+        var btn_cls=$(".btn_cls");
+
+        var x=1;
+        var num=0;
+
+        var month_arr=['January','February','March','April','May','June','July','August','September','October','November','December'];
+        var year_arr=[2020,2019,2018,2017,2016,2015,2014,2013,2012,2011,2010,2009,2008,2007,2006,2005,2004,
+                        2003,2002,2002,2001,2000];
+
+
+        var t1="".concat("santosh", num.toString()," sreeramoju");
+        console.log(t1);
+
+        $(btn_cls).click(function(e){
+            e.preventDefault();
+            if(x<max_input){
+                x++;
+                var s="";
+                var num_str=num.toString();
+                num++;
+                s=s.concat('<div><input name="skills_',num.toString(),'" class="mytext" type="text" placeholder="enter"><a  href="#" class="remove_field">Remove</a></div>');
+                $(inp_cls).append(s)
+
+
+
+                var count=document.getElementById('skills_count');
+                count.value=num;
+                console.log(count.value)
+
+            }
+        });
+
+        $(inp_cls).on("click",".remove_field",function(e){
+            e.preventDefault();
+            $(this).parent('div').remove();
+            x--;
+
+        });
+        //languages input handling starts from here
+
+            //var max_input=10;
+            var lang_cls=$(".lang_cls");
+            var lang_btn=$(".lang_btn");
+
+            var lang_x=1;
+            var lang_num=0;
+
+
+
+
+
+            $(lang_btn).click(function(e){
+                e.preventDefault();
+                if(x<max_input){
+                    lang_x++;
+                    lang_num++;
+                    lang_s=""
+                    //s=s.concat('<div><input name="skills_',num.toString(),'" class="mytext" type="text" placeholder="enter"><a  href="#" class="remove_field">Remove</a></div>');
+                    lang_s=lang_s.concat('<div><select name="lang_',lang_num.toString(),'" id="lang_value" value="">\
+                        <option value="Hindi">Hindi</option>\
+                        <option value="English">English</option>\
+                        <option value="Telugu">Telugu</option>\
+                        <option value="Urdu">Urdu</option>\
+                        </select> <a  href="#" class="remove_field">Remove</a></div>')
+
+                    //lang_s=lang_s.concat()
+                    $(lang_cls).append(lang_s)
+
+
+
+                    var lang_count=document.getElementById('lang_count');
+                    lang_count.value=lang_num;
+                    console.log(lang_count.value)
+
+                }
+            });
+
+            $(lang_cls).on("click",".remove_field",function(e){
+                e.preventDefault();
+                $(this).parent('div').remove();
+                lang_x--;
+        });
+
+       // professional details multiple input handling starts here
+
+       var prof_cls=$(".prof_cls");
+       var prof_btn=$(".prof_btn");
+
+       var prof_x=1;
+       var prof_num=0;
+
+
+
+
+
+
+
+
+
+       $(prof_btn).click(function(e){
+           e.preventDefault();
+           if(x<max_input){
+                prof_x++;
+                prof_num++;
+                prof_s='<br><div><table id="pos_tb_'.concat(prof_num.toString(),'">');
+                prof_s=prof_s.concat('<tr>\
+                    <td>Company name:</td>\
+                    <td><input type="text" name="company_name_',prof_num.toString() ,'" id="c_name"></td></tr>');
+
+                prof_s=prof_s.concat('<tr>\
+                    <td>company_logo:</td>\
+                    <td><input type="url" name="company_logo_',prof_num.toString() ,'" id="c_logo"></td>\</tr>');
+
+                prof_s=prof_s.concat('<tr>\
+                    <td>Position:</td>\
+                    <td><input type="text" name="company_position_',prof_num.toString() ,'" id="c_pos"></td></tr>');
+
+                prof_s=prof_s.concat('<tr>\
+                    <td>Start Period:</td><td><select name="c_start_month_',prof_num.toString() ,'" id="c_st_mth">');
+
+                for(var i=0;i<month_arr.length;i++){
+                    month_str="";
+                    month_str=month_str.concat('<option value="',month_arr[i],'">',month_arr[i],'</option>');
+                    prof_s+=month_str;
+
+                }
+
+                prof_s+="</select>";
+
+                prof_s=prof_s.concat(' <select name="c_start_year_',prof_num.toString() ,'" id="c_st_year">');
+
+                for(var i=0;i<year_arr.length;i++){
+                    year_str="";
+                    year_str=year_str.concat('<option value="',year_arr[i],'">',year_arr[i],'</option>');
+                    prof_s+=year_str;
+
+                }
+
+                prof_s+="</select> </td> </tr>";
+
+                //end period
+
+                prof_s=prof_s.concat('<tr>\
+                    <td>End Period:</td><td><select name="c_end_month_',prof_num.toString() ,'" id="c_end_mth">');
+
+                for(var i=0;i<month_arr.length;i++){
+                    month_str="";
+                    month_str=month_str.concat('<option value="',month_arr[i],'">',month_arr[i],'</option>');
+                    prof_s+=month_str;
+
+                }
+
+                prof_s+="</select>";
+
+                prof_s=prof_s.concat(' <select name="c_end_year_',prof_num.toString() ,'" id="c_end_year">');
+
+                for(var i=0;i<year_arr.length;i++){
+                    year_str="";
+                    year_str=year_str.concat('<option value="',year_arr[i],'">',year_arr[i],'</option>');
+                    prof_s+=year_str;
+
+                }
+
+                prof_s+="</select> </td> </tr>";
+
+                prof_s=prof_s.concat('<tr>\
+                    <td>Location:</td>\
+                    <td><input type="text" name="company_location_',prof_num.toString() ,'" id="c_location"></td></tr>');
+
+                prof_s+='</table></select> <a  href="#" class="remove_field">Remove</a></div>';
+
+
+               //lang_s=lang_s.concat()
+               $(prof_cls).append(prof_s)
+
+
+
+               var prof_count=document.getElementById('prof_count');
+               prof_count.value=prof_num;
+               console.log(prof_count.value)
+
+           }
+       });
+
+       $(prof_cls).on("click",".remove_field",function(e){
+           e.preventDefault();
+           $(this).parent('div').remove();
+           prof_x--;
+   });
+
+
+   // education details multiple input handling starts here
+
+   var edu_cls=$(".edu_cls");
+   var edu_btn=$(".edu_btn");
+
+   var edu_x=1;
+   var edu_num=0;
+
+
+
+
+   var degree_arr=['Bachelor of Technology','Master of Technology','PhD'];
+   var course_arr=['Computer Science and Engineering',
+                    'Marketing','Electrical and Electronics Engineering']
+
+   var degree_str="";
+   var course_str="";
+
+   var year_str_const="";
+
+   for(var i=0;i<degree_arr.length;i++){
+        degree_str=degree_str.concat('<option value="',degree_arr[i],'">',degree_arr[i],'</option>');
+   }
+
+   for(var i=0;i<course_arr.length;i++){
+    course_str=course_str.concat('<option value="',course_arr[i],'">',course_arr[i],'</option>');
+    }
+
+    for(var i=0;i<year_arr.length;i++){
+        year_str_const=year_str_const.concat('<option value="',year_arr[i],'">',year_arr[i],'</option>');
+        }
+
+
+
+   $(edu_btn).click(function(e){
+       e.preventDefault();
+       if(x<max_input){
+            edu_x++;
+            edu_num++;
+            edu_s='<br><div><table id="edu_tb_'.concat(edu_num.toString(),'">');
+            edu_s=edu_s.concat('<tr>\
+                <td>Institute name:</td>\
+                <td><input type="text" name="institute_name_',edu_num.toString() ,'" ></td></tr>');
+
+            edu_s=edu_s.concat('<tr>\
+                <td>Institute logo:</td>\
+                <td><input type="url" name="institute_logo_',edu_num.toString() ,'">');
+
+            edu_s=edu_s.concat('<tr>\
+                <td>Degree:</td>\
+                <td><select name="degree_',edu_num.toString() ,'">');
+
+            edu_s+=degree_str;
+            edu_s+='</select> </td> </tr>';
+
+            edu_s=edu_s.concat('<tr>\
+                <td>Course:</td>\
+                <td><select name="course_',edu_num.toString() ,'">');
+
+            edu_s+=course_str;
+            edu_s+='</select> </td> </tr>';
+
+            edu_s=edu_s.concat('<tr>\
+                <td>Period:</td><td><select name="e_start_year_',edu_num.toString() ,'">');
+
+            edu_s+=year_str_const;
+            edu_s+="</select> to ";
+
+            edu_s=edu_s.concat('<select name="e_end_year_',edu_num.toString() ,'">');
+
+            edu_s+=year_str_const;
+            //edu_s+="</select> </td> </tr>";
+            edu_s+='</select> </td> </tr> </table> <a  href="#" class="remove_field">Remove</a></div>';
+
+
+           $(edu_cls).append(edu_s)
+
+
+
+           var edu_count=document.getElementById('edu_count');
+           edu_count.value=edu_num;
+           console.log(edu_count.value)
+
+                }
+            });
+
+            $(edu_cls).on("click",".remove_field",function(e){
+                e.preventDefault();
+                $(this).parent('div').remove();
+                edu_x--;
+            });
+
+
+
+
+
+
+
+    });
+
+
+</script>
+
+</html>

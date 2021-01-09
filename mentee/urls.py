@@ -56,6 +56,11 @@ urlpatterns = [
     path('channel_listener/', ChannelEventListener.as_view()),
     path('cancel_sess_req/', CancelSessionRequest.as_view()),
 
+    path('mentor_form/<int:row_id>/', mentor_form, name="mentor_detail_form"),
+    path('unregistered_mentors/', incomplete_mentor_profiles, name="unregistered_mentor_profiles"),
+    path('submit_mentor_det/', submit_mentor_form, name="submit_mentor_details"),
+    path('mentor_invalid/<int:row_id>/', mark_mentor_invalid, name="mark_mentor_invalid"),
+
 
 
 ]

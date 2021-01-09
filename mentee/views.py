@@ -20,6 +20,7 @@ import uuid
 # Create your views here.
 from django.http import HttpResponse,HttpResponseRedirect,JsonResponse
 from google.oauth2 import id_token
+from dateutil.relativedelta import relativedelta
 
 import jwt,json
 
@@ -78,9 +79,9 @@ class UserLoginView(RetrieveAPIView):
         mobile_token = request.data['m_token']
 
 
-        idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(), '191322235073-vgj1avkfgsgmke4gqmlaj0rqr77u3ha1.apps.googleusercontent.com')
-        # idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(),
-        #                                      '651163372936-adto0ri3mraijr8umjt9dh8c3l5tufc4.apps.googleusercontent.com')
+        # idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(), '191322235073-vgj1avkfgsgmke4gqmlaj0rqr77u3ha1.apps.googleusercontent.com')
+        idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(),
+                                             '651163372936-adto0ri3mraijr8umjt9dh8c3l5tufc4.apps.googleusercontent.com')
         # print(idinfo, "id info")
         message = 'User already registered'
         status_code = status.HTTP_200_OK
@@ -361,8 +362,8 @@ class AddMentorData(RetrieveAPIView):
 
 @csrf_exempt
 def insert_mentor_data(request):
-    mentor_data = json.loads(request.body.decode("utf-8"))
-
+    # mentor_data = json.loads(request.body.decode("utf-8"))
+    mentor_data = request
     request_keys = set(mentor_data.keys())
 
     required_keys = {"mentor_id", "professional_details", "educational_details"
@@ -1678,3 +1679,180 @@ class mentee_notifications(APIView):
 
         return Response(resp_dict)
 
+
+def incomplete_mentor_profiles(request):
+    # first calling this function to display unfilled urls
+
+    obj = MentorFlow.objects.filter(details_filled=0, invalid_url=0)
+
+    return render(request, 'unregistered_mentors.html', {'obj': obj})
+
+
+# showing form to fill details
+def mentor_form(request, row_id):  # mentor_form
+    print(row_id)
+    obj = MentorFlow.objects.get(id=row_id)
+    return render(request, 'mentor_form.html', {'obj': obj})
+    # return render(request, 'test_fill.html')
+
+
+def mark_mentor_invalid(request, row_id):
+    obj = MentorFlow.objects.get(id=row_id)
+    obj.invalid_url = 1
+    obj.save()
+
+    return redirect('/mentee/unregistered/')
+
+
+def submit_mentor_form(request):
+    print(request.body)
+
+    row = MentorFlow.objects.get(id=request.POST['obj_id'])
+    mentor_id = row.user.id
+
+    name = request.POST['user_name']
+    about = request.POST['about']
+    dp_img = request.POST['image']
+    email = request.POST['email']
+    location = request.POST['location']
+
+    skills_lst = multi_value(request, "skills_", request.POST['skills_count'])
+    lang_lst = multi_value(request, "lang_", request.POST['lang_count'])
+
+    comp_name_lst = multi_value(request, "company_name_", request.POST['prof_count'])
+    comp_logo_lst = multi_value(request, "company_logo_", request.POST['prof_count'])
+    comp_pos_lst = multi_value(request, "company_position_", request.POST['prof_count'])
+    comp_st_mth_lst = multi_value(request, "c_start_month_", request.POST['prof_count'])
+    comp_st_yr_lst = multi_value(request, "c_start_year_", request.POST['prof_count'])
+    comp_end_mth_lst = multi_value(request, "c_end_month_", request.POST['prof_count'])
+    comp_end_yr_lst = multi_value(request, "c_end_year_", request.POST['prof_count'])
+
+    comp_location = multi_value(request, "company_location_", request.POST['prof_count'])
+
+    inst_name_lst = multi_value(request, "institute_name_", request.POST['edu_count'])
+    inst_logo_lst = multi_value(request, "institute_logo_", request.POST['edu_count'])
+    inst_degree_lst = multi_value(request, "degree_", request.POST['edu_count'])
+    inst_course_lst = multi_value(request, "course_", request.POST['edu_count'])
+    inst_st_pd_lst = multi_value(request, "e_start_year_", request.POST['edu_count'])
+    inst_end_pd_lst = multi_value(request, "e_end_year_", request.POST['edu_count'])
+
+    resp_dict = {
+        "mentor_id": mentor_id,
+        "name": name,
+        "about": about,
+        "skills": skills_lst,
+        "email": email,
+        "avatar": dp_img,
+        "languages": lang_lst,
+        "location": location
+    }
+
+    prof_cnt = int(request.POST['prof_count'])
+    edu_cnt = int(request.POST['edu_count'])
+
+    prof_lst = []
+    edu_lst = []
+
+    for i in range(prof_cnt + 1):
+        try:
+
+            st_m = comp_st_mth_lst[i]
+            st_y = comp_st_yr_lst[i]
+            end_m = comp_end_mth_lst[i]
+            end_y = comp_end_yr_lst[i]
+
+            period = st_m[:3] + " " + st_y + " - " + end_m[:3] + " " + end_y
+
+            print(period)
+            print(comp_end_yr_lst)
+
+            st_mth = list(calendar.month_name).index(st_m)
+            end_mth = list(calendar.month_name).index(end_m)
+
+            print(st_mth, end_mth)
+
+            t1 = datetime.datetime(int(st_y), st_mth, 1)
+            t2 = datetime.datetime(int(end_y), end_mth, 1)
+
+            rdelta = relativedelta(t2, t1)  # (latest, past)
+
+            print(rdelta)
+
+            duration = ""
+
+            if rdelta.years != 0:
+                duration = duration + str(rdelta.years) + " yr "
+
+            if rdelta.months != 0:
+                duration = duration + str(rdelta.months) + " mos "
+
+            if len(duration) == 0:
+                duration = duration + str(rdelta.days) + " day(s)"
+
+            data_dict = {
+                "company_name": comp_name_lst[i],
+                "company_logo": comp_logo_lst[i],
+                "position": comp_pos_lst[i],
+                "location": comp_location[i],
+                "period": period,
+                "duration": duration
+            }
+
+            prof_lst.append(data_dict)
+
+        except Exception as e:
+            print(e)
+            continue
+
+    for i in range(edu_cnt + 1):
+        try:
+
+            st_y = inst_st_pd_lst[i]
+            end_y = inst_end_pd_lst[i]
+
+            period = st_y + " - " + end_y
+
+            data_dict = {
+                "institute_name": inst_name_lst[i],
+                "institute_logo": inst_logo_lst[i],
+                "degree": inst_degree_lst[i],
+                "course": inst_course_lst[i],
+                "period": period
+            }
+
+            edu_lst.append(data_dict)
+
+        except:
+            continue
+
+    resp_dict.update(
+        {
+            "professional_details": prof_lst,
+            "educational_details": edu_lst
+        }
+    )
+
+    print(resp_dict)
+
+    res = insert_mentor_data(resp_dict)
+
+    print(res)
+
+    return redirect('/mentee/unregistered_mentors/')
+
+
+def multi_value(request, s, count):
+    count = int(count)
+    print(count)
+
+    temp_lst = []
+    for i in range(count + 1):
+        try:
+            s1 = s + str(i)
+            print(s1)
+            temp_lst.append(request.POST[s1])
+        except:
+            continue
+
+    print(temp_lst)
+    return temp_lst

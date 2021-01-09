@@ -101,6 +101,7 @@ class MentorFlow(models.Model):
     webinar_min = models.SmallIntegerField(null=True)
     webinar_max = models.SmallIntegerField(null=True)
     details_filled = models.BooleanField(null=True, default=0)
+    invalid_url = models.BooleanField(null=True, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

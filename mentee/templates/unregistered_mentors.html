@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MentorBox</title>
+</head>
+<body>
+
+
+    <style>
+
+        table, th, td {
+            border: 1px solid black;
+          }
+
+        table {
+        width: 100%;
+        }
+
+        table {
+            border-collapse: collapse;
+          }
+
+
+    </style>
+
+
+    <table class="urls">
+        <tr>
+            <th>Linked Urls</th>
+            <th>Fill Details</th>
+            <th>Mark Invalid</th>
+        </tr>
+    {%  for obj in obj %}
+
+
+        <tr>
+
+            <td>{{obj.linkedin_url}}</td>
+            <td><a href="{% url 'users:mentor_detail_form' obj.id %}"><input type="button" value="Fill">
+            </a></td>
+            <td><a href="{% url 'users:mark_mentor_invalid' obj.id %}"><input type="button" value="Invalid">
+            </a></td>
+
+        </tr>
+
+    {% endfor %}
+
+    </table>
+
+
+</body>
+
+
+
+</html>

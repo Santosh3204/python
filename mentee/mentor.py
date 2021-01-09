@@ -1295,7 +1295,7 @@ def Search_API_func(request):
             objects = skills_career.objects.filter(name__iregex=r"(^|\s)%s" % text)
             for i in range(10):
                 try:
-                    data_lst.append(objects[i].degree_name)
+                    data_lst.append(objects[i].name)
                 except:
                     break
         else:
@@ -1497,7 +1497,7 @@ def Mentee_My_Order_API_func(request):
                 is_feedback = True
             except Exception as e:
                 print("No Feedback given")
-                rating = ""
+                rating = 0
                 comments = ""
               
             sch_obj = mentor_schedule.objects.get(id=row.Schedule_id)

@@ -159,14 +159,15 @@ class DashboardView(RetrieveAPIView):
                 user_detail_dict = {
                     # "College": user_detail.college,
                     #                 "Course": user_detail.course,
-                                    "Degree": user_detail.degree,
+                    #                 "Degree": user_detail.degree,
                                     "fields": json.loads(user_detail.career_list),
                                     "Skills": json.loads(user_detail.skills)}
                 mentors = es_ob.search_mentor_for_student(user_detail_dict)
             else:
                 user_detail_dict = {
                     # "College": user_detail.college,
-                                    "Degree": user_detail.degree, "fields": json.loads(user_detail.career_list),
+                    #                 "Degree": user_detail.degree,
+                    "fields": json.loads(user_detail.career_list),
                                     "Skills": json.loads(user_detail.skills),
                                     "CurrentDesignation": user_detail.designation,
                                     # "CurrentCompany": user_detail.company
@@ -286,7 +287,8 @@ class UserProfileView(RetrieveAPIView):
                                              # college=data["College"],
                                              degree=data["Degree"],
                                              # course=data["Course"],
-                                             goal_defined=data['careerGoals'],
+                                             education_level=data["education_level"],
+                                             # goal_defined=data['careerGoals'],
                                              skills=json.dumps(data["Skills"]), career1=career1, career2=career2,
                                              career_list=json.dumps(data["fields"]),
                                              user_id=user.pk)
@@ -304,10 +306,11 @@ class UserProfileView(RetrieveAPIView):
                                              # college=data["College"],
                                              degree=data["Degree"],
                                              # industry_exp=data["IndustryExperience"],
+                                             education_level=data["education_level"],
                                              skills=json.dumps(data["Skills"]),
                                              # company=data["CurrentCompany"],
                                              designation=data["CurrentDesignation"],
-                                             same_profession=data["stayInField"],
+                                             # same_profession=data["stayInField"],
                                              career1=career1, career2=career2, career_list=json.dumps(data["fields"]),
                                              user_id=user.pk)
                 user_details.save()

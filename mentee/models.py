@@ -67,6 +67,7 @@ class MenteeDetails(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile = models.CharField(max_length=15, blank=True)
+    education_level = models.CharField(max_length=45, blank=True)
     college = models.CharField(null=True, max_length=300, blank=True)
     degree = models.CharField(null=True, max_length=300, blank=True)
     course = models.CharField(null=True, max_length=300, blank=True)

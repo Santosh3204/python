@@ -110,7 +110,7 @@ class ElasticDB:
                         "should": [
                             {"terms": {"designation": student_details["fields"]}},
                             # {"match_phrase": {"college": student_details["College"]}},
-                            {"match_phrase": {"course": student_details["Degree"]}},
+                            # {"match_phrase": {"course": student_details["Degree"]}},
                             # {"match_phrase": {"degree": student_details["Course"]}}
 
 
@@ -188,7 +188,7 @@ class ElasticDB:
                     "should": [
                         {"match_phrase": {"designation": prof_details["CurrentDesignation"]}},
                         # {"match_phrase": {"college": prof_details["College"]}},
-                        {"match_phrase": {"degree": prof_details["Degree"]}},
+                        # {"match_phrase": {"degree": prof_details["Degree"]}},
                         # {"match_phrase": {"company_name": prof_details["CurrentCompany"]}}
 
                     ],

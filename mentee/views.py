@@ -387,8 +387,6 @@ def insert_mentor_data(request):
 
     user_row = User.objects.get(pk=int(mentor_data["mentor_id"]))
 
-
-
     mentor_flow = MentorFlow.objects.get(user_id=user_row.pk)
 
     skills = json.loads(mentor_flow.skills)

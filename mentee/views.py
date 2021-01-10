@@ -144,8 +144,7 @@ class DashboardView(RetrieveAPIView):
         response = {
             'success': True,
             "status_code":200,
-            "is_mentee":True,
-            "profile_verified":True
+            "is_mentee":True
 
         }
 
@@ -202,13 +201,14 @@ class DashboardView(RetrieveAPIView):
 
             upcoming_sessions.sort(key=lambda x: x['sort_key'],reverse=False)
 
-            response["data"] = {'recommended_mentors': mentors,"upcoming_sessions":upcoming_sessions}
+            response["data"] = {'recommended_mentors': mentors,"upcoming_sessions":upcoming_sessions,
+                               "profile_verified":True}
             #print(user_in_db.pk,user_in_db.id,"-------------------------")
             req_sessions = mentee_notifications_func(user_in_db.id)
             print(req_sessions,"req_sessions")
             response["data"].update({"requested_sessions":req_sessions})
             # print(user_detail_dict)
-
+            
         elif is_mentor:
             mentor_dict = {"mentor_id":user_in_db.pk,"is_scheduled":1}
             upcoming_sessions =fetch_booked_sessions(mentor_dict)
@@ -218,23 +218,27 @@ class DashboardView(RetrieveAPIView):
             request_sessions = mentor_notifications_func(user_in_db.id)
             response["data"].update({"requested_sessions":request_sessions})
 
-            response['profile_verified'] = MentorFlow.objects.get(user=user_in_db).details_filled
+            response["data"].update({"profile_verified": MentorFlow.objects.get(user=user_in_db).details_filled}
         else:
             status_code = status.HTTP_201_CREATED
             message = "User has to fill registraion info"
+            response["user_email"] = user_in_db.email
+            response["user_name"] = user_in_db.name
+            response["user_profile_pic"] = user_in_db.picture
 
-        response["message"] = message
+            return HttpResponse(json.dumps(response), status=status_code)
+
         response["user_email"] = user_in_db.email
         response["user_name"] = user_in_db.name
         response["user_profile_pic"] = user_in_db.picture
 
-        if not response['profile_verified']:
+        if not response["data"]['profile_verified']:
             response["message"] = "Verification is pending, We will notify you once it gets completed"
 
         # adding mentorbox videos to dashboard
         suffix = "&controls=0&modestbranding=1&rel=0"
         prefix = "https://www.youtube.com/embed?"
-        response["videos"] = [{"Glimpse of our previous webinars":[
+        videos = [{"Glimpse of our previous webinars":[
             {"Mentorbox proudly collaborates with Techniche,IIT Guwahati : Speed mentoring session":prefix+"oJHbDDcO-Qw"+suffix},
             {"Meet Our Mentor - Mr. David Meltzer | Consultant & Business Coach, Mentor": prefix+"2OxTDDqjO2g"+suffix},
             {"Want to prepare for Google with Dhruv Chandok":prefix+"IaaXA_LMa0Y"+suffix},
@@ -257,7 +261,7 @@ class DashboardView(RetrieveAPIView):
                                 ]}
 
                               ]
-
+        response["data"].update({"videos":videos})
         return HttpResponse(json.dumps(response), status=status_code)
 
 

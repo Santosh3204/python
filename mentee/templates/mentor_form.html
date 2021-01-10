@@ -67,26 +67,19 @@
             <td>Display Image:</td>
             <td><input type="url" name="image" placeholder="" id="dp_id"></td>
         </tr>
+
         <tr>
             <td>Languages:</td>
 
             <td>
                 <div class="lang_cls">
-                    <select name="lang_0" id="lang_value">
-                        <option value="Hindi">Hindi</option>
-                        <option value="English">English</option>
-                        <option value="Telugu">Telugu</option>
-                        <option value="Urdu">Urdu</option>
-                    </select>
+                    <input type="text" name="lang_0" placeholder="English" id="lang_value">
                 </div>
-
                 <div class="lang_btn"><input type="button" id="lang_btn" value="Add More"></div>
             </td>
 
-
-
-
         </tr>
+
         <tr>
             <td>Location:</td>
             <td><textarea name="location" rows="2" cols="50" id="loc_id"></textarea></td>
@@ -128,19 +121,8 @@
                                 <option value="November">November</option>
                                 <option value="December">December</option>
                             </select> -
-                            <select name="c_start_year_0" id="c_st_year">
-                                <option value="2020">2020</option>
-                                <option value="2019">2019</option>
-                                <option value="2018">2018</option>
-                                <option value="2017">2017</option>
-                                <option value="2016">2016</option>
-                                <option value="2015">2015</option>
-                                <option value="2014">2014</option>
-                                <option value="2013">2013</option>
-                                <option value="2012">2012</option>
-                                <option value="2011">2011</option>
-                                <option value="2010">2010</option>
-                                <option value="2009">2009</option>
+                            <select name="c_start_year_0" id="comp_st_years">
+
                             </select>
 
 
@@ -150,6 +132,14 @@
                         <tr>
                             <td>End Period:</td>
                             <td>
+
+                                <input type="checkbox" name="present" value="present" id="present" onclick="presentFunction()">
+                                <label for="present">Present</label>
+
+                                <br>
+
+                                <div id="comp_end_period" style="display:block">
+
                                 <select name="c_end_month_0" id="c_end_mth">
                                     <option value="January">January</option>
                                     <option value="February">February</option>
@@ -164,26 +154,21 @@
                                     <option value="November">November</option>
                                     <option value="December">December</option>
                                 </select> -
-                                <select name="c_end_year_0" id="c_end_year">
-                                    <option value="2020">2020</option>
-                                    <option value="2019">2019</option>
-                                    <option value="2018">2018</option>
-                                    <option value="2017">2017</option>
-                                    <option value="2016">2016</option>
-                                    <option value="2015">2015</option>
-                                    <option value="2014">2014</option>
-                                    <option value="2013">2013</option>
-                                    <option value="2012">2012</option>
-                                    <option value="2011">2011</option>
-                                    <option value="2010">2010</option>
-                                    <option value="2009">2009</option>
+                                <select name="c_end_year_0" id="comp_end_years">
                                 </select>
+
+                            </div>
+
+
+
                             </td>
                     </tr>
+
                     <tr>
                         <td>Location:</td>
-                        <td><input type="text" name="company_location_0" id="c_location"></td>
+                        <td><textarea name="company_location_0" rows="2" cols="50" id="c_location"></textarea></td>
                     </tr>
+
 
                 </table>
             </div>
@@ -210,55 +195,19 @@
                     </tr>
                     <tr>
                         <td>Degree:</td>
-                        <td>
-                            <select name="degree_0" id="i_degree">
-                                <option value="Bachelor of Technology">Bachelor of Technology</option>
-                                <option value="Master of Technology">Master of Technology</option>
-                                <option value="PhD">PhD</option>
-                            </select>
-                        </td>
+                        <td><input type="text" name="degree_0" placeholder="Bachelor of Technology" id="i_degree"></td>
                     </tr>
                     <tr>
                         <td>Course:</td>
-                        <td>
-                            <select name="course_0" id="i_course">
-                                <option value="Computer Science and Engineering">Computer Science and Engineering</option>
-                                <option value="Marketing">Marketing</option>
-                                <option value="Electrical and Electronics Engineering">Electrical and Electronics Engineering</option>
-                            </select>
-                        </td>
+                        <td><input type="text" name="course_0" placeholder="Computer Science and Engineering" id="i_course"></td>
                     </tr>
                     <tr>
                         <tr>
                             <td>Duration:</td>
                             <td>
-                                <select name="e_start_year_0" id="i_st_year">
-                                    <option value="2020">2020</option>
-                                    <option value="2019">2019</option>
-                                    <option value="2018">2018</option>
-                                    <option value="2017">2017</option>
-                                    <option value="2016">2016</option>
-                                    <option value="2015">2015</option>
-                                    <option value="2014">2014</option>
-                                    <option value="2013">2013</option>
-                                    <option value="2012">2012</option>
-                                    <option value="2011">2011</option>
-                                    <option value="2010">2010</option>
-                                    <option value="2009">2009</option>
+                                <select name="e_start_year_0" id="edu_st_years">
                                 </select> to
-                                <select name="e_end_year_0" id="i_end_year">
-                                    <option value="2020">2020</option>
-                                    <option value="2019">2019</option>
-                                    <option value="2018">2018</option>
-                                    <option value="2017">2017</option>
-                                    <option value="2016">2016</option>
-                                    <option value="2015">2015</option>
-                                    <option value="2014">2014</option>
-                                    <option value="2013">2013</option>
-                                    <option value="2012">2012</option>
-                                    <option value="2011">2011</option>
-                                    <option value="2010">2010</option>
-                                    <option value="2009">2009</option>
+                                <select name="e_end_year_0" id="edu_end_years">
                                 </select>
                             </td>
                     </tr>
@@ -297,6 +246,21 @@
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 
 <script>
+
+
+    function presentFunction() {
+        var checkBox = document.getElementById("present");
+        var end_period = document.getElementById("comp_end_period");
+        if (checkBox.checked == true){
+            end_period.style.display = "none";
+        } else {
+            end_period.style.display = "block";
+        }
+
+      }
+
+
+
     $(document).ready(function(){
 
         // skills input handling starts from here
@@ -308,16 +272,30 @@
         var num=0;
 
         var month_arr=['January','February','March','April','May','June','July','August','September','October','November','December'];
-        var year_arr=[2020,2019,2018,2017,2016,2015,2014,2013,2012,2011,2010,2009,2008,2007,2006,2005,2004,
-                        2003,2002,2002,2001,2000];
 
 
-        var t1="".concat("santosh", num.toString()," sreeramoju");
-        console.log(t1);
+
+
+        var nowY = new Date().getFullYear();
+        console.log("first year:", nowY);
+
+        options = "";
+
+        for(var Y=nowY; Y>=1980; Y--) {
+            options += "<option>"+ Y +"</option>";
+        }
+
+        $("#comp_st_years").append( options );
+        $("#comp_end_years").append(options);
+        $("#edu_st_years").append(options);
+        $("#edu_end_years").append(options);
+
+
+
 
         $(btn_cls).click(function(e){
             e.preventDefault();
-            if(x<max_input){
+
                 x++;
                 var s="";
                 var num_str=num.toString();
@@ -331,7 +309,7 @@
                 count.value=num;
                 console.log(count.value)
 
-            }
+
         });
 
         $(inp_cls).on("click",".remove_field",function(e){
@@ -355,17 +333,17 @@
 
             $(lang_btn).click(function(e){
                 e.preventDefault();
-                if(x<max_input){
+
                     lang_x++;
                     lang_num++;
                     lang_s=""
-                    //s=s.concat('<div><input name="skills_',num.toString(),'" class="mytext" type="text" placeholder="enter"><a  href="#" class="remove_field">Remove</a></div>');
-                    lang_s=lang_s.concat('<div><select name="lang_',lang_num.toString(),'" id="lang_value" value="">\
-                        <option value="Hindi">Hindi</option>\
-                        <option value="English">English</option>\
-                        <option value="Telugu">Telugu</option>\
-                        <option value="Urdu">Urdu</option>\
-                        </select> <a  href="#" class="remove_field">Remove</a></div>')
+                    lang_s=lang_s.concat('<div><input name="lang_',lang_num.toString(),'" class="mytext" type="text" placeholder="enter"><a  href="#" class="remove_field">Remove</a></div>');
+                    //lang_s=lang_s.concat('<div><select name="lang_',lang_num.toString(),'" id="lang_value" value="">\
+                    //    <option value="Hindi">Hindi</option>\
+                    //    <option value="English">English</option>\
+                    //    <option value="Telugu">Telugu</option>\
+                    //    <option value="Urdu">Urdu</option>\
+                    //    </select> <a  href="#" class="remove_field">Remove</a></div>')
 
                     //lang_s=lang_s.concat()
                     $(lang_cls).append(lang_s)
@@ -376,7 +354,7 @@
                     lang_count.value=lang_num;
                     console.log(lang_count.value)
 
-                }
+
             });
 
             $(lang_cls).on("click",".remove_field",function(e){
@@ -403,7 +381,7 @@
 
        $(prof_btn).click(function(e){
            e.preventDefault();
-           if(x<max_input){
+
                 prof_x++;
                 prof_num++;
                 prof_s='<br><div><table id="pos_tb_'.concat(prof_num.toString(),'">');
@@ -431,22 +409,19 @@
 
                 prof_s+="</select>";
 
-                prof_s=prof_s.concat(' <select name="c_start_year_',prof_num.toString() ,'" id="c_st_year">');
+                prof_s=prof_s.concat(' <select name="c_start_year_',prof_num.toString() ,'" id="comp_st_year">');
 
-                for(var i=0;i<year_arr.length;i++){
-                    year_str="";
-                    year_str=year_str.concat('<option value="',year_arr[i],'">',year_arr[i],'</option>');
-                    prof_s+=year_str;
-
-                }
+                prof_s+=options;
 
                 prof_s+="</select> </td> </tr>";
+
+
+
 
                 //end period
 
                 prof_s=prof_s.concat('<tr>\
                     <td>End Period:</td><td><select name="c_end_month_',prof_num.toString() ,'" id="c_end_mth">');
-
                 for(var i=0;i<month_arr.length;i++){
                     month_str="";
                     month_str=month_str.concat('<option value="',month_arr[i],'">',month_arr[i],'</option>');
@@ -454,22 +429,18 @@
 
                 }
 
+
+
                 prof_s+="</select>";
 
-                prof_s=prof_s.concat(' <select name="c_end_year_',prof_num.toString() ,'" id="c_end_year">');
+                prof_s=prof_s.concat(' <select name="c_end_year_',prof_num.toString() ,'" id="comp_end_year">');
 
-                for(var i=0;i<year_arr.length;i++){
-                    year_str="";
-                    year_str=year_str.concat('<option value="',year_arr[i],'">',year_arr[i],'</option>');
-                    prof_s+=year_str;
-
-                }
-
+                prof_s+=options;
                 prof_s+="</select> </td> </tr>";
 
                 prof_s=prof_s.concat('<tr>\
                     <td>Location:</td>\
-                    <td><input type="text" name="company_location_',prof_num.toString() ,'" id="c_location"></td></tr>');
+                    <td><textarea name="company_location_',prof_num.toString() ,'" rows="2" cols="50" id="c_location"></textarea></td></tr>');
 
                 prof_s+='</table></select> <a  href="#" class="remove_field">Remove</a></div>';
 
@@ -483,7 +454,7 @@
                prof_count.value=prof_num;
                console.log(prof_count.value)
 
-           }
+
        });
 
        $(prof_cls).on("click",".remove_field",function(e){
@@ -504,32 +475,23 @@
 
 
 
-   var degree_arr=['Bachelor of Technology','Master of Technology','PhD'];
-   var course_arr=['Computer Science and Engineering',
-                    'Marketing','Electrical and Electronics Engineering']
+
+
 
    var degree_str="";
    var course_str="";
 
    var year_str_const="";
 
-   for(var i=0;i<degree_arr.length;i++){
-        degree_str=degree_str.concat('<option value="',degree_arr[i],'">',degree_arr[i],'</option>');
-   }
 
-   for(var i=0;i<course_arr.length;i++){
-    course_str=course_str.concat('<option value="',course_arr[i],'">',course_arr[i],'</option>');
-    }
 
-    for(var i=0;i<year_arr.length;i++){
-        year_str_const=year_str_const.concat('<option value="',year_arr[i],'">',year_arr[i],'</option>');
-        }
+
 
 
 
    $(edu_btn).click(function(e){
        e.preventDefault();
-       if(x<max_input){
+
             edu_x++;
             edu_num++;
             edu_s='<br><div><table id="edu_tb_'.concat(edu_num.toString(),'">');
@@ -543,27 +505,27 @@
 
             edu_s=edu_s.concat('<tr>\
                 <td>Degree:</td>\
-                <td><select name="degree_',edu_num.toString() ,'">');
+                <td><input type="text" name="degree_',edu_num.toString() ,'" placeholder="Bachelor of Technology" id="i_degree"></td></tr>');
 
-            edu_s+=degree_str;
-            edu_s+='</select> </td> </tr>';
+            //edu_s+=degree_str;
+            //edu_s+='</select> </td> </tr>';
 
             edu_s=edu_s.concat('<tr>\
                 <td>Course:</td>\
-                <td><select name="course_',edu_num.toString() ,'">');
+                <td><input type="text" name="course_',edu_num.toString() ,'" placeholder="Computer Science and Engineering" id="i_course"></td></tr>');
 
-            edu_s+=course_str;
-            edu_s+='</select> </td> </tr>';
+            //edu_s+=course_str;
+            //edu_s+='</select> </td> </tr>';
 
             edu_s=edu_s.concat('<tr>\
                 <td>Period:</td><td><select name="e_start_year_',edu_num.toString() ,'">');
 
-            edu_s+=year_str_const;
+            edu_s+=options;
             edu_s+="</select> to ";
 
             edu_s=edu_s.concat('<select name="e_end_year_',edu_num.toString() ,'">');
 
-            edu_s+=year_str_const;
+            edu_s+=options;
             //edu_s+="</select> </td> </tr>";
             edu_s+='</select> </td> </tr> </table> <a  href="#" class="remove_field">Remove</a></div>';
 
@@ -576,7 +538,7 @@
            edu_count.value=edu_num;
            console.log(edu_count.value)
 
-                }
+
             });
 
             $(edu_cls).on("click",".remove_field",function(e){
@@ -584,11 +546,6 @@
                 $(this).parent('div').remove();
                 edu_x--;
             });
-
-
-
-
-
 
 
     });

@@ -21,7 +21,9 @@ import uuid
 from django.http import HttpResponse,HttpResponseRedirect,JsonResponse
 from google.oauth2 import id_token
 from dateutil.relativedelta import relativedelta
-
+import io
+from PIL import Image
+import urllib.request
 import jwt,json
 
 #from django.shortcuts import redirect, render , render_to_response         #server
@@ -1736,6 +1738,15 @@ def incomplete_mentor_profiles(request):
 
 
 # showing form to fill details
+def incomplete_mentor_profiles(request):
+    # first calling this function to display unfilled urls
+
+    obj = MentorFlow.objects.filter(details_filled=0, invalid_url=0)
+
+    return render(request, 'unregistered_mentors.html', {'obj': obj})
+
+
+# showing form to fill details
 def mentor_form(request, row_id):  # mentor_form
     print(row_id)
     obj = MentorFlow.objects.get(id=row_id)
@@ -1743,7 +1754,7 @@ def mentor_form(request, row_id):  # mentor_form
     # return render(request, 'test_fill.html')
 
 
-def mark_mentor_invalid(request, row_id):
+def mentor_invalid(request, row_id):
     obj = MentorFlow.objects.get(id=row_id)
     obj.invalid_url = 1
     obj.save()
@@ -1782,6 +1793,18 @@ def submit_mentor_form(request):
     inst_course_lst = multi_value(request, "course_", request.POST['edu_count'])
     inst_st_pd_lst = multi_value(request, "e_start_year_", request.POST['edu_count'])
     inst_end_pd_lst = multi_value(request, "e_end_year_", request.POST['edu_count'])
+
+    url = dp_img
+    file_name = str(mentor_id)
+
+    path = linkedin_image(url, 'media/', file_name)
+
+    mentor_img = MentorImage()
+    mentor_img.mentor_id = mentor_id
+    mentor_img.image = path
+    mentor_img.save()
+
+    dp_img = mentor_img.image_link
 
     resp_dict = {
         "mentor_id": mentor_id,
@@ -1836,6 +1859,18 @@ def submit_mentor_form(request):
             if len(duration) == 0:
                 duration = duration + str(rdelta.days) + " day(s)"
 
+            url = comp_logo_lst[i]
+            file_name = str(mentor_id) + "_company_" + str(i)
+
+            path = linkedin_image(url, 'media/', file_name)
+
+            mentor_img = MentorImage()
+            mentor_img.mentor_id = mentor_id
+            mentor_img.image = path
+            mentor_img.save()
+
+            comp_logo_lst[i] = mentor_img.image_link
+
             data_dict = {
                 "company_name": comp_name_lst[i],
                 "company_logo": comp_logo_lst[i],
@@ -1858,6 +1893,18 @@ def submit_mentor_form(request):
             end_y = inst_end_pd_lst[i]
 
             period = st_y + " - " + end_y
+
+            url = inst_logo_lst[i]
+            file_name = str(mentor_id) + "_institute_" + str(i)
+
+            path = linkedin_image(url, 'media/', file_name)
+
+            mentor_img = MentorImage()
+            mentor_img.mentor_id = mentor_id
+            mentor_img.image = path
+            mentor_img.save()
+
+            inst_logo_lst[i] = mentor_img.image_link
 
             data_dict = {
                 "institute_name": inst_name_lst[i],
@@ -1885,7 +1932,7 @@ def submit_mentor_form(request):
 
     print(res)
 
-    return redirect('/mentee/unregistered_mentors/')
+    return redirect('/mentee/unregistered/')
 
 
 def multi_value(request, s, count):
@@ -1897,9 +1944,39 @@ def multi_value(request, s, count):
         try:
             s1 = s + str(i)
             print(s1)
-            temp_lst.append(request.POST[s1])
+
+            if s1 == "c_end_month_0":
+                try:
+                    if request.POST['present'] == "present":
+                        temp_mth = datetime.datetime.now().strftime("%B")
+                        print("Present month is: ", temp_mth)
+                        temp_lst.append(temp_mth)
+                except Exception as e:
+                    print(e)
+                    print("wrong with end month present input")
+
+            elif s1 == "c_end_year_0":
+                try:
+                    if request.POST['present'] == "present":
+                        temp_yr = datetime.datetime.now().year
+                        print("present  year is: ", temp_yr)
+                        temp_lst.append(str(temp_yr))
+                except Exception as e:
+                    print(e)
+                    print("wrong with end year when present is checked")
+
+            else:
+                temp_lst.append(request.POST[s1])
         except:
             continue
 
     print(temp_lst)
     return temp_lst
+
+
+def linkedin_image(url, file_path, file_name):
+    full_path = file_path + file_name + ".jpg"
+    urllib.request.urlretrieve(url, full_path)
+    print(full_path)
+
+    return full_path

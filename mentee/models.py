@@ -134,14 +134,24 @@ class mentor_profile(models.Model):
         return self.user_id
 
 
+def img_url(path):
+    host="http://ec2-13-233-21-6.ap-south-1.compute.amazonaws.com:8000/"
+    return host+str(path)
+
+
 class MentorImage(models.Model):
-    image_id = models.IntegerField()
+    mentor_id = models.IntegerField()
     mentor_name = models.CharField(max_length=50, null=True)
-    image = models.ImageField(upload_to='images_media/', max_length=1000)
+    image = models.ImageField(upload_to='media/', max_length=2000)
+    image_link = models.URLField()
 
     def __str__(self):
         return self.mentor_name
 
+    def save(self):
+        # if not self.pk:
+        self.image_link = img_url(self.image)
+        super(MentorImage, self).save()
 
 # def return_datetime():
 #    now = timezone.now()

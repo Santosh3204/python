@@ -1754,12 +1754,12 @@ def mentor_form(request, row_id):  # mentor_form
     # return render(request, 'test_fill.html')
 
 
-def mentor_invalid(request, row_id):
+def mark_mentor_invalid(request, row_id):
     obj = MentorFlow.objects.get(id=row_id)
     obj.invalid_url = 1
     obj.save()
 
-    return redirect('/mentee/unregistered/')
+    return redirect('/mentee/unregistered_mentors/')
 
 
 def submit_mentor_form(request):

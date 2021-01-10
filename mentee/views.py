@@ -79,9 +79,9 @@ class UserLoginView(RetrieveAPIView):
         mobile_token = request.data['m_token']
 
 
-        # idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(), '191322235073-vgj1avkfgsgmke4gqmlaj0rqr77u3ha1.apps.googleusercontent.com')
-        idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(),
-                                             '651163372936-adto0ri3mraijr8umjt9dh8c3l5tufc4.apps.googleusercontent.com')
+        idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(), '191322235073-vgj1avkfgsgmke4gqmlaj0rqr77u3ha1.apps.googleusercontent.com')
+        #idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(),
+        #                                     '651163372936-adto0ri3mraijr8umjt9dh8c3l5tufc4.apps.googleusercontent.com')
         # print(idinfo, "id info")
         message = 'User already registered'
         status_code = status.HTTP_200_OK
@@ -267,7 +267,7 @@ class UserProfileView(RetrieveAPIView):
         # try:
 
         data = json.loads(request.body.decode("utf-8"))
-
+        print(data,"---------------------------")
         status_code = status.HTTP_200_OK
         mentors = []
         user = User.objects.get(email=request.user)
@@ -286,9 +286,9 @@ class UserProfileView(RetrieveAPIView):
 
                 user_details = MenteeDetails(user, profile=data["subProfile"],
                                              # college=data["College"],
-                                             degree=data["Degree"],
+                                             #degree=data["Degree"],
                                              # course=data["Course"],
-                                             education_level=data["education_level"],
+                                             education_level=data["Degree"],
                                              # goal_defined=data['careerGoals'],
                                              skills=json.dumps(data["Skills"]), career1=career1, career2=career2,
                                              career_list=json.dumps(data["fields"]),
@@ -305,9 +305,9 @@ class UserProfileView(RetrieveAPIView):
                 print("-------------------------")
                 user_details = MenteeDetails(user, profile=data["subProfile"],
                                              # college=data["College"],
-                                             degree=data["Degree"],
+                                             #degree=data["Degree"],
                                              # industry_exp=data["IndustryExperience"],
-                                             education_level=data["education_level"],
+                                             education_level=data["Degree"],
                                              skills=json.dumps(data["Skills"]),
                                              # company=data["CurrentCompany"],
                                              designation=data["CurrentDesignation"],
@@ -831,7 +831,10 @@ class Mentor_Schedule_API(APIView):  # API to schedule for mentor.
 
         # increase charge by 100% for mentorbox
         mb_charge = 2 * request.data["charge"]
-        es_ob.update_mentor_topics_in_es(o2o_topics, mentor_id, mb_charge)
+        try:
+           es_ob.update_mentor_topics_in_es(o2o_topics, mentor_id, mb_charge)
+        except:
+           text = "Profile verification pending"
 
         return Response(text)
 

@@ -281,7 +281,8 @@ def send_push_notification(mobile_token, message, title):
              "body": message,
              "title": title,
              "content_available": True,
-             "priority": "high"
+             "priority": "high",
+             "icon":"splash_icon"
          },
         "data": {"notification_id": 5, "message": message,"title":title,"priority": "high","body":message}
     }

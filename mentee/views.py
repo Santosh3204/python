@@ -192,9 +192,10 @@ class DashboardView(RetrieveAPIView):
                 start_time = schedule_tab.Start_datetime
 
                 diff_time = datetime.datetime.now() - start_time
-                minutes_diff = diff_time.seconds / 60
+                minutes_diff = diff_time.total_seconds() / 60
+                print(minutes_diff,start_time,diff_time,"---------------------")
                 if minutes_diff >= 60:
-                    print("skipped some older sessions")
+                    print("skipped some older sessions",start_time)
                     continue
                 upcoming_sessions.append({"schedule_id":schedule_id,"id_":mentor_id,"name":name,"industry_exp":industry_exp,"avatar":avatar,
                  "position":position,"session_at":start_time.strftime("%d %b, %I:%M %p"),"session_name":session_name,"sort_key":str(start_time)})
@@ -218,7 +219,7 @@ class DashboardView(RetrieveAPIView):
             request_sessions = mentor_notifications_func(user_in_db.id)
             response["data"].update({"requested_sessions":request_sessions})
 
-            response["data"].update({"profile_verified": MentorFlow.objects.get(user=user_in_db).details_filled}
+            response["data"].update({"profile_verified": MentorFlow.objects.get(user=user_in_db).details_filled})
         else:
             status_code = status.HTTP_201_CREATED
             message = "User has to fill registraion info"
@@ -233,11 +234,13 @@ class DashboardView(RetrieveAPIView):
         response["user_profile_pic"] = user_in_db.picture
 
         if not response["data"]['profile_verified']:
-            response["message"] = "Verification is pending, We will notify you once it gets completed"
+            response["data"].update({"message" :"Verification is pending, We will notify you once it gets completed"})
 
         # adding mentorbox videos to dashboard
-        suffix = "&controls=0&modestbranding=1&rel=0"
-        prefix = "https://www.youtube.com/embed?"
+        #suffix = "&controls=0&modestbranding=1&rel=0"
+        #prefix = "https://www.youtube.com/embed?"
+        prefix = ''
+        suffix=""
         videos = [{"Glimpse of our previous webinars":[
             {"Mentorbox proudly collaborates with Techniche,IIT Guwahati : Speed mentoring session":prefix+"oJHbDDcO-Qw"+suffix},
             {"Meet Our Mentor - Mr. David Meltzer | Consultant & Business Coach, Mentor": prefix+"2OxTDDqjO2g"+suffix},
@@ -248,17 +251,17 @@ class DashboardView(RetrieveAPIView):
             {"How to make an amazing professional CV/Resume? by Mentor Priyank Ahuja":prefix+"1AI4z3BnFRo"+suffix}
 
         ]},
-            {"About us": [{"What can Mentorbox do for your career?": prefix+"P6bLy-6PNY0"+suffix},
-                          {"What Mentees have to say about us": prefix + "g9wppAMf8Qg" + suffix}]
-             },
-
             {"Mentorbox Talks":[{"Career Building as a Data Engineer":prefix+"nLyr67LqCzo"+suffix},
                                 {"How to enhance Personal/Professional Image":prefix+"aEfBHdLj74k"+suffix},
                                 {"Telling Stories: How Leaders Can Influence, Teach, and Inspire":prefix+"hxZGq6hADmQ"+suffix},
                                 {"Learn practical strategies to maintain and cultivate self-confidence":prefix+"lGJM0rszXpw"+suffix},
                                 {"Mentorship for managerial operations": prefix+"JnbhburJ834"+suffix},
                                 {"Develop optimal human behavior for work relationships and work performance​":prefix+"6D--fbQzQgo"+suffix}
-                                ]}
+                                ]},
+            {"About us": [{"What can Mentorbox do for your career?": prefix+"P6bLy-6PNY0"+suffix},
+                          {"What Mentees have to say about us": prefix + "g9wppAMf8Qg" + suffix}]
+             }
+
 
                               ]
         response["data"].update({"videos":videos})

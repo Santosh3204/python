@@ -144,7 +144,8 @@ class DashboardView(RetrieveAPIView):
         response = {
             'success': True,
             "status_code":200,
-            "is_mentee":True
+            "is_mentee":True,
+            "profile_verified":True
 
         }
 
@@ -216,6 +217,8 @@ class DashboardView(RetrieveAPIView):
             message = "success"
             request_sessions = mentor_notifications_func(user_in_db.id)
             response["data"].update({"requested_sessions":request_sessions})
+
+            response['profile_verified'] = MentorFlow.objects.get(user=user_in_db).details_filled
         else:
             status_code = status.HTTP_201_CREATED
             message = "User has to fill registraion info"
@@ -224,6 +227,9 @@ class DashboardView(RetrieveAPIView):
         response["user_email"] = user_in_db.email
         response["user_name"] = user_in_db.name
         response["user_profile_pic"] = user_in_db.picture
+
+        if not response['profile_verified']:
+            response["message"] = "Verification is pending, We will notify you once it gets completed"
 
         return HttpResponse(json.dumps(response), status=status_code)
 
@@ -268,6 +274,7 @@ class UserProfileView(RetrieveAPIView):
 
         data = json.loads(request.body.decode("utf-8"))
         print(data,"---------------------------")
+
         status_code = status.HTTP_200_OK
         mentors = []
         user = User.objects.get(email=request.user)
@@ -302,7 +309,7 @@ class UserProfileView(RetrieveAPIView):
                 mentors = es_ob.search_mentor_for_student(data)
 
             elif data["subProfile"] == 'professional':
-                print("-------------------------")
+
                 user_details = MenteeDetails(user, profile=data["subProfile"],
                                              # college=data["College"],
                                              #degree=data["Degree"],
@@ -318,7 +325,6 @@ class UserProfileView(RetrieveAPIView):
                 user.is_mentee = 1
                 user.save()
                 mentors = es_ob.search_mentors_for_prof(data)
-                print("Trueeeeee")
 
             response = {
                 'success': 'true',
@@ -328,11 +334,15 @@ class UserProfileView(RetrieveAPIView):
             }
 
         else:
+            if "contact_no" not in data:
+                contact_no = None
+            else:
+                contact_no = data["contact_no"]
             mentor_flow = MentorFlow(user, linkedin_url=data["linkedin_url"], skills=json.dumps(data["skills"]),
-                                     session_121=data["session_121"],
+                                     session_121=data["session_121"],contact_no=contact_no,
                                      webinar=data["webinar"], webinar_topics=json.dumps(data["webinar_topics"]),
-                                     webinar_min=data["webinar_min"],
-                                     webinar_max=data["webinar_max"], user_id=user.pk)
+                                     #webinar_min=data["webinar_min"],
+                                     webinar_charge=data["webinar_max"], user_id=user.pk)
 
             mentor_flow.save()
             user.is_mentor = True

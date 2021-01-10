@@ -231,6 +231,33 @@ class DashboardView(RetrieveAPIView):
         if not response['profile_verified']:
             response["message"] = "Verification is pending, We will notify you once it gets completed"
 
+        # adding mentorbox videos to dashboard
+        suffix = "&controls=0&modestbranding=1&rel=0"
+        prefix = "https://www.youtube.com/embed?"
+        response["videos"] = [{"Glimpse of our previous webinars":[
+            {"Mentorbox proudly collaborates with Techniche,IIT Guwahati : Speed mentoring session":prefix+"oJHbDDcO-Qw"+suffix},
+            {"Meet Our Mentor - Mr. David Meltzer | Consultant & Business Coach, Mentor": prefix+"2OxTDDqjO2g"+suffix},
+            {"Want to prepare for Google with Dhruv Chandok":prefix+"IaaXA_LMa0Y"+suffix},
+            {"Emotional Intelligence with Mentor Pratibha Tiwari":prefix+"oOZSGk8EeX8"+suffix},
+            {"Why soft skills are key to become successful person by Anapurna Monga":prefix+"y24wuSK-A6M"+suffix},
+            {"Workshop on AI and Data Science By Alumunus of IIT Madras mentor Kashish":prefix+"ZAGXyy-vLjw"+suffix},
+            {"How to make an amazing professional CV/Resume? by Mentor Priyank Ahuja":prefix+"1AI4z3BnFRo"+suffix}
+
+        ]},
+            {"About us": [{"What can Mentorbox do for your career?": prefix+"P6bLy-6PNY0"+suffix},
+                          {"What Mentees have to say about us": prefix + "g9wppAMf8Qg" + suffix}]
+             },
+
+            {"Mentorbox Talks":[{"Career Building as a Data Engineer":prefix+"nLyr67LqCzo"+suffix},
+                                {"How to enhance Personal/Professional Image":prefix+"aEfBHdLj74k"+suffix},
+                                {"Telling Stories: How Leaders Can Influence, Teach, and Inspire":prefix+"hxZGq6hADmQ"+suffix},
+                                {"Learn practical strategies to maintain and cultivate self-confidence":prefix+"lGJM0rszXpw"+suffix},
+                                {"Mentorship for managerial operations": prefix+"JnbhburJ834"+suffix},
+                                {"Develop optimal human behavior for work relationships and work performance​":prefix+"6D--fbQzQgo"+suffix}
+                                ]}
+
+                              ]
+
         return HttpResponse(json.dumps(response), status=status_code)
 
 

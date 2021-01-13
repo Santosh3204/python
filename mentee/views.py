@@ -1450,6 +1450,7 @@ class update_favourite_mentors(APIView):
     #permission_classes=(AllowAny,)                          #local
 
     def post(self,request):
+        print(request.data,"------",type(request.data["mentor_id"]))
         if type(request.data) != dict:
             return Response("Request body not in Dictionary format", status=400)
 
@@ -1463,8 +1464,8 @@ class update_favourite_mentors(APIView):
             if i not in request.data:
                 return Response("Keys in Request body mis-matched", status=400)
 
-            if type(request.data[i]) != actual_dict[i]:
-                return Response("Values datatype in Request body is mis-matched", status=400)
+            #if type(request.data[i]) != actual_dict[i]:
+            #    return Response("Values datatype in Request body is mis-matched", status=400)
 
         added_status=favourite_mentor_functions(request)
 
@@ -1932,7 +1933,7 @@ def submit_mentor_form(request):
 
     print(res)
 
-    return redirect('/mentee/unregistered/')
+    return redirect('/mentee/unregistered_mentors/')
 
 
 def multi_value(request, s, count):

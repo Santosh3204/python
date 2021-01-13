@@ -44,7 +44,7 @@ def fetch_booked_sessions(request):
         mentee_obj = MenteeDetails.objects.get(id=sales_ob.Mentee_id)
 
         diff_time = datetime.datetime.now() - objects[i].Start_datetime
-        minutes_diff = diff_time.seconds/60
+        minutes_diff = diff_time.total_seconds()/60
         if minutes_diff>=60:
             print("skipped session")
             continue

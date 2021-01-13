@@ -424,6 +424,10 @@ def Mentor_Schedule_API_func(request, mentor_id):  # API to schedule for mentor.
 
     end_date = datetime.date(yyyy, mm, dd)
 
+    for topic in request.data["session_names"]:
+        name = str(topic).title()
+        skills_career.objects.get_or_create(name=name)
+
     while dt <= end_date:  # Checking dates for given week days
 
         if dt != end_date:

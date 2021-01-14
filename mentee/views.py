@@ -1981,3 +1981,35 @@ def linkedin_image(url, file_path, file_name):
     print(full_path)
 
     return full_path
+
+
+def verify_captcha(request,captcha):
+    # first calling this function to display unfilled urls
+
+    import requests
+
+    headers = {
+        'content-type': 'application/json',
+    }
+
+    # params = (
+    #     ('key', 'AIzaSyC6UsWLr0-yCkAJEQjGvv-qDTf9Vuywsy0'),
+    # )
+
+    data = { "phoneNumber": "+917988344254", "recaptchaToken":  captcha}
+    data = json.dumps(data)
+    #
+    # response = requests.post('https://www.googleapis.com/identitytoolkit/v3/relyingparty/sendVerificationCode',
+    #                          headers=headers, params=params, data=data)
+
+
+    # NB. Original query string below. It seems impossible to parse and
+    # reproduce query strings 100% accurately so the one below is given
+    # in case the reproduced version is not "correct".
+    response = requests.post('https://www.googleapis.com/identitytoolkit/v3/relyingparty/sendVerificationCode?key=AIzaSyC6UsWLr0-yCkAJEQjGvv-qDTf9Vuywsy0', headers=headers, data=data)
+
+    print(response.text,"-----------------")
+
+    return "success"
+
+

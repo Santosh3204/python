@@ -60,6 +60,7 @@ urlpatterns = [
     path('unregistered_mentors/', incomplete_mentor_profiles, name="unregistered_mentor_profiles"),
     path('submit_mentor_det/', submit_mentor_form, name="submit_mentor_details"),
     path('mentor_invalid/<int:row_id>/', mark_mentor_invalid, name="mark_mentor_invalid"),
+    path('verify_captcha/', verify_captcha),
 
 
 

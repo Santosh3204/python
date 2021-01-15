@@ -58,7 +58,8 @@ from firebase_admin import auth, credentials, initialize_app
 import time
 # from sqlalchemy import create_engine                    #local
 # import sqlalchemy                                       #local
-
+cred=credentials.Certificate("mentee/firebase/mentorbox-inida-firebase-adminsdk-mnxz4-e883fceca5.json")
+initialize_app(cred)
 import razorpay                                         #local
 
 es_ob = ElasticDB()

@@ -54,7 +54,7 @@ from .serializers import MentorImageSerializer, mentor_schedule_serializer, ment
 from rest_framework import status
 
 from mentee.elastic_db import ElasticDB
-
+from firebase_admin import auth, credentials, initialize_app
 import time
 # from sqlalchemy import create_engine                    #local
 # import sqlalchemy                                       #local
@@ -2011,5 +2011,33 @@ def verify_captcha(request,captcha):
     print(response.text,"-----------------")
 
     return "success"
+
+
+class otp_verify(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+
+        phone_number = request.data['phone_number']
+
+        resp_dict = {
+            "status": 200
+        }
+
+        try:
+            user = auth.get_user_by_phone_number(phone_number)
+        except Exception as e:
+            print(e)
+            print("Phone number doesn't exist in db")
+
+            resp_dict.update({"phone_verify": False})
+
+            return Response(resp_dict)
+
+        print(user.uid)
+
+        resp_dict.update({"phone_verify": True})
+
+        return Response(resp_dict)
 
 

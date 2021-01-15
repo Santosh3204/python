@@ -80,11 +80,11 @@ class UserLoginView(RetrieveAPIView):
         gmail_token = request.data['g_token']
         mobile_token = request.data['m_token']
 
-
-        idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(), '191322235073-vgj1avkfgsgmke4gqmlaj0rqr77u3ha1.apps.googleusercontent.com')
+        print(gmail_token,"-----------------")
+        idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(), '242017925852-adacce81ou3vqqaiu6bpv2bg53571s5r.apps.googleusercontent.com')
         #idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(),
         #                                     '651163372936-adto0ri3mraijr8umjt9dh8c3l5tufc4.apps.googleusercontent.com')
-        # print(idinfo, "id info")
+        print(idinfo, "id info")
         message = 'User already registered'
         status_code = status.HTTP_200_OK
         user_in_db = None

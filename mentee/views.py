@@ -140,8 +140,8 @@ class DashboardView(RetrieveAPIView):
 
     def get(self, request):
 
-        # user_in_db = User.objects.get(email=request.user)
-        user_in_db = User.objects.get(email='neerajdtu2015@gmail.com')
+        user_in_db = User.objects.get(email=request.user)
+        # user_in_db = User.objects.get(email='neerajdtu2015@gmail.com')
         print(user_in_db.id, "user det", user_in_db.email)
         is_mentee = user_in_db.is_mentee
         is_mentor = user_in_db.is_mentor

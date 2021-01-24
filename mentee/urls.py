@@ -65,6 +65,8 @@ urlpatterns = [
     path('submit_event_info/', submit_event_info, name="submit_event_info"),
     path('fetch_event_info/', fetch_event_info.as_view(), name="fetch_event_info"),
 
+    path('fill_account_details',AccountDetails.as_view()),
+
 
 
 

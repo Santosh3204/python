@@ -1993,7 +1993,18 @@ def profile_page_func(request):
 
     lst=[]
 
-    obj=mentor_schedule.objects.filter(Mentor_id=user_in_db.id,Status=1,Is_scheduled=1)
+    obj=mentor_schedule.objects.filter(Mentor_id=user_in_db.id,Is_scheduled=1)
+
+    bank_det= mentor_bank_details.objects.filter(mentor_id=user_in_db.id)
+
+
+    account_name = ""
+    account_number = ""
+    ifsc_code = ""
+    if len(bank_det)>0:
+        account_name = bank_det[0].account_name
+        account_number =bank_det[0].account_number
+        ifsc_code = bank_det[0].ifsc_code
 
     if len(obj)==0:
         total_sessions=0
@@ -2020,7 +2031,10 @@ def profile_page_func(request):
             "image":user_in_db.picture,
             "total_sessions":total_sessions,
             "total_amount":total_amount,
-            "topics":lst
+            "topics":lst,
+            "account_name":account_name,
+            "account_number":account_number,
+            "ifsc_code":ifsc_code
         }
 
         return data_dict
@@ -2301,6 +2315,22 @@ def events_details_func(request):
     }
 
     return data_dict
+
+
+def save_account_details(details,mentor_id):
+    """
+
+    :param details:
+    :param mentor_id:
+    :return:
+    """
+
+    mbd = mentor_bank_details()
+    mbd.mentor_id = mentor_id
+    mbd.account_name = details["account_name"].upper().strip()
+    mbd.account_number = details["account_number"].strip()
+    mbd.ifsc_code = details["ifsc_code"].strip()
+    mbd.save()
 
 
 

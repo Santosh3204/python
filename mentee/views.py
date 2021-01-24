@@ -2040,8 +2040,7 @@ class otp_verify(APIView):
         }
 
         try:
-            pass
-            # user = auth.get_user_by_phone_number(phone_number)
+            user = auth.get_user_by_phone_number(phone_number)
         except Exception as e:
             print(e)
             print("Phone number doesn't exist in db")
@@ -2117,7 +2116,7 @@ def submit_event_info(request):
 
 class fetch_event_info(APIView):
     # permission_classes = (IsAuthenticated,)
-    # authentication_classes = JSONWebTokenAuthentication
+    # authentication_class = JSONWebTokenAuthentication
 
     permission_classes = (AllowAny,)
 
@@ -2149,3 +2148,35 @@ class fetch_event_info(APIView):
 
         return Response(resp_dict)
 
+
+class AccountDetails(APIView):
+    # permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)  # server
+    authentication_class = JSONWebTokenAuthentication
+
+    def post(self,request):
+
+        if type(request.data) != dict:
+            return Response("Request body not in Dictionary format", status=400)
+
+        elif len(request.data) != 3:
+            return Response("No. of keys is mis-matched, it should be 3", status=400)
+
+        actual_dict = {"account_name": str,"account_number":str,"ifsc_code":str
+                       }
+
+        for i in actual_dict:
+            if i not in request.data:
+                return Response("Keys in Request body mis-matched", status=400)
+
+            if type(request.data[i]) != actual_dict[i]:
+                return Response("Values datatype in Request body is mis-matched", status=400)
+
+        user_in_db = User.objects.get(email=request.user)
+        print(user_in_db.id, "user det", user_in_db.email)
+
+        mentor_id = user_in_db.id
+
+        save_account_details(request.data,mentor_id)
+
+        return Response(status=200)

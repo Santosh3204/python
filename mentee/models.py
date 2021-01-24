@@ -378,3 +378,11 @@ class events(models.Model):
     status = models.BooleanField(null=True,blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class mentor_bank_details(models.Model):
+    mentor_id=models.IntegerField()
+    account_name = models.CharField(max_length=100)
+    ifsc_code = models.CharField(max_length=15)
+    account_number = models.CharField(max_length=50)
+

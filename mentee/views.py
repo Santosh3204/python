@@ -54,7 +54,7 @@ from .serializers import MentorImageSerializer, mentor_schedule_serializer, ment
 from rest_framework import status
 
 from mentee.elastic_db import ElasticDB
-# from firebase_admin import auth, credentials, initialize_app
+from firebase_admin import auth, credentials, initialize_app
 import time
 # from sqlalchemy import create_engine                    #local
 # import sqlalchemy                                       #local

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link class="jsbin" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1/themes/base/jquery-ui.css" rel="stylesheet" type="text/css" />
+    <script class="jsbin" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+    <script class="jsbin" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.0/jquery-ui.min.js"></script>
+    <title>Webinar</title>
+
+</head>
+<body>
+
+
+    <style>
+
+
+            * {box-sizing: border-box;}
+
+            body {
+              margin: 0;
+              font-family: Arial, Helvetica, sans-serif;
+              background-color: whitesmoke;
+            }
+
+            .header {
+              overflow: hidden;
+              background-color: deepskyblue;
+              padding: 20px 10px;
+            }
+
+            .header a {
+              float: left;
+              color: black;
+              text-align: center;
+              padding: 12px;
+              text-decoration: none;
+              font-size: 18px;
+              line-height: 25px;
+              border-radius: 4px;
+            }
+
+            .header a.logo {
+              font-size: 25px;
+              font-weight: bold;
+            }
+
+
+
+
+
+            .header-right {
+              float: right;
+            }
+
+            @media screen and (max-width: 500px) {
+              .header a {
+                float: none;
+                display: block;
+                text-align: left;
+              }
+
+              .header-right {
+                float: none;
+              }
+            }
+        textarea{
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+          }
+
+        table {
+        width: 30%;
+        }
+
+        table {
+            border-collapse: collapse;
+
+          }
+
+
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+          }
+
+
+
+
+        tr:hover {background-color: #f2f2f2;}
+        tr:nth-child(even) {background-color: #f2f2f2;}
+
+        th {
+            background-color: deepskyblue;
+            text-align: center;
+          }
+
+        td{
+            width: max-content;
+        }
+
+        .webinar_table{
+            background-color: white;
+            width: 60%;
+            border-radius: 30px;
+        }
+
+
+
+
+        .alert {
+            padding: 20px;
+            background-color: #f44336;
+            color: white;
+            width: 90%;
+          }
+        .alert.success {background-color: #4CAF50;}
+
+          .closebtn {
+            margin-left: 15px;
+            color: white;
+            font-weight: bold;
+            float: right;
+            font-size: 22px;
+            line-height: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+          }
+
+          .closebtn:hover {
+            color: black;
+          }
+
+    </style>
+
+    <div class="header">
+        <a href="{% url 'users:event_page' %}" class="logo">MentorBox</a>
+
+
+      </div>
+      <br>
+
+    <div style="overflow-x:auto;">
+    <center>
+
+
+        {% if show %}
+
+            {% if msg %}
+
+            <div class="alert success">
+                <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+                <strong>Note:</strong> Saved Successfully
+            </div>
+
+            {% endif %}
+
+            {% if not msg %}
+
+            <div class="alert">
+                <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+                <strong>Note:</strong>Not saved!!! Please go back and check once again.
+            </div>
+
+
+            {% endif %}
+
+        {% endif %}
+
+    <form action="{% url 'users:submit_event_info' %}" method="POST" enctype="multipart/form-data">
+
+    {% csrf_token %}
+
+    <div class="webinar_table">
+
+        <br>
+        <h1>Webinar Details</h1>
+    <table>
+        <tr>
+            <th>Fields</th>
+            <th>Info</th>
+        </tr>
+
+        <tr>
+            <td>
+                <label for="web_title">Title<font color="red">*</font></label>
+            </td>
+            <td>
+                <textarea name="title" id="web_title" oninvalid="alert('You must fill Title field!');" cols="100" rows="2"></textarea>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label for="web_image">Image<font color="red">*</font></label>
+            </td>
+            <td>
+                <input type="file" name="image" id="web_image" onchange="img_display(this);">
+
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label for="image_view">Uploaded Image</label>
+            </td>
+            <td>
+                <img id="image_view" src="#" alt="view your image here"/>
+            </td>
+
+        </tr>
+
+        <tr>
+            <td>
+                <label for="start_datetime">Start date and time<font color="red">*</font></label>
+            </td>
+            <td>
+                <input type="datetime-local" name="start_datetime" id="start_datetime">
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label for="duration">Duration<font color="red">*</font></label>
+            </td>
+            <td>
+                <input type="text" name="duration" id="duration" placeholder="30 minutes">
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label for="web_price">Webinar price<font color="red">*</font></label>
+            </td>
+            <td>
+                <input type="number" name="price" id="web_price" placeholder="500">
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label for="mentor_about">About the mentor<font color="red">*</font></label>
+            </td>
+            <td>
+                <textarea name="mentor_about" id="mentor_about" cols="100" rows="5"></textarea>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label for="webinar_about">About the webinar<font color="red">*</font></label>
+            </t1d>
+            <td>
+                <textarea name="webinar_about" id="webinar_about" cols="100" rows="5"></textarea>
+            </td>
+        </tr>
+
+
+        <tr>
+            <td>
+                <label for="key_takeaways">Key Takeaways<font color="red">*</font></label>
+            </td>
+            <td>
+                <textarea name="key_takeaways" id="key_takeaways" cols="100" rows="5"></textarea>
+            </td>
+        </tr>
+
+
+    </table>
+
+    <br>
+
+    <input type="submit" value="Submit" name="submit" id="submot_btn">
+
+
+    </div>
+    </form>
+    </center>
+    <br>
+
+    </div>
+
+
+    <script>
+        function img_display(input) {
+            console.log("entered");
+            console.log(input);
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    $('#image_view')
+                        .attr('src', e.target.result)
+                        .width(150)
+                        .height(200);
+                };
+
+                reader.readAsDataURL(input.files[0]);
+                console.log(reader);
+            }
+        }
+    </script>
+</body>
+</html>

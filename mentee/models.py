@@ -363,3 +363,18 @@ class mentor_profile_clicks(models.Model):
 class skills_career(models.Model):
     name=models.CharField(max_length=100)
     type=models.CharField(max_length=20)
+
+
+class events(models.Model):
+    title=models.CharField(max_length=300, null=False)
+    image=models.ImageField(null=False)
+    image_link=models.URLField(null=True)
+    price=models.PositiveIntegerField(null=False)
+    about_the_mentor=models.TextField(null=True, blank=True)
+    about_the_event=models.TextField(null=True, blank=True)
+    duration=models.CharField(max_length=50, null=True, blank=True)
+    start_datetime=models.DateTimeField(null=True)
+    key_takeaways=models.TextField(null=True, blank=True)
+    status = models.BooleanField(null=True,blank=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

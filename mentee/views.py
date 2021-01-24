@@ -54,7 +54,7 @@ from .serializers import MentorImageSerializer, mentor_schedule_serializer, ment
 from rest_framework import status
 
 from mentee.elastic_db import ElasticDB
-from firebase_admin import auth, credentials, initialize_app
+# from firebase_admin import auth, credentials, initialize_app
 import time
 # from sqlalchemy import create_engine                    #local
 # import sqlalchemy                                       #local
@@ -83,8 +83,8 @@ class UserLoginView(RetrieveAPIView):
 
         print(gmail_token,"-----------------")
         idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(), '242017925852-adacce81ou3vqqaiu6bpv2bg53571s5r.apps.googleusercontent.com')
-        #idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(),
-        #                                     '651163372936-adto0ri3mraijr8umjt9dh8c3l5tufc4.apps.googleusercontent.com')
+        # idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(),
+        #                                     '824991669873-4uvhv8anug1h4hv2gjo2g0hiclrcvvbn.apps.googleusercontent.com')
         print(idinfo, "id info")
         message = 'User already registered'
         status_code = status.HTTP_200_OK
@@ -133,12 +133,15 @@ class UserLoginView(RetrieveAPIView):
 
 
 class DashboardView(RetrieveAPIView):
-    permission_classes = (IsAuthenticated,)
-    authentication_class = JSONWebTokenAuthentication
+    # permission_classes = (IsAuthenticated,)
+    # authentication_class = JSONWebTokenAuthentication
+
+    permission_classes = (AllowAny,)
 
     def get(self, request):
 
-        user_in_db = User.objects.get(email=request.user)
+        # user_in_db = User.objects.get(email=request.user)
+        user_in_db = User.objects.get(email='neerajdtu2015@gmail.com')
         print(user_in_db.id, "user det", user_in_db.email)
         is_mentee = user_in_db.is_mentee
         is_mentor = user_in_db.is_mentor
@@ -268,6 +271,17 @@ class DashboardView(RetrieveAPIView):
 
                               ]
         response["data"].update({"videos":videos})
+
+        now = datetime.datetime.now()
+        all_events = events.objects.filter(status=1,start_datetime__gt=now).order_by('start_datetime')
+        event_list = []
+        for event in all_events:
+            event_date = event.start_datetime.date().strftime("%d %b")
+            event_time = event.start_datetime.time().strftime('%I:%M %p')
+            event_list.append({"id_":event.id,"title":event.title,"datetime":event_date+","+event_time,"image":event.image_link})
+
+        response["data"].update({"events": event_list})
+
         return HttpResponse(json.dumps(response), status=status_code)
 
 
@@ -2026,7 +2040,8 @@ class otp_verify(APIView):
         }
 
         try:
-            user = auth.get_user_by_phone_number(phone_number)
+            pass
+            # user = auth.get_user_by_phone_number(phone_number)
         except Exception as e:
             print(e)
             print("Phone number doesn't exist in db")
@@ -2035,10 +2050,102 @@ class otp_verify(APIView):
 
             return Response(resp_dict)
 
-        print(user.uid)
+        # print(user.uid)
 
         resp_dict.update({"phone_verify": True})
 
         return Response(resp_dict)
 
+
+def event_page(request):
+    print(request.body)
+    return render(request, 'event_info.html', {'show': False})
+
+
+def submit_event_info(request):
+    msg = ""
+    show = False
+    try:
+        if request.method == "POST" and request.FILES['image']:
+            row = events()
+            row.title = request.POST['title']
+            row.image = request.FILES['image']
+            row.price = request.POST['price']
+            row.duration = request.POST['duration']
+            row.about_the_mentor = request.POST['mentor_about']
+            row.about_the_webinar = request.POST['webinar_about']
+            row.key_takeaways = request.POST['key_takeaways']
+            # row.start_datetime=request.POST['start_datetime']
+            row.status=1
+            dt = request.POST['start_datetime']
+            print(dt)
+            dt = dt.split("T")
+            print(datetime.datetime.now())
+
+            yy, mm, dd = map(int, dt[0].split("-"))
+            print(yy, mm, dd)
+            hh, mts = map(int, dt[1].split(":"))
+
+            res = datetime.datetime(yy, mm, dd, hh, mts)
+
+            row.start_datetime = res
+
+            row.save()
+
+            host = "http://localhost:8000/media/"
+            row.image_link = host + str(row.image)
+            row.save()
+
+            # request.POST['start_datetime']
+            print(row.start_datetime.strftime("%d-%m-%Y %I:%M %p"))
+            print(datetime.datetime.now().strftime("%d-%m-%Y %I:%M %p"))
+
+            msg = True
+            show = True
+
+    except Exception as e:
+        print(e)
+        msg = False
+        show = True
+        print(msg)
+        print(datetime.datetime.now().strftime("%d-%m-%Y %I:%M %p"))
+
+    # return redirect('/mentee/webinar_page/')
+    # return redirect('webinar_page')
+    return render(request, 'event_info.html', {'msg': msg, 'show': show})
+
+
+class fetch_event_info(APIView):
+    # permission_classes = (IsAuthenticated,)
+    # authentication_classes = JSONWebTokenAuthentication
+
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        if type(request.data) != dict:
+            return Response("Request body not in Dictionary format", status=400)
+
+        elif len(request.data) != 1:
+            return Response("No. of keys is mis-matched, it should be 1", status=400)
+
+        actual_dict = {"event_id": int,
+                       }
+
+        for i in actual_dict:
+            if i not in request.data:
+                return Response("Keys in Request body mis-matched", status=400)
+
+            if type(request.data[i]) != actual_dict[i]:
+                return Response("Values datatype in Request body is mis-matched", status=400)
+
+        resp_dict = {
+            "status": 200,
+
+        }
+
+        data_dict = events_details_func(request)
+
+        resp_dict.update(data_dict)
+
+        return Response(resp_dict)
 

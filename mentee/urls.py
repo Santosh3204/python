@@ -61,6 +61,9 @@ urlpatterns = [
     path('submit_mentor_det/', submit_mentor_form, name="submit_mentor_details"),
     path('mentor_invalid/<int:row_id>/', mark_mentor_invalid, name="mark_mentor_invalid"),
     path('otp_verify/', otp_verify.as_view()),
+    path('event_page/', event_page, name="event_page"),
+    path('submit_event_info/', submit_event_info, name="submit_event_info"),
+    path('fetch_event_info/', fetch_event_info.as_view(), name="fetch_event_info"),
 
 
 

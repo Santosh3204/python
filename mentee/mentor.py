@@ -2282,8 +2282,25 @@ def remove_session_request(request,req_session_id):
         row.save()
 
 
+def events_details_func(request):
+    try:
+        row=events.objects.get(id=request.data['event_id'])
+    except Exception as e:
+        print(e)
+        return Response("row not exists", status=500)
 
+    data_dict={
+        "title":row.title,
+        "image":row.image_link,
+        "date_time":row.start_datetime.strftime("%d-%m-%Y %I:%M %p"),
+        "duration":row.duration,
+        "price":row.price,
+        "about_mentor":row.about_the_mentor,
+        "about_webinar":row.about_the_event,
+        "key_takeaways":row.key_takeaways
+    }
 
+    return data_dict
 
 
 

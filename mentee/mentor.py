@@ -1995,7 +1995,7 @@ def profile_page_func(request):
 
     obj=mentor_schedule.objects.filter(Mentor_id=user_in_db.id,Is_scheduled=1)
 
-    bank_det= mentor_bank_details.objects.filter(mentor_id=user_in_db.id).order_by('created_at')
+    bank_det= mentor_bank_details.objects.filter(mentor_id=user_in_db.id).order_by('-created_at')
 
 
     account_name = ""

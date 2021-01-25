@@ -286,7 +286,7 @@ class coupon(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        self.coupon_name
+        return self.coupon_name
 
 
 class mentee_feedback(models.Model):
@@ -296,7 +296,7 @@ class mentee_feedback(models.Model):
     comments=models.TextField(null=True)
 
     def __str__(self):
-        self.mentor_id
+        return self.mentor_id
 
 
 class voice_call(models.Model):
@@ -311,7 +311,7 @@ class voice_call(models.Model):
     
 
     def __str__(self):
-        self.sales_order_id
+        return self.sales_order_id
 
 
 class wallet(models.Model):
@@ -386,4 +386,5 @@ class mentor_bank_details(models.Model):
     account_name = models.CharField(max_length=100)
     ifsc_code = models.CharField(max_length=15)
     account_number = models.CharField(max_length=50)
+    created_at = models.DateTimeField(null=True,auto_now_add=True)
 

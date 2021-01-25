@@ -343,7 +343,7 @@ def Mentor_Calender_API_func(request):
     user_in_db = User.objects.get(email=request.user)
     mentor_id = user_in_db.id
     now = datetime.datetime.now()
-    objects = mentor_schedule.objects.filter(Mentor_id=mentor_id, Status=1,Start_datetime__gt=now).order_by('Start_datetime')
+    objects = mentor_schedule.objects.filter(Mentor_id=mentor_id, Status=1,Start_datetime__gt=now).order_by('-Start_datetime')
 
     if len(objects) != 0:
 
@@ -1995,7 +1995,7 @@ def profile_page_func(request):
 
     obj=mentor_schedule.objects.filter(Mentor_id=user_in_db.id,Is_scheduled=1)
 
-    bank_det= mentor_bank_details.objects.filter(mentor_id=user_in_db.id)
+    bank_det= mentor_bank_details.objects.filter(mentor_id=user_in_db.id).order_by('created_at')
 
 
     account_name = ""

@@ -361,6 +361,7 @@ class mentor_profile_clicks(models.Model):
 
 
 class skills_career(models.Model):
+    id = models.AutoField(primary_key=True)
     name=models.CharField(max_length=100)
     type=models.CharField(max_length=20)
 

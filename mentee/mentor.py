@@ -2025,7 +2025,7 @@ def profile_page_func(request):
         total_amount=amount
         topics=lst
 
-        data_dict={
+    data_dict={
             "name":user_in_db.name,
             "joined_on":user_in_db.date_joined.strftime("%d-%m-%Y"),
             "image":user_in_db.picture,
@@ -2035,9 +2035,9 @@ def profile_page_func(request):
             "account_name":account_name,
             "account_number":account_number,
             "ifsc_code":ifsc_code
-        }
+    }
 
-        return data_dict
+    return data_dict
 
         
 

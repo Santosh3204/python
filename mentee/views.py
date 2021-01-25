@@ -276,9 +276,9 @@ class DashboardView(RetrieveAPIView):
         all_events = events.objects.filter(status=1,start_datetime__gt=now).order_by('start_datetime')
         event_list = []
         for event in all_events:
-            event_date = event.start_datetime.date().strftime("%d %b")
+            event_date = event.start_datetime.date().strftime("%d %b %y")
             event_time = event.start_datetime.time().strftime('%I:%M %p')
-            event_list.append({"id_":event.id,"title":event.title,"datetime":event_date+","+event_time,"image":event.image_link})
+            event_list.append({"id_":event.id,"title":event.title.strip(),"event_date":event_date,"event_time":event_time,"image":event.image_link})
 
         response["data"].update({"events": event_list})
 

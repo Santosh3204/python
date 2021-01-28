@@ -79,12 +79,13 @@ class ElasticDB:
 
             if "highlight" not in hits:
                 continue
-            elif "one2one_topics" not in hits["highlight"] and "designation" not in hits["highlight"]:
+            elif "one2one_topics" not in hits["highlight"]:
                 continue
 
             one2one_topics = []
+            #if "one2one_topics" in hits["highlight"]:
             for topic in hits["highlight"]["one2one_topics"]:
-                one2one_topics.append(ElasticDB.striphtml(topic))
+                  one2one_topics.append(ElasticDB.striphtml(topic))
 
             view_count = mentor_profile_clicks.objects.filter(mentor_id=id_).values_list(
                 'mentee_id').distinct().count()

@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view
 from rest_framework.generics import RetrieveAPIView
 from django.views.generic.detail import DetailView
 from rest_framework.response import Response
+from collections import OrderedDict
 import time
 from .models import *
 from .serializers import *
@@ -343,7 +344,7 @@ def Mentor_Calender_API_func(request):
     user_in_db = User.objects.get(email=request.user)
     mentor_id = user_in_db.id
     now = datetime.datetime.now()
-    objects = mentor_schedule.objects.filter(Mentor_id=mentor_id, Status=1,Start_datetime__gt=now).order_by('-Start_datetime')
+    objects = mentor_schedule.objects.filter(Mentor_id=mentor_id, Status=1,Start_datetime__gt=now).order_by('Start_datetime')
 
     if len(objects) != 0:
 
@@ -357,9 +358,11 @@ def Mentor_Calender_API_func(request):
             month.append(calendar.month_name[dt.month])
             year.append(dt.year)
 
-        month = list(dict.fromkeys(month))
-        year = list(dict.fromkeys(year))
 
+        month = list(OrderedDict.fromkeys(month))
+        year = list(OrderedDict.fromkeys(year))
+        print(month)
+        print(year)
         for y in range(len(year)):
             for i in range(len(month)):
 
@@ -391,7 +394,6 @@ def Mentor_Calender_API_func(request):
                     data.append(title_dict)
                     # data_dict = {"data": data}
                     # resp_dict.update(data_dict)
-
         return data
     else:
         #print("No Mentor exists with the provided Mentor_id")
@@ -425,7 +427,8 @@ def Mentor_Schedule_API_func(request, mentor_id):  # API to schedule for mentor.
     end_date = datetime.date(yyyy, mm, dd)
 
     for topic in request.data["session_names"]:
-        name = str(topic).title()
+        name = str(topic).upper()
+        print(name)
         skills_career.objects.get_or_create(name=name)
 
     while dt <= end_date:  # Checking dates for given week days

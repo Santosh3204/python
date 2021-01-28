@@ -271,7 +271,7 @@ def send_push_notification(mobile_token, message, title):
     :return:
     """
     # sending push notification for call completion
-    fcm_key = "AAAALIuxoME:APA91bEkyslF0vrmIGX14kwS2wAGEvb8PGCdKnvNgC7JUTwrXZkAyZv-0MrPQ0kMHKd6vzceErzHlz76i4MPF8icPtMux1GSckZoFfjDhX9M89rRZiTds0fxm-5lKTy0WqVlHtBP_HiJ"
+    fcm_key = "AAAAOFlketw:APA91bF7JEPkPpBQ6QKqbKEQ4hBSBGSk1V2qpS5sgcn-FKe0TrTO-PcIjndN3SOBkyXksPXojzHJDoVGayfFcD4yt0TtdocPx0xVUUa62KwwBCAvkIoXjAJcn1OCMqozdPyiwijTgpNy"
     headers = {"Content-Type": "application/json",
                "Authorization": "key=" + fcm_key}
 

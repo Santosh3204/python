@@ -277,12 +277,13 @@ def send_push_notification(mobile_token, message, title):
 
     notify_data = {
         "to": mobile_token,
+        "priority":10,
         "notification": {
              "body": message,
              "title": title,
              "content_available": True,
              "priority": "high",
-             "icon":"splash_icon"
+             "color":"#36A4AA"
          },
         "data": {"notification_id": 5, "message": message,"title":title,"priority": "high","body":message}
     }

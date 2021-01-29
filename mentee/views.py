@@ -615,7 +615,15 @@ class FetchMentorProfile(APIView):
             current_company = prof["company_name"]
             current_designation = prof["position"]
             break
-
+        
+        session_names = list(mentor_schedule.objects.filter(Mentor_id=mentor_id).values_list('Session_name',flat=True).distinct())
+        
+        session_names.remove(one2one_topics[0])
+        session_topics = [one2one_topics[0]]
+        session_topics.extend(session_names)
+        
+        session_topics = [x.title() for x in session_topics]
+        
         schedule = fetch_mentors_schedule(mentor_id,0,one2one_topics[0])
         view_count = mentor_profile_clicks.objects.filter(mentor_id=mentor_id).values_list(
             'mentee_id').distinct().count()
@@ -630,6 +638,7 @@ class FetchMentorProfile(APIView):
                 "languages": languages,
                 "professional_details": prof_details,
                 "educational_details": edu_details,
+                "session_topics":session_topics,
                 "schedule":schedule,
                 "fav":fav,
                 "view_count":view_count}
@@ -1053,7 +1062,7 @@ class Search_API(APIView):
     permission_classes = [AllowAny, ]
 
     def post(self, request):
-
+        t1=time.time()
         if type(request.data) != dict:
             return Response("Request body not in Dictionary format", status=400)
 
@@ -1071,13 +1080,13 @@ class Search_API(APIView):
             if type(request.data[i]) != actual_dict[i]:
                 return Response("Values datatype in Request body is mis-matched", status=400)
 
-            resp_list = Search_API_func(request)
-            resp_dict = {
+        resp_list = Search_API_func(request)
+        resp_dict = {
                 "status": status.HTTP_200_OK,
                 "data": resp_list
-            }
-
-            return Response(resp_dict)
+        }
+        print(time.time()-t1)
+        return Response(resp_dict)
 
 
 class Fetch_Session_Names_API(APIView):

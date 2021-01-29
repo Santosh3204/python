@@ -1268,7 +1268,7 @@ def Search_API_func(request):
     data_lst = []
     try:
         if request.data['type'] == 'skill':
-            objects = skills_list.objects.filter(name__iregex=r"(^|\s)%s" % text)
+            objects = skills_list.objects.filter(name__iregex=r"(^)%s" % text)
             for i in range(10):
                 try:
                     data_lst.append(objects[i].name)
@@ -1276,7 +1276,7 @@ def Search_API_func(request):
                     break
 
         elif request.data['type'] == 'college':
-            objects = course_list.objects.filter(College_Name__iregex=r"(^|\s)%s" % text)
+            objects = course_list.objects.filter(College_Name__iregex=r"(^)%s" % text)
             for i in range(10):
                 try:
                     data_lst.append(objects[i].College_Name)
@@ -1284,7 +1284,7 @@ def Search_API_func(request):
                     break
 
         elif request.data['type'] == 'course':
-            objects = course_list.objects.filter(Level_of_Course__iregex=r"(^|\s)%s" % text)
+            objects = course_list.objects.filter(Level_of_Course__iregex=r"(^)%s" % text)
             for i in range(10):
                 try:
                     data_lst.append(objects[i].Level_of_Course)
@@ -1292,14 +1292,15 @@ def Search_API_func(request):
                     break
 
         elif request.data['type'] == 'degree':
-            objects = degree_list.objects.filter(degree_name__iregex=r"(^|\s)%s" % text)
+            objects = degree_list.objects.filter(degree_name__iregex=r"(^)%s" % text)
             for i in range(10):
                 try:
                     data_lst.append(objects[i].degree_name)
                 except:
                     break
         elif request.data['type'] == 'skills_career':
-            objects = skills_career.objects.filter(name__iregex=r"(^|\s)%s" % text)
+            objects = skills_career.objects.filter(name__iregex=r"(^)%s" % text)
+            print(len(objects))
             for i in range(10):
                 try:
                     data_lst.append(objects[i].name)
@@ -1314,7 +1315,8 @@ def Search_API_func(request):
         print(e)
         return Response(json.loads("Error in Value in key('type')"), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    data_lst = list(dict.fromkeys(data_lst))
+    data_lst = list(OrderedDict.fromkeys(data_lst))
+    print(data_lst)
 
     return data_lst
 

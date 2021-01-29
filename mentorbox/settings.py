@@ -92,7 +92,7 @@ GP_CLIENT_SECRET = 'N61i7vOEtneXAYVo1k3Pl6UP'
 
 
 DATABASES = {
-   'default': {
+  'default': {
        'ENGINE': 'django.db.backends.mysql',
        'NAME': 'mbox',
        'USER': 'root',
@@ -122,16 +122,16 @@ DATABASES = {
 # }
 
 
-# DATABASES = {
-#     'default': {
+#DATABASES = {
+#    'default': {
 #         'ENGINE': 'django.db.backends.mysql',
 #         'NAME': 'mbox',
 #         'USER': 'root',
 #         'PASSWORD': 'Santosh@2k',
 #         'HOST': 'localhost',
 #         'PORT': '3306',
-#     }
-# }
+#    }
+#}
 
 
 # Password validation

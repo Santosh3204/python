@@ -70,6 +70,7 @@ class MenteeDetails(models.Model):
     education_level = models.CharField(max_length=45, blank=True)
     college = models.CharField(null=True, max_length=300, blank=True)
     degree = models.CharField(null=True, max_length=300, blank=True)
+    school_name=models.CharField(null=True, max_length=300, blank=True)
     course = models.CharField(null=True, max_length=300, blank=True)
     designation = models.CharField(null=True, max_length=300, blank=True)
     company = models.CharField(null=True, max_length=300, blank=True)

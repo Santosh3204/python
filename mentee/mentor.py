@@ -2340,3 +2340,39 @@ def save_account_details(details,mentor_id):
 
 
 
+
+def mentee_profile_func(request):
+
+    try:
+        user_in_db=User.objects.get(email=request.user)
+        #user_in_db=User.objects.get(id=2)
+    except Exception as e:
+        print(e)
+        print("mentee doesn't exists in db")
+        return Response("mentee doesn't exists in db", status=500)
+
+    try:
+        row=MenteeDetails.objects.get(user=user_in_db)
+    except Exception as e:
+        print(e)
+        print("Mentee details table doesn't contain any details of mentee")
+        return Response("Mentee details table doesn't contain any details of mentee", status=500)
+
+
+    row.education_level=request.data['level_of_education']
+    row.college=request.data['college']
+    row.degree=request.data['degree']
+    row.school_name=request.data['school']
+    row.designation=request.data['current_designation']
+    row.company=request.data['company']
+    if request.data['experience']!=-1:
+        row.industry_exp=request.data['experience']
+    row.skills=json.dumps(request.data['skills'])
+
+    row.career1=request.data['field_of_interest']                       # getting only one field ex:- "python"
+    row.career_list=json.dumps([request.data['field_of_interest']])
+
+    row.save()
+
+    return "Updated Successfully"
+

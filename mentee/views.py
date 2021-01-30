@@ -54,12 +54,12 @@ from .serializers import MentorImageSerializer, mentor_schedule_serializer, ment
 from rest_framework import status
 
 from mentee.elastic_db import ElasticDB
-# from firebase_admin import auth, credentials, initialize_app
+from firebase_admin import auth, credentials, initialize_app
 import time
 # from sqlalchemy import create_engine                    #local
 # import sqlalchemy                                       #local
-# cred=credentials.Certificate("mentee/firebase/mentorbox-inida-firebase-adminsdk-mnxz4-e883fceca5.json")
-# initialize_app(cred)
+cred=credentials.Certificate("mentee/firebase/mentorbox-inida-firebase-adminsdk-mnxz4-e883fceca5.json")
+initialize_app(cred)
 import razorpay                                         #local
 
 es_ob = ElasticDB()
@@ -2190,3 +2190,231 @@ class AccountDetails(APIView):
         save_account_details(request.data,mentor_id)
 
         return Response(status=200)
+
+
+class mentee_profile(APIView):
+    
+
+    permission_classes=(IsAuthenticated,)
+    authentication_classes=JSONWebTokenAuthentication
+
+    #permission_classes=(AllowAny,)
+
+    def get(self, request):
+        try:
+            user_in_db=User.objects.get(email=request.email)
+            #user_in_db=User.objects.get(id=2)
+        except Exception as e:
+            print(e)
+            print("mentee doesn't exists in db")
+            return Response("mentee doesn't exists in db", status=500)
+
+        try:
+            row=MenteeDetails.objects.get(user=user_in_db)                  
+        except Exception as e:
+            print(e)
+            print("Mentee details table doesn't contain any details of mentee")
+            return Response("Mentee details table doesn't contain any details of mentee", status=500)
+
+        resp_dict={
+            'status':200,
+            'name':user_in_db.name,
+            'image':user_in_db.picture,
+            'joined_date':user_in_db.date_joined.strftime("%d/%m/%Y"),
+            "level_of_education":row.education_level,
+            "college":row.college,
+            "degree":row.degree,
+            "school":row.school_name,
+            "current_designation":row.designation,
+            "company":row.company,
+            "experience":row.industry_exp,
+            "skills":row.skills,
+            "field_of_interest":row.career1
+
+        }
+
+        return Response(resp_dict)
+
+
+    def post(self, request):
+        if type(request.data) != dict:
+            return Response("Request body not in Dictionary format", status=400)
+
+        elif len(request.data) != 9:
+            return Response("No. of keys is mis-matched, it should be 3", status=400)
+
+        actual_dict = {
+
+            "level_of_education":str,
+            "college":str,
+            "degree":str,
+            "school":str,
+            "current_designation":str,
+            "company":str,
+            "experience":int,
+            "skills":list,
+            "field_of_interest":str
+
+            
+        }
+
+        for i in actual_dict:
+            if i not in request.data:
+                return Response("Keys in Request body mis-matched", status=400)
+
+            if type(request.data[i]) != actual_dict[i]:
+                return Response("Values datatype in Request body is mis-matched", status=400)
+
+        msg = mentee_profile_func(request)
+        
+        resp_dict = {
+            "status": 200,
+            "message": msg
+        }
+
+        return Response(resp_dict)
+class mentee_profile(APIView):
+
+    #permission_classes=(IsAuthenticated,)
+    #authentication_classes=JSONWebTokenAuthentication
+
+    permission_classes=(AllowAny,)
+
+    def get(self, request):
+        try:
+            user_in_db=User.objects.get(email=request.user)
+            #user_in_db=User.objects.get(id=2)
+        except Exception as e:
+            print(e)
+            print("mentee doesn't exists in db")
+            return Response("mentee doesn't exists in db", status=500)
+
+        try:
+            row=MenteeDetails.objects.get(user=user_in_db)
+        except Exception as e:
+            print(e)
+            print("Mentee details table doesn't contain any details of mentee")
+            return Response("Mentee details table doesn't contain any details of mentee", status=500)
+
+        resp_dict={
+            'status':200,
+            'name':user_in_db.name,
+            'image':user_in_db.picture,
+            'joined_on':user_in_db.date_joined.strftime("%d/%m/%Y"),
+            "level_of_education":row.education_level,
+            "college":row.college,
+            "degree":row.degree,
+            "school":row.school_name,
+            "current_designation":row.designation,
+            "company":row.company,
+            "experience":row.industry_exp,
+            "skills":json.loads(row.skills),
+            "field_of_interest":row.career1
+
+        }
+
+        return Response(resp_dict)
+
+
+    def post(self, request):
+        if type(request.data) != dict:
+            return Response("Request body not in Dictionary format", status=400)
+
+        elif len(request.data) != 9:
+            return Response("No. of keys is mis-matched, it should be 3", status=400)
+
+        actual_dict = {
+
+            "level_of_education":str,
+            "college":str,
+            "degree":str,
+            "school":str,
+            "current_designation":str,
+            "company":str,
+            "experience":int,
+            "skills":list,
+            "field_of_interest":str
+
+        }
+
+        for i in actual_dict:
+            if i not in request.data:
+                return Response("Keys in Request body mis-matched", status=400)
+
+            if type(request.data[i]) != actual_dict[i]:
+                return Response("Values datatype in Request body is mis-matched", status=400)
+
+        msg = mentee_profile_func(request)
+
+        resp_dict = {
+            "status": 200,
+            "message": msg
+        }
+
+        return Response(resp_dict) 
+
+
+class mentee_profile_pic(APIView):
+
+    permission_classes=(IsAuthenticated,)
+    authentication_class=JSONWebTokenAuthentication
+
+    #permission_classes=(AllowAny,)
+
+    def post(self, request):
+
+        
+        try:
+            user_in_db=User.objects.get(email=request.user)
+            #user_in_db=User.objects.get(id=2)
+
+        except Exception as e:
+            print(e)
+            print("mentee details not found in user table")
+            return Response("mentee details not found in user table", status=500)
+        
+        print(request.data)
+        
+        print("started")
+        pic=Image.open(request.FILES['image'])
+        print(pic.size)
+
+        
+
+
+        # 1 way directly getting image obj from request
+
+        # if that doen't work, creating image obj by uncommenting the lines
+
+        #img_io=io.BytesIO()
+        #pic.save(img_io,format='jpeg')
+        #file_name=user_in_db.name
+        #thumb = InMemoryUploadedFile(img_io, None, file_name+'.jpeg', 'image/jpeg',None, None)
+
+
+        print("name is -------------files--",request.FILES['image'])
+
+        row=MentorImage()
+        row.mentor_id=user_in_db.id
+        row.mentor_name=user_in_db.name
+        row.image=request.FILES['image']            
+        #row.image=thumb
+        row.save()
+
+        print(row.image)
+
+        
+        
+        print(row.image_link)
+
+        link="http://ec2-13-233-21-6.ap-south-1.compute.amazonaws.com:8000/"+"media/"+str(row.image)
+        #link="http://localhost:8000/"+"media/"+str(row.image)
+        print(link)
+
+        user_in_db.picture=link
+        user_in_db.save()
+
+        print(user_in_db.picture)
+
+        return Response("image received successfully", status=200)
+

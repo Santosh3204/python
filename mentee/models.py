@@ -389,3 +389,6 @@ class mentor_bank_details(models.Model):
     account_number = models.CharField(max_length=50)
     created_at = models.DateTimeField(null=True,auto_now_add=True)
 
+class session_notification(models.Model):
+     schedule_id = models.IntegerField()
+     created_at = models.DateTimeField(auto_now_add=True)

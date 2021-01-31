@@ -617,9 +617,10 @@ class FetchMentorProfile(APIView):
             break
         
         session_names = list(mentor_schedule.objects.filter(Mentor_id=mentor_id).values_list('Session_name',flat=True).distinct())
-        
-        session_names.remove(one2one_topics[0])
+        print(one2one_topics,session_names,"-----------------------------------------------------------------")     
+        session_names.remove(one2one_topics[0].lower())
         session_topics = [one2one_topics[0]]
+
         session_topics.extend(session_names)
         
         session_topics = [x.title() for x in session_topics]

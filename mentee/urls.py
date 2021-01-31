@@ -68,10 +68,8 @@ urlpatterns = [
     path('fill_account_details',AccountDetails.as_view()),
 
     path('mentee_profile/', mentee_profile.as_view()),
-    path('mentee_profile_pic/', mentee_profile_pic.as_view()),
 
-
-
+    path('profile_pic/', profile_pic.as_view()),  # profile pic url
 
 ]
 

@@ -389,6 +389,13 @@ class mentor_bank_details(models.Model):
     account_number = models.CharField(max_length=50)
     created_at = models.DateTimeField(null=True,auto_now_add=True)
 
+
 class session_notification(models.Model):
      schedule_id = models.IntegerField()
      created_at = models.DateTimeField(auto_now_add=True)
+
+
+class profile_picture(models.Model):
+    user_id = models.IntegerField(null=True)
+    image = models.ImageField(upload_to='profile_picture/', max_length=200)
+    image_link = models.URLField(null=True)

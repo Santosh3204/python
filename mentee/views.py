@@ -617,7 +617,7 @@ class FetchMentorProfile(APIView):
             break
         
         session_names = list(mentor_schedule.objects.filter(Mentor_id=mentor_id).values_list('Session_name',flat=True).distinct())
-        print(one2one_topics,session_names,"-----------------------------------------------------------------")     
+
         session_names.remove(one2one_topics[0].lower())
         session_topics = [one2one_topics[0]]
 
@@ -2082,7 +2082,7 @@ def submit_event_info(request):
             row.price = request.POST['price']
             row.duration = request.POST['duration']
             row.about_the_mentor = request.POST['mentor_about']
-            row.about_the_webinar = request.POST['webinar_about']
+            row.about_the_event = request.POST['webinar_about']
             row.key_takeaways = request.POST['key_takeaways']
             # row.start_datetime=request.POST['start_datetime']
             row.status=1
@@ -2352,70 +2352,47 @@ class mentee_profile(APIView):
             "message": msg
         }
 
-        return Response(resp_dict) 
+        return Response(resp_dict)
 
 
-class mentee_profile_pic(APIView):
+class profile_pic(APIView):
+    permission_classes = (IsAuthenticated,)
+    authentication_class = JSONWebTokenAuthentication
 
-    permission_classes=(IsAuthenticated,)
-    authentication_class=JSONWebTokenAuthentication
-
-    #permission_classes=(AllowAny,)
+    # permission_classes=(AllowAny,)
 
     def post(self, request):
 
-        
         try:
-            user_in_db=User.objects.get(email=request.user)
-            #user_in_db=User.objects.get(id=2)
+            user_in_db = User.objects.get(email=request.user)
+
 
         except Exception as e:
             print(e)
             print("mentee details not found in user table")
             return Response("mentee details not found in user table", status=500)
-        
-        print(request.data)
-        
-        print("started")
-        pic=Image.open(request.FILES['image'])
-        print(pic.size)
 
-        
+        row = profile_picture()
+        row.user_id = user_in_db.id
+        row.image = request.FILES['image']
+        row.save()
 
-
-        # 1 way directly getting image obj from request
-
-        # if that doen't work, creating image obj by uncommenting the lines
-
-        #img_io=io.BytesIO()
-        #pic.save(img_io,format='jpeg')
-        #file_name=user_in_db.name
-        #thumb = InMemoryUploadedFile(img_io, None, file_name+'.jpeg', 'image/jpeg',None, None)
-
-
-        print("name is -------------files--",request.FILES['image'])
-
-        row=MentorImage()
-        row.mentor_id=user_in_db.id
-        row.mentor_name=user_in_db.name
-        row.image=request.FILES['image']            
-        #row.image=thumb
+        link = "http://ec2-13-233-21-6.ap-south-1.compute.amazonaws.com:8000/media/" + str(row.image)
+        row.image_link = link
         row.save()
 
         print(row.image)
-
-        
-        
         print(row.image_link)
 
-        link="http://ec2-13-233-21-6.ap-south-1.compute.amazonaws.com:8000/"+"media/"+str(row.image)
-        #link="http://localhost:8000/"+"media/"+str(row.image)
-        print(link)
+        if user_in_db.is_mentee:
+            user_in_db.picture = row.image_link
+            user_in_db.save()
+            print("mentee link: ", user_in_db.picture)
 
-        user_in_db.picture=link
-        user_in_db.save()
+        if user_in_db.is_mentor:
+            obj = mentor_profile.objects.get(user=user_in_db)
+            obj.avatar = row.image_link
+            obj.save()
+            print("mentor link: ", obj.avatar)
 
-        print(user_in_db.picture)
-
-        return Response("image received successfully", status=200)
-
+        return Response("Profile picture updated", status=200)

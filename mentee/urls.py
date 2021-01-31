@@ -65,6 +65,13 @@ urlpatterns = [
     path('submit_event_info/', submit_event_info, name="submit_event_info"),
     path('fetch_event_info/', fetch_event_info.as_view(), name="fetch_event_info"),
 
+    path('event_payment/', event_make_payment.as_view()),
+    path('event_order/', event_order_api.as_view()),
+    path('event_sign_verify/', event_sign_verify.as_view()),
+
+ 
+    path('phone_check/', phone_num_check.as_view()),
+
     path('fill_account_details',AccountDetails.as_view()),
 
     path('mentee_profile/', mentee_profile.as_view()),

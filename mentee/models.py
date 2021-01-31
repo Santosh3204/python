@@ -381,6 +381,24 @@ class events(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+class event_sales_order(models.Model):
+    event_id=models.IntegerField()
+    mentee_id=models.IntegerField()
+    payment_id = models.CharField(max_length=100,null=True)
+    status = models.SmallIntegerField(default=0)     #0=not booked, 1=booked, 2=under booking, 3=sign verification failed
+    user_order_id = models.CharField(max_length=100,null=True)
+    mentee_name = models.CharField(max_length=100, null=True, blank=True)
+    mentee_phonenumber = models.CharField(max_length=15)
+    mentee_email = models.EmailField(null=True, blank=True)
+    event_price = models.PositiveIntegerField(null=True)
+    coupon_used = models.BooleanField(default=False)
+    coupon_amount = models.FloatField(null=True)
+    coupon_code = models.CharField(max_length=30, null=True)
+    wallet_used = models.BooleanField(default=False)
+    wallet_amount = models.IntegerField(null=True)
+    final_price = models.FloatField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    status_updated_at=models.DateTimeField(auto_now=True)
 
 class mentor_bank_details(models.Model):
     mentor_id=models.IntegerField()

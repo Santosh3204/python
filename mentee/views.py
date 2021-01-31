@@ -617,9 +617,10 @@ class FetchMentorProfile(APIView):
             break
         
         session_names = list(mentor_schedule.objects.filter(Mentor_id=mentor_id).values_list('Session_name',flat=True).distinct())
-
-        session_names.remove(one2one_topics[0].lower())
-        session_topics = [one2one_topics[0]]
+        session_names = [x.title() for x in session_names]
+        print(session_names,one2one_topics,"=====================")
+        session_names.remove(one2one_topics[0].title())
+        session_topics = [one2one_topics[0].title()]
 
         session_topics.extend(session_names)
         
@@ -2037,9 +2038,44 @@ def verify_captcha(request,captcha):
 
     return "success"
 
+class phone_num_check(APIView):
+    permission_classes=(IsAuthenticated,)
+    authentication_class=JSONWebTokenAuthentication
+
+    #permission_classes=(AllowAny,)
+
+    def post(self, request):
+        if type(request.data) != dict:
+            return Response("Request body not in Dictionary format", status=400)
+
+        elif len(request.data) != 1:
+            return Response("No. of keys is mis-matched, it should be 3", status=400)
+
+        actual_dict = {
+            "phone_number": str,
+            
+        }
+
+        for i in actual_dict:
+            if i not in request.data:
+                return Response("Keys in Request body mis-matched", status=400)
+
+            if type(request.data[i]) != actual_dict[i]:
+                return Response("Values datatype in Request body is mis-matched", status=400)
+        
+        msg, status_code = phone_num_check_func(request)
+        
+        resp_dict = {
+            "message": msg
+        }
+
+        return Response(resp_dict,status=status_code)
+
 
 class otp_verify(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes=(IsAuthenticated,)
+    authentication_class=JSONWebTokenAuthentication
+    #permission_classes = (AllowAny,)
 
     def post(self, request):
 
@@ -2053,13 +2089,21 @@ class otp_verify(APIView):
             user = auth.get_user_by_phone_number(phone_number)
         except Exception as e:
             print(e)
-            print("Phone number doesn't exist in db")
+            print("Phone number doesn't exist in firebase db")
 
             resp_dict.update({"phone_verify": False})
 
             return Response(resp_dict)
 
-        # print(user.uid)
+        print(user.uid)
+
+        #user_in_db=User.objects.get(email=request.user)
+
+        #row=MentorFlow.objects.get(user_id=user_in_db.pk)
+        #row.contact_no=request.data['phone_number']
+        #row.save()
+
+        auth.delete_user(user.uid)
 
         resp_dict.update({"phone_verify": True})
 
@@ -2384,10 +2428,10 @@ class profile_pic(APIView):
         print(row.image)
         print(row.image_link)
 
-        if user_in_db.is_mentee:
-            user_in_db.picture = row.image_link
-            user_in_db.save()
-            print("mentee link: ", user_in_db.picture)
+        
+        user_in_db.picture = row.image_link
+        user_in_db.save()
+        print("mentee link: ", user_in_db.picture)
 
         if user_in_db.is_mentor:
             obj = mentor_profile.objects.get(user=user_in_db)
@@ -2396,3 +2440,124 @@ class profile_pic(APIView):
             print("mentor link: ", obj.avatar)
 
         return Response("Profile picture updated", status=200)
+
+
+class event_make_payment(APIView):
+    permission_classes=(IsAuthenticated,)
+    authentication_class=JSONWebTokenAuthentication
+
+    #permission_classes=(AllowAny,)
+
+    def post(self, request):
+        if type(request.data) != dict:
+            return Response("Request body not in Dictionary format", status=400)
+
+        elif len(request.data) != 6:
+            return Response("No. of keys is mis-matched, it should be 1", status=400)
+
+        actual_dict = {"event_id":int,
+                        "name":str,
+                        "phone_number":str,
+                        "email":str,
+                        "is_coupon_valid":bool,
+                        "coupon_code":str
+                       }
+
+        for i in actual_dict:
+            if i not in request.data:
+                return Response("Keys in Request body mis-matched", status=400)
+
+            if type(request.data[i]) != actual_dict[i]:
+                return Response("Values datatype in Request body is mis-matched", status=400)
+
+        
+        resp_dict={
+            "status":200,
+
+        }
+
+        data_dict=event_make_payment_func(request)
+        
+        resp_dict.update(data_dict)
+
+        return Response(resp_dict)
+
+
+
+class event_order_api(APIView):
+    permission_classes=(IsAuthenticated,)
+    authentication_class=JSONWebTokenAuthentication
+
+    #permission_classes=(AllowAny,)
+
+    def post(self, request):
+        if type(request.data) != dict:
+            return Response("Request body not in Dictionary format", status=400)
+
+        elif len(request.data) != 3:
+            return Response("No. of keys is mis-matched, it should be 1", status=400)
+
+        actual_dict = {"event_id":int,
+                        #"amount_to_add":int and float,
+                        "use_wallet":bool
+                       }
+
+        for i in actual_dict:
+            if i not in request.data:
+                return Response("Keys in Request body mis-matched", status=400)
+
+            if type(request.data[i]) != actual_dict[i]:
+                return Response("Values datatype in Request body is mis-matched", status=400)
+
+        
+        print(request.data['amount_to_add'], type(request.data['amount_to_add']))
+        resp_dict={
+            "status":200,
+        }
+
+        order_id, order_amount=event_order_api_func(request)
+
+        resp_dict.update({
+            "order_amount":order_amount,
+            "order_id":order_id
+        })
+
+        return Response(resp_dict)
+
+
+class event_sign_verify(APIView):
+    permission_classes=(IsAuthenticated,)
+    authenticate_class=JSONWebTokenAuthentication
+
+    #permission_classes=(AllowAny,)
+
+    def post(self, request):
+        if type(request.data) != dict:
+            return Response("Request body not in Dictionary format", status=400)
+
+        elif len(request.data) != 3:
+            return Response("No. of keys is mis-matched, it should be 3", status=400)
+
+        actual_dict = {
+            "razorpay_order_id": str,
+            "razorpay_payment_id": str,
+            "razorpay_signature": str
+        }
+
+        for i in actual_dict:
+            if i not in request.data:
+                return Response("Keys in Request body mis-matched", status=400)
+
+            if type(request.data[i]) != actual_dict[i]:
+                return Response("Values datatype in Request body is mis-matched", status=400)
+
+        resp_note = event_sign_verification_func(request)
+        print(resp_note)
+        resp_dict = {
+            "status": status.HTTP_200_OK,
+            "note": resp_note
+        }
+
+        return Response(resp_dict)
+        
+

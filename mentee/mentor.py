@@ -2001,7 +2001,7 @@ def profile_page_func(request):
     obj=mentor_schedule.objects.filter(Mentor_id=user_in_db.id,Is_scheduled=1)
 
     bank_det= mentor_bank_details.objects.filter(mentor_id=user_in_db.id).order_by('-created_at')
-
+    mentor_prof = mentor_profile.objects.get(id=user_in_db.id)
 
     account_name = ""
     account_number = ""
@@ -2039,7 +2039,9 @@ def profile_page_func(request):
             "topics":lst,
             "account_name":account_name,
             "account_number":account_number,
-            "ifsc_code":ifsc_code
+            "ifsc_code":ifsc_code,
+            "email":user_in_db.email,
+            "contact_no":mentor_prof.contact_no
     }
 
     return data_dict
@@ -2375,4 +2377,422 @@ def mentee_profile_func(request):
     row.save()
 
     return "Updated Successfully"
+
+def phone_num_check_func(request):
+    
+    ph_num=request.data['phone_number']
+    
+    row=MentorFlow.objects.filter(contact_no=ph_num)
+    print(row,"---------------------")  
+    if len(row)==0:
+        
+        msg="success"
+        status_code=200
+
+    else:
+        msg="Given number is already registered"
+        status_code=400
+    return msg, status_code
+
+
+def event_make_payment_func(request):
+    
+    try:                                                                        #server
+        user_in_db=User.objects.get(email=request.user)
+    except Exception as e:
+        print(e)
+        print("Current user doesn't exist in db")
+        return Response("Current user doesn't exist in db", status=500)
+    
+
+    #user_in_db=User.objects.get(id=1)                                           #local
+
+    #tables- events, coupon, event_sales_order
+    
+    try:
+        event_obj=events.objects.get(id=request.data['event_id'])
+    except Exception as e:
+        print(e)
+        print("event doesn't exists in db")
+        return Response("event doesn't exists in db",status=500)
+
+    chargeable_amount = event_obj.price
+
+
+    
+    
+
+    sales_ord=event_sales_order()
+
+    sales_ord.event_id=event_obj.id
+    sales_ord.mentee_id=user_in_db.id
+    #sales_ord.status=2                      #under booking
+    sales_ord.mentee_name=request.data['name']
+    sales_ord.mentee_phonenumber=request.data['phone_number']
+    sales_ord.mentee_email=request.data['email']
+    sales_ord.event_price=event_obj.price
+
+
+
+
+    if request.data['is_coupon_valid']==True:
+        try:
+            coupon_obj=coupon.objects.get(coupon_code=request.data['coupon_code'], active_status=1)
+            print("11111111111111111111111111111")
+        except Exception as e:
+            print(e)
+            print("Coupon doesn't exists in db")
+            return Response("Coupon doesn't exists in db", status=500)
+
+        
+        
+        
+        # if len(new_user)<=3:
+        #if coupon_obj.new_user_coupon == 1:
+        #    new_user = mentor_schedule.objects.filter(order_id=user_in_db.id) ############################################ whats this??
+        #    if len(new_user) >= 4:
+        #        print("This coupon is for new user who has booked 3 and less than 3 sessions.")
+        #        return Response("This coupon is for new user who has booked 3 and less than 3 sessions.",status=500)
+
+        coupon_amount = 0
+        if coupon_obj.coupon_type == "flat":
+            print("2222222222222222222",coupon_obj.coupon_amount)
+
+            if coupon_obj.coupon_amount<event_obj.price:
+                chargeable_amount = event_obj.price - coupon_obj.coupon_amount
+                coupon_amount = coupon_obj.coupon_amount
+            else:
+                chargeable_amount=0
+                coupon_amount=event_obj.price
+
+        if coupon_obj.coupon_type == "percentage":
+            print("33333333333333333")
+            discount_float = ((event_obj.price * coupon_obj.coupon_percentage) / 100)
+            discount_int = ((event_obj.price * coupon_obj.coupon_percentage) // 100)
+            if discount_float==discount_int:
+                print(discount_float, discount_int)
+                print("discount is of type ", type(discount_int))
+                chargeable_amount = event_obj.price - discount_int
+                coupon_amount = discount_int
+                print(chargeable_amount, coupon_amount)
+            else:
+                print("discount is of type ", type(discount_float))
+                print(discount_float, discount_int)
+                chargeable_amount = event_obj.price - discount_float
+                coupon_amount = discount_float
+                
+                print(chargeable_amount, coupon_amount)
+
+
+        
+
+        sales_ord.coupon_used=True
+        sales_ord.coupon_amount=coupon_amount
+        sales_ord.coupon_code=request.data['coupon_code']
+    print("4444444444444444444",chargeable_amount)
+    sales_ord.final_price = chargeable_amount
+    sales_ord.save()
+
+    
+
+    if type(chargeable_amount)==int:
+        chargeable_amount=str(chargeable_amount)
+        print("final chargeable amount : ", chargeable_amount)
+    if type(chargeable_amount)==float:
+        chargeable_amount="{:.2f}".format(chargeable_amount)
+        print("final chargeable amount : ", chargeable_amount)
+    
+    wt=wallet.objects.filter(mentee_id=user_in_db.id,status=2).order_by('-updated_at')
+
+    if len(wt)==0:
+        data_dict = {
+            "wallet_balance": 0,
+            "event_charge": float(chargeable_amount)
+        }
+    else:
+
+        data_dict={
+            "wallet_balance":wt[0].current_balance,
+            "event_charge":float(chargeable_amount)
+        }
+    
+    print(type(data_dict['wallet_balance']))
+    print(data_dict)
+    return data_dict
+
+
+def event_sign_verification_func(request):
+    user_in_db = User.objects.get(email=request.user)  # server
+    mentee_id = user_in_db.id
+    
+    try:
+        sales_ord=event_sales_order.objects.get(user_order_id=request.data['razorpay_order_id'])
+    except Exception as e:
+        print(e)
+        print("Error occured in getting fetching data from sales_order table using order_id")
+        return Response("Error occured in getting fetching data from sales_order table using order_id", status=422)
+
+    
+    try:
+        # generated_signature = hmac_sha256(request.data['razorpay_order_id'] + "|" + request.data['razorpay_payment_id'], 'RKxq0NX3rGgEZ3HEKt5cr5BT')
+        s1 = request.data['razorpay_order_id'] + "|" + request.data['razorpay_payment_id']
+
+        key = 'RKxq0NX3rGgEZ3HEKt5cr5BT'
+        key= 'mwIcHdj1fIDGVi44N6BoUX0W'
+        hex_str = key.encode()
+        message = s1.encode()
+
+        generated_signature = hmac.new(hex_str, message, hashlib.sha256).hexdigest()
+        print(generated_signature)
+        print(request.data['razorpay_signature'])
+
+        check=0                                             
+
+        # check=0 means payment success
+        # check=1 means payment failed
+
+        if (generated_signature == request.data['razorpay_signature']):
+            print("Payment is successfull, Data came from authenticated source")
+            
+        
+        else:
+            print("Data not came from authenticated sources")
+            check=1                                                             # sign verification failed
+            #return Response("Data not came from authenticated sources, Razorpay signature and generated signature mis-matched",status=422)
+    except Exception as e:
+        print(e)
+        print("Data not came from authenticated sources")
+        check=1                                                                 # sign verification failed
+        #return Response("Data not came from authenticated sources, Razorpay signature and generated signature mis-matched",status=422)
+        
+    
+    if check==1:                                                    # for failed cases, once again checking it by contacting razorpay
+
+        try:
+
+            # client = razorpay.Client(auth=('rzp_test_JAObx3Y47SmBhB', 'RKxq0NX3rGgEZ3HEKt5cr5BT'))
+            client = razorpay.Client(auth=('rzp_test_A5QQVVWf0eMog1', 'mwIcHdj1fIDGVi44N6BoUX0W'))
+            status = client.utility.verify_payment_signature(request.data)
+            print(status,"payment statusssss")
+            check=0                                                                             # payment successful, if above line executes without any error
+        
+        except Exception as e:
+        
+            print(e)
+            check=1                                                                              # if error comes, marking it has failed
+            
+            
+            rz_dict = client.payment.fetch(request.data['razorpay_payment_id'])                 # contacting razorpay with payment_id
+            if rz_dict['status']=="captured" and rz_dict['captured']==True:
+                check=0                                                                         # if payment captured successfully, marking it has success                                                                         
+            else:   
+                check=1
+                print("Razorpay Signature verification Failed")
+                return Response("Razorpay Signature verification Failed",status=422)
+
+    if check==0:                                                                                # for successful payment making it has booked in db
+        
+        try:
+            sales_ord.payment_id = request.data['razorpay_payment_id']
+            sales_ord.status = 1  # payment done
+            sales_ord.save()
+        except Exception as e:
+            print(e)
+            return Response("Error occured in sales_order table", status=500)
+
+        try:
+            rz = payment_details()
+            rz.razorpay_order_id = request.data['razorpay_order_id']
+            rz.razorpay_payment_id = request.data['razorpay_payment_id']
+            rz.razorpay_signature = request.data['razorpay_signature']
+            rz.save()
+
+        except Exception as e:
+            print(e)
+            return Response("Error occured in payment_detals table", status=500)
+
+
+        
+
+        ########## add amount in wallet and deduct money
+
+
+        mth = wallet.objects.filter(mentee_id=mentee_id, status=2).order_by('-updated_at')
+
+        row = wallet()
+        row.mentee_id = user_in_db.id
+        row.txn_order_id = request.data['razorpay_order_id']
+        row.amount_changed = sales_ord.wallet_amount
+        row.status = 2  # added money
+        #row.remarks = sales_ord.Session_name+ " session"
+        curr_bal = 0
+        if len(mth) != 0:
+            curr_bal = mth[0].current_balance
+            row.previous_balance = mth[0].current_balance
+            row.current_balance = mth[0].current_balance + sales_ord.wallet_amount
+
+        else:
+            row.mentee_id = user_in_db.id
+            row.txn_order_id = request.data['razorpay_order_id']
+            row.previous_balance = curr_bal
+            row.current_balance = sales_ord.wallet_amount
+        row.save()
+
+        # deduct money for this session
+        row = wallet()
+        row.mentee_id = user_in_db.id
+        row.txn_order_id = request.data['razorpay_order_id']
+        row.amount_changed = -sales_ord.final_price
+        row.status = 2  # added money
+        #row.remarks = sales_ord.Session_name + " session"
+
+        row.previous_balance = curr_bal + sales_ord.wallet_amount
+        row.current_balance = curr_bal + sales_ord.wallet_amount - sales_ord.final_price
+
+        row.save()
+        
+
+        
+
+        return "Payment Successfully"
+    else:                                   # finally, for failed case making it as payment failed in db
+        # print(status)
+        sales_ord.status=3                  # 3=sign verification failed
+        print("Payment Failed")
+        sales_ord.save()       
+        return "Payment Failed"
+
+def event_order_api_func(request):
+
+    
+    user_in_db=User.objects.get(email=request.user)
+    mentee_id=user_in_db.id
+    
+
+    #user_in_db=User.objects.get(id=1)
+    #mentee_id=user_in_db.id
+
+    event_id=request.data['event_id']
+
+    #tables - events, event_sales_order, wallet
+
+    try:
+        event=events.objects.get(id=event_id)
+    except Exception as e:
+        print(e)
+        print("event details with this id doesnot exists")
+
+        return Response("event details with this id doesnot exists", status=500)
+
+    
+
+    sales_ord=event_sales_order.objects.filter(event_id=event_id, mentee_id=mentee_id, status=0).order_by('-status_updated_at')
+    print("fetched", len(sales_ord))
+    if len(sales_ord)==0:
+        
+        print("mentee's order details not found in event_sales_order table")
+        return Response("mentee's order details not found in event_sales_order table", status=500)
+
+    
+    if request.data["use_wallet"]:
+
+        
+
+        wt = wallet.objects.filter(mentee_id=mentee_id).order_by('-updated_at')
+        
+        if len(wt) != 0:
+            
+
+            
+
+            if wt[0].current_balance >= event.price:
+                print("went insideeeeeeeeeeeeeeeeeeeeeeeeeee")
+
+                order_amount = 0
+
+                order_id = str(uuid.uuid1())
+                print(order_id)
+
+                # deduct money for this session
+
+                wall_obj = wallet()
+                wall_obj.mentee_id = mentee_id
+                wall_obj.status=1       # just row created 
+                wall_obj.remarks = "webinar session for id="+str(event_id)
+                wall_obj.wallet_used = True
+                wall_obj.txn_order_id = order_id
+                wall_obj.amount_changed = -event.price
+                wall_obj.status = 2  # active row, can be shown in wallet history
+                wall_obj.remarks = "webinar id="+str(event_id)
+
+                wall_obj.previous_balance = wt[0].current_balance
+                wall_obj.current_balance = wt[0].current_balance - event.price
+
+                wall_obj.save()
+                print("wallet row deducted")
+
+                sales_ord[0].status=1  #booked
+                sales_ord[0].user_order_id=order_id
+                sales_ord[0].wallet_used=True
+                sales_ord[0].wallet_amount = sales_ord[0].final_price
+
+                sales_ord[0].save()
+                    
+
+                return order_id, order_amount 
+
+            elif wt[0].current_balance + request.data['amount_to_add'] >= event.price:
+                order_amount = request.data['amount_to_add'] * 100
+
+            else:
+                amount = event.price - wt[0].current_balance
+                order_amount = amount * 100
+        else:
+            order_amount = request.data['amount_to_add'] * 100
+
+    else:
+        order_amount = request.data['amount_to_add'] * 100
+
+    order_currency = 'INR'
+    order_receipt = str(event.id)
+    notes = {'mentee_id': user_in_db.id}  # OPTIONAL
+
+    
+
+    try:
+
+        # client = razorpay.Client(auth=('rzp_test_JAObx3Y47SmBhB', 'RKxq0NX3rGgEZ3HEKt5cr5BT'))
+        client = razorpay.Client(auth=('rzp_test_A5QQVVWf0eMog1', 'mwIcHdj1fIDGVi44N6BoUX0W'))
+
+        response = client.order.create(
+            dict(amount=order_amount, currency=order_currency, receipt=order_receipt, notes=notes))
+    except Exception as e:
+        print("Error occured in generating order_id from razorpay pay API side")
+        print(e)
+
+        return Response("Order ID not created successfully", status=500)
+
+
+
+    sales_ord[0].event_id=event_id
+    sales_ord[0].mentee_id=mentee_id
+    sales_ord[0].status=2                      #under booking
+    sales_ord[0].user_order_id=response['id']
+    sales_ord[0].event_price=event.price
+    
+
+    fp_float=order_amount/100
+    fp_int=order_amount//100
+
+    if fp_float==fp_int:
+        sales_ord[0].final_price=fp_int
+    else:
+        sales_ord[0].final_price=fp_float
+
+    sales_ord[0].save()
+    
+    
+    print(order_amount)
+    print(response['id'])
+    return response['id'], order_amount
 

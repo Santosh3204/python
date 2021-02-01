@@ -2170,10 +2170,10 @@ def submit_event_info(request):
 
 
 class fetch_event_info(APIView):
-    # permission_classes = (IsAuthenticated,)
-    # authentication_class = JSONWebTokenAuthentication
+    permission_classes = (IsAuthenticated,)
+    authentication_class = JSONWebTokenAuthentication
 
-    permission_classes = (AllowAny,)
+    #permission_classes = (AllowAny,)
 
     def post(self, request):
         if type(request.data) != dict:

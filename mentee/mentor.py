@@ -2309,7 +2309,14 @@ def events_details_func(request):
     except Exception as e:
         print(e)
         return Response("row not exists", status=500)
+    user_in_db = User.objects.get(email=request.user)
 
+    sales_rows = event_sales_order.objects.filter(event_id=request.data['event_id'],mentee_id=user_in_db.pk,status=1)
+    event_booked = False
+     
+    if len(sales_rows)>0:
+       event_booked = True
+     
     data_dict={
         "title":row.title,
         "image":row.image_link,
@@ -2318,7 +2325,8 @@ def events_details_func(request):
         "price":row.price,
         "about_mentor":row.about_the_mentor,
         "about_webinar":row.about_the_event,
-        "key_takeaways":row.key_takeaways
+        "key_takeaways":row.key_takeaways,
+        "event_booked":event_booked
     }
 
     return data_dict
@@ -2791,6 +2799,10 @@ def event_order_api_func(request):
 
     sales_ord[0].save()
     
+    if request.data["use_wallet"]:
+        sales_ord[0].wallet_used = request.data["use_wallet"]
+    sales_ord[0].wallet_amount = order_amount/100
+    sales_ord[0].save()    
     
     print(order_amount)
     print(response['id'])

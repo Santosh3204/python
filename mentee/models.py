@@ -417,3 +417,9 @@ class profile_picture(models.Model):
     user_id = models.IntegerField(null=True)
     image = models.ImageField(upload_to='profile_picture/', max_length=200)
     image_link = models.URLField(null=True)
+
+class event_feedback(models.Model):
+    event_order=models.OneToOneField(event_sales_order, on_delete=models.CASCADE, null=True)
+    event_id=models.IntegerField()
+    star_rating=models.SmallIntegerField(null=True)
+    comments=models.TextField(null=True)

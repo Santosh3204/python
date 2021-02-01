@@ -1459,7 +1459,6 @@ def Coupon_API_func(request):
 
 
 def Mentee_My_Order_API_func(request):
-
     inner_list = []
 
     data_dict = {
@@ -1467,7 +1466,7 @@ def Mentee_My_Order_API_func(request):
         "inner_data": []
     }
 
-    try:                                                             #server
+    try:  # server
         user_in_db = User.objects.get(email=request.user)
     except Exception as e:
         print(e)
@@ -1476,7 +1475,8 @@ def Mentee_My_Order_API_func(request):
 
     if user_in_db.is_mentee:
 
-        sales_ord_objs = sales_order.objects.filter(Mentee_id=user_in_db.id, Status__in=[1,2], Is_active=1).order_by('-Created_at')
+        sales_ord_objs = sales_order.objects.filter(Mentee_id=user_in_db.id, Status__in=[1, 2], Is_active=1).order_by(
+            '-Created_at')
 
         client = razorpay.Client(auth=("rzp_test_A5QQVVWf0eMog1", "mwIcHdj1fIDGVi44N6BoUX0W"))
 
@@ -1492,8 +1492,8 @@ def Mentee_My_Order_API_func(request):
             payment_mode = "Wallet"
             if payment_id is not None:
                 resp = client.payment.fetch(payment_id)
-                #print(resp,"--------------------------------------------------")
-                #payment_mode = resp['method']
+                # print(resp,"--------------------------------------------------")
+                # payment_mode = resp['method']
                 if 'method' in resp:
                     payment_mode = resp['method']
                 else:
@@ -1508,7 +1508,7 @@ def Mentee_My_Order_API_func(request):
                 print("No Feedback given")
                 rating = 0
                 comments = ""
-              
+
             sch_obj = mentor_schedule.objects.get(id=row.Schedule_id)
 
             inner_dict = {
@@ -1526,8 +1526,8 @@ def Mentee_My_Order_API_func(request):
                 "time": sch_obj.Start_datetime.strftime("%I:%M %p"),
                 "paid_amount": row.final_price,
                 "created_at": row.Created_at,
-                "is_feedback":is_feedback,
-                "schedule_id":sch_obj.id
+                "is_feedback": is_feedback,
+                "schedule_id": sch_obj.id
             }
 
             msg = False
@@ -1553,7 +1553,7 @@ def Mentee_My_Order_API_func(request):
     else:
         mentee_status = False
 
-        sales_ord_objs = sales_order.objects.filter(Mentor_id=user_in_db.id, Status__in=[1,2], Is_active=1)
+        sales_ord_objs = sales_order.objects.filter(Mentor_id=user_in_db.id, Status__in=[1, 2], Is_active=1)
 
         for row in sales_ord_objs:
 
@@ -1578,7 +1578,6 @@ def Mentee_My_Order_API_func(request):
             inner_list.append(data_di)
         data_dict["is_mentee"] = mentee_status
         data_dict["data"] = inner_list
-
 
     return data_dict
 
@@ -2528,25 +2527,23 @@ def event_make_payment_func(request):
     print(data_dict)
     return data_dict
 
-
 def event_sign_verification_func(request):
     user_in_db = User.objects.get(email=request.user)  # server
     mentee_id = user_in_db.id
-    
+
     try:
-        sales_ord=event_sales_order.objects.get(user_order_id=request.data['razorpay_order_id'])
+        sales_ord = event_sales_order.objects.get(user_order_id=request.data['razorpay_order_id'])
     except Exception as e:
         print(e)
         print("Error occured in getting fetching data from sales_order table using order_id")
         return Response("Error occured in getting fetching data from sales_order table using order_id", status=422)
 
-    
     try:
         # generated_signature = hmac_sha256(request.data['razorpay_order_id'] + "|" + request.data['razorpay_payment_id'], 'RKxq0NX3rGgEZ3HEKt5cr5BT')
         s1 = request.data['razorpay_order_id'] + "|" + request.data['razorpay_payment_id']
 
         key = 'RKxq0NX3rGgEZ3HEKt5cr5BT'
-        key= 'mwIcHdj1fIDGVi44N6BoUX0W'
+        key = 'mwIcHdj1fIDGVi44N6BoUX0W'
         hex_str = key.encode()
         message = s1.encode()
 
@@ -2554,52 +2551,50 @@ def event_sign_verification_func(request):
         print(generated_signature)
         print(request.data['razorpay_signature'])
 
-        check=0                                             
+        check = 0
 
         # check=0 means payment success
         # check=1 means payment failed
 
         if (generated_signature == request.data['razorpay_signature']):
             print("Payment is successfull, Data came from authenticated source")
-            
-        
+
+
         else:
             print("Data not came from authenticated sources")
-            check=1                                                             # sign verification failed
-            #return Response("Data not came from authenticated sources, Razorpay signature and generated signature mis-matched",status=422)
+            check = 1  # sign verification failed
+            # return Response("Data not came from authenticated sources, Razorpay signature and generated signature mis-matched",status=422)
     except Exception as e:
         print(e)
         print("Data not came from authenticated sources")
-        check=1                                                                 # sign verification failed
-        #return Response("Data not came from authenticated sources, Razorpay signature and generated signature mis-matched",status=422)
-        
-    
-    if check==1:                                                    # for failed cases, once again checking it by contacting razorpay
+        check = 1  # sign verification failed
+        # return Response("Data not came from authenticated sources, Razorpay signature and generated signature mis-matched",status=422)
+
+    if check == 1:  # for failed cases, once again checking it by contacting razorpay
 
         try:
 
             # client = razorpay.Client(auth=('rzp_test_JAObx3Y47SmBhB', 'RKxq0NX3rGgEZ3HEKt5cr5BT'))
             client = razorpay.Client(auth=('rzp_test_A5QQVVWf0eMog1', 'mwIcHdj1fIDGVi44N6BoUX0W'))
             status = client.utility.verify_payment_signature(request.data)
-            print(status,"payment statusssss")
-            check=0                                                                             # payment successful, if above line executes without any error
-        
-        except Exception as e:
-        
-            print(e)
-            check=1                                                                              # if error comes, marking it has failed
-            
-            
-            rz_dict = client.payment.fetch(request.data['razorpay_payment_id'])                 # contacting razorpay with payment_id
-            if rz_dict['status']=="captured" and rz_dict['captured']==True:
-                check=0                                                                         # if payment captured successfully, marking it has success                                                                         
-            else:   
-                check=1
-                print("Razorpay Signature verification Failed")
-                return Response("Razorpay Signature verification Failed",status=422)
+            print(status, "payment statusssss")
+            check = 0  # payment successful, if above line executes without any error
 
-    if check==0:                                                                                # for successful payment making it has booked in db
-        
+        except Exception as e:
+
+            print(e)
+            check = 1  # if error comes, marking it has failed
+
+            rz_dict = client.payment.fetch(request.data['razorpay_payment_id'])  # contacting razorpay with payment_id
+            if rz_dict['status'] == "captured" and rz_dict['captured'] == True:
+                check = 0  # if payment captured successfully, marking it has success
+            else:
+                check = 1
+                print("Razorpay Signature verification Failed")
+                return Response("Razorpay Signature verification Failed", status=422)
+
+    if check == 0:  # for successful payment making it has booked in db
+
         try:
             sales_ord.payment_id = request.data['razorpay_payment_id']
             sales_ord.status = 1  # payment done
@@ -2619,11 +2614,7 @@ def event_sign_verification_func(request):
             print(e)
             return Response("Error occured in payment_detals table", status=500)
 
-
-        
-
         ########## add amount in wallet and deduct money
-
 
         mth = wallet.objects.filter(mentee_id=mentee_id, status=2).order_by('-updated_at')
 
@@ -2632,7 +2623,7 @@ def event_sign_verification_func(request):
         row.txn_order_id = request.data['razorpay_order_id']
         row.amount_changed = sales_ord.wallet_amount
         row.status = 2  # added money
-        #row.remarks = sales_ord.Session_name+ " session"
+        row.remarks = "Webinar"
         curr_bal = 0
         if len(mth) != 0:
             curr_bal = mth[0].current_balance
@@ -2652,66 +2643,50 @@ def event_sign_verification_func(request):
         row.txn_order_id = request.data['razorpay_order_id']
         row.amount_changed = -sales_ord.final_price
         row.status = 2  # added money
-        #row.remarks = sales_ord.Session_name + " session"
+        row.remarks = "Webinar"
 
         row.previous_balance = curr_bal + sales_ord.wallet_amount
         row.current_balance = curr_bal + sales_ord.wallet_amount - sales_ord.final_price
 
         row.save()
-        
-
-        
 
         return "Payment Successfully"
-    else:                                   # finally, for failed case making it as payment failed in db
+    else:  # finally, for failed case making it as payment failed in db
         # print(status)
-        sales_ord.status=3                  # 3=sign verification failed
+        sales_ord.status = 3  # 3=sign verification failed
         print("Payment Failed")
-        sales_ord.save()       
+        sales_ord.save()
         return "Payment Failed"
 
 def event_order_api_func(request):
 
-    
     user_in_db=User.objects.get(email=request.user)
     mentee_id=user_in_db.id
-    
 
-    #user_in_db=User.objects.get(id=1)
-    #mentee_id=user_in_db.id
+    event_id = request.data['event_id']
 
-    event_id=request.data['event_id']
-
-    #tables - events, event_sales_order, wallet
+    # tables - events, event_sales_order, wallet
 
     try:
-        event=events.objects.get(id=event_id)
+        event = events.objects.get(id=event_id)
     except Exception as e:
         print(e)
         print("event details with this id doesnot exists")
 
         return Response("event details with this id doesnot exists", status=500)
 
-    
-
-    sales_ord=event_sales_order.objects.filter(event_id=event_id, mentee_id=mentee_id, status=0).order_by('-status_updated_at')
+    sales_ord = event_sales_order.objects.filter(event_id=event_id, mentee_id=mentee_id, status=0).order_by(
+        '-status_updated_at')
     print("fetched", len(sales_ord))
-    if len(sales_ord)==0:
-        
+    if len(sales_ord) == 0:
         print("mentee's order details not found in event_sales_order table")
         return Response("mentee's order details not found in event_sales_order table", status=500)
 
-    
     if request.data["use_wallet"]:
 
-        
-
         wt = wallet.objects.filter(mentee_id=mentee_id).order_by('-updated_at')
-        
-        if len(wt) != 0:
-            
 
-            
+        if len(wt) != 0:
 
             if wt[0].current_balance >= event.price:
                 print("went insideeeeeeeeeeeeeeeeeeeeeeeeeee")
@@ -2725,13 +2700,13 @@ def event_order_api_func(request):
 
                 wall_obj = wallet()
                 wall_obj.mentee_id = mentee_id
-                wall_obj.status=1       # just row created 
-                wall_obj.remarks = "webinar session for id="+str(event_id)
+                wall_obj.status = 1  # just row created
+                wall_obj.remarks = "webinar session for id=" + str(event_id)
                 wall_obj.wallet_used = True
                 wall_obj.txn_order_id = order_id
                 wall_obj.amount_changed = -event.price
                 wall_obj.status = 2  # active row, can be shown in wallet history
-                wall_obj.remarks = "webinar id="+str(event_id)
+                wall_obj.remarks = "webinar id=" + str(event_id)
 
                 wall_obj.previous_balance = wt[0].current_balance
                 wall_obj.current_balance = wt[0].current_balance - event.price
@@ -2739,15 +2714,14 @@ def event_order_api_func(request):
                 wall_obj.save()
                 print("wallet row deducted")
 
-                sales_ord[0].status=1  #booked
-                sales_ord[0].user_order_id=order_id
-                sales_ord[0].wallet_used=True
+                sales_ord[0].status = 1  # booked
+                sales_ord[0].user_order_id = order_id
+                sales_ord[0].wallet_used = True
                 sales_ord[0].wallet_amount = sales_ord[0].final_price
 
                 sales_ord[0].save()
-                    
 
-                return order_id, order_amount 
+                return order_id, order_amount
 
             elif wt[0].current_balance + request.data['amount_to_add'] >= event.price:
                 order_amount = request.data['amount_to_add'] * 100
@@ -2765,8 +2739,6 @@ def event_order_api_func(request):
     order_receipt = str(event.id)
     notes = {'mentee_id': user_in_db.id}  # OPTIONAL
 
-    
-
     try:
 
         # client = razorpay.Client(auth=('rzp_test_JAObx3Y47SmBhB', 'RKxq0NX3rGgEZ3HEKt5cr5BT'))
@@ -2780,31 +2752,25 @@ def event_order_api_func(request):
 
         return Response("Order ID not created successfully", status=500)
 
+    sales_ord[0].event_id = event_id
+    sales_ord[0].mentee_id = mentee_id
+    sales_ord[0].status = 2  # under booking
+    sales_ord[0].user_order_id = response['id']
+    sales_ord[0].event_price = event.price
 
+    fp_float = order_amount / 100
+    fp_int = order_amount // 100
 
-    sales_ord[0].event_id=event_id
-    sales_ord[0].mentee_id=mentee_id
-    sales_ord[0].status=2                      #under booking
-    sales_ord[0].user_order_id=response['id']
-    sales_ord[0].event_price=event.price
-    
-
-    fp_float=order_amount/100
-    fp_int=order_amount//100
-
-    if fp_float==fp_int:
-        sales_ord[0].final_price=fp_int
+    if fp_float == fp_int:
+        sales_ord[0].final_price = fp_int
     else:
-        sales_ord[0].final_price=fp_float
+        sales_ord[0].final_price = fp_float
 
     sales_ord[0].save()
-    
-    if request.data["use_wallet"]:
-        sales_ord[0].wallet_used = request.data["use_wallet"]
-    sales_ord[0].wallet_amount = order_amount/100
-    sales_ord[0].save()    
-    
+
     print(order_amount)
     print(response['id'])
     return response['id'], order_amount
+
+
 

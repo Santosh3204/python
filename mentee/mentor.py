@@ -24,7 +24,7 @@ import binascii
 import uuid
 from mentee.agora.src.RtcTokenBuilder import RtcTokenBuilder # agora
 from mentee.agora.call import send_push_notification
-
+import operator
 
 def fetch_booked_sessions(request):
     objects = mentor_schedule.objects.filter(Mentor_id=request['mentor_id'],
@@ -1458,6 +1458,130 @@ def Coupon_API_func(request):
         return data_dict
 
 
+# def Mentee_My_Order_API_func(request):
+#     inner_list = []
+#
+#     data_dict = {
+#         "is_mentee": True,
+#         "inner_data": []
+#     }
+#
+#     try:  # server
+#         user_in_db = User.objects.get(email=request.user)
+#     except Exception as e:
+#         print(e)
+#         print("User doesn't exist")
+#         return Response("User doesn't exist", status=500)
+#
+#     if user_in_db.is_mentee:
+#
+#         sales_ord_objs = sales_order.objects.filter(Mentee_id=user_in_db.id, Status__in=[1, 2], Is_active=1).order_by(
+#             '-Created_at')
+#
+#         client = razorpay.Client(auth=("rzp_test_A5QQVVWf0eMog1", "mwIcHdj1fIDGVi44N6BoUX0W"))
+#
+#         for row in sales_ord_objs:
+#             mentor_in_db = None
+#             try:
+#                 mentor_in_db = User.objects.get(id=row.Mentor_id)
+#             except Exception as e:
+#                 print(e)
+#                 print("error occured in for loop in User table")
+#
+#             payment_id = row.Payment_id
+#             payment_mode = "Wallet"
+#             if payment_id is not None:
+#                 resp = client.payment.fetch(payment_id)
+#                 # print(resp,"--------------------------------------------------")
+#                 # payment_mode = resp['method']
+#                 if 'method' in resp:
+#                     payment_mode = resp['method']
+#                 else:
+#                     payment_mode = "--"
+#             is_feedback = False
+#             try:
+#                 fd = mentee_feedback.objects.get(Sales_Order=row)
+#                 rating = fd.star_rating
+#                 comments = fd.comments
+#                 is_feedback = True
+#             except Exception as e:
+#                 print("No Feedback given")
+#                 rating = 0
+#                 comments = ""
+#
+#             sch_obj = mentor_schedule.objects.get(id=row.Schedule_id)
+#
+#             inner_dict = {
+#                 "mentor_name": mentor_in_db.name,
+#                 "order_id": row.User_order_id,
+#                 "star_rating": rating,
+#                 "comments": comments,
+#                 "actual_price": row.session_charge,
+#                 "coupon_id": row.coupon_id,
+#                 "coupon_amount": row.coupon_amount,
+#                 "payment_mode": payment_mode,
+#                 "session_name": row.Session_name,
+#                 "profile_pic": mentor_in_db.picture,
+#                 "date": sch_obj.Start_datetime.strftime("%d %b %Y"),
+#                 "time": sch_obj.Start_datetime.strftime("%I:%M %p"),
+#                 "paid_amount": row.final_price,
+#                 "created_at": row.Created_at,
+#                 "is_feedback": is_feedback,
+#                 "schedule_id": sch_obj.id
+#             }
+#
+#             msg = False
+#             t_30 = datetime.timedelta(minutes=30)
+#
+#             allowed_time = sch_obj.End_datetime + t_30
+#
+#             if row.Status == 2:
+#
+#                 msg = True
+#             elif datetime.datetime.now() >= allowed_time:
+#
+#                 msg = True
+#             else:
+#
+#                 msg = False
+#
+#             inner_dict.update({"feedback_status": msg})
+#
+#             inner_list.append(inner_dict)
+#         data_dict["inner_data"] = inner_list
+#
+#     else:
+#         mentee_status = False
+#
+#         sales_ord_objs = sales_order.objects.filter(Mentor_id=user_in_db.id, Status__in=[1, 2], Is_active=1)
+#
+#         for row in sales_ord_objs:
+#
+#             try:
+#                 mentee_in_db = User.objects.get(id=row.Mentee_id)
+#             except Exception as e:
+#                 print(e)
+#                 print("error occured in for loop in User table")
+#
+#             sch_obj = mentor_schedule.objects.get(id=row.Schedule_id)
+#
+#             data_di = {
+#                 "mentee_name": mentee_in_db.name,
+#                 "session_name": row.Session_name,
+#                 "profile_pic": mentee_in_db.picture,
+#                 "date": sch_obj.Start_datetime.strftime("%d %b %Y"),
+#                 "time": sch_obj.Start_datetime.strftime("%I:%M %p"),
+#                 "paid_amount": sch_obj.mentor_charge
+#
+#             }
+#
+#             inner_list.append(data_di)
+#         data_dict["is_mentee"] = mentee_status
+#         data_dict["data"] = inner_list
+#
+#     return data_dict
+
+
 def Mentee_My_Order_API_func(request):
     inner_list = []
 
@@ -1467,7 +1591,8 @@ def Mentee_My_Order_API_func(request):
     }
 
     try:  # server
-        user_in_db = User.objects.get(email=request.user)
+        user_in_db = User.objects.get(email=request.user, is_active=1)
+        # user_in_db = User.objects.get(id=2, is_active=1)
     except Exception as e:
         print(e)
         print("User doesn't exist")
@@ -1483,7 +1608,7 @@ def Mentee_My_Order_API_func(request):
         for row in sales_ord_objs:
             mentor_in_db = None
             try:
-                mentor_in_db = User.objects.get(id=row.Mentor_id)
+                mentor_in_db = User.objects.get(id=row.Mentor_id)  # error occures when is_active=0
             except Exception as e:
                 print(e)
                 print("error occured in for loop in User table")
@@ -1525,7 +1650,8 @@ def Mentee_My_Order_API_func(request):
                 "date": sch_obj.Start_datetime.strftime("%d %b %Y"),
                 "time": sch_obj.Start_datetime.strftime("%I:%M %p"),
                 "paid_amount": row.final_price,
-                "created_at": row.Created_at,
+                "created_at": row.Created_at.strftime("%d %b %Y, %I:%M %p"),
+                "created_at_sorting": row.Created_at,
                 "is_feedback": is_feedback,
                 "schedule_id": sch_obj.id
             }
@@ -1548,6 +1674,83 @@ def Mentee_My_Order_API_func(request):
             inner_dict.update({"feedback_status": msg})
 
             inner_list.append(inner_dict)
+
+        event_sales_objs = event_sales_order.objects.filter(mentee_id=user_in_db.id, status=1)
+        # mentor_in_db = None
+        # try:
+        #    mentor_in_db = User.objects.get(id=row.Mentor_id)                   # error occures when is_active=0
+        # except Exception as e:
+        #    print(e)
+        #    print("error occured in for loop in User table")
+
+        for row in event_sales_objs:
+
+            event_row = events.objects.get(id=row.event_id)
+
+            payment_id = row.payment_id
+            payment_mode = "Wallet"
+            if payment_id is not None:
+                resp = client.payment.fetch(payment_id)
+                # print(resp,"--------------------------------------------------")
+                # payment_mode = resp['method']
+                if 'method' in resp:
+                    payment_mode = resp['method']
+                else:
+                    payment_mode = "--"
+            is_feedback = False
+            try:
+                print("entered")
+                fd = event_feedback.objects.get(event_order=row)
+                rating = fd.star_rating
+                comments = fd.comments
+                is_feedback = True
+            except Exception as e:
+                print("No Feedback given")
+                rating = 0
+                comments = ""
+
+            inner_dict = {
+                "mentor_name": "Ashok HC",
+                "order_id": row.user_order_id,
+                "star_rating": rating,
+                "comments": comments,
+                "actual_price": row.event_price,
+                "coupon_code": row.coupon_code,
+                "coupon_amount": row.coupon_amount,
+                "payment_mode": payment_mode,
+                "session_name": "webinar HC",
+                "profile_pic": event_row.image_link,
+                "date": event_row.start_datetime.strftime("%d %b %Y"),
+                "time": event_row.start_datetime.strftime("%I:%M %p"),
+                "paid_amount": row.final_price,
+                "created_at": row.created_at.strftime("%d %b %Y, %I:%M %p"),
+                "created_at_sorting": row.created_at,
+                "is_feedback": is_feedback,
+                "event_id": event_row.id
+            }
+
+            msg = False
+            t_30 = datetime.timedelta(minutes=30)
+
+            allowed_time = event_row.start_datetime + t_30
+
+            # if row.Status == 2:
+
+            #    msg = True
+            # elif datetime.datetime.now() >= allowed_time:
+            if datetime.datetime.now() >= allowed_time:
+
+                msg = True
+            else:
+
+                msg = False
+
+            inner_dict.update({"feedback_status": msg})
+
+            inner_list.append(inner_dict)
+
+        inner_list.sort(key=operator.itemgetter('created_at_sorting'), reverse=True)
+
         data_dict["inner_data"] = inner_list
 
     else:
@@ -1581,7 +1784,7 @@ def Mentee_My_Order_API_func(request):
 
     return data_dict
 
-            
+
 def Mentor_My_Orders_API_func(request):
 
     

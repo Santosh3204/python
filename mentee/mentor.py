@@ -2758,15 +2758,12 @@ def event_order_api_func(request):
     sales_ord[0].user_order_id = response['id']
     sales_ord[0].event_price = event.price
 
-    fp_float = order_amount / 100
-    fp_int = order_amount // 100
-
-    if fp_float == fp_int:
-        sales_ord[0].final_price = fp_int
-    else:
-        sales_ord[0].final_price = fp_float
-
     sales_ord[0].save()
+
+    if request.data["use_wallet"]:                                              # these     
+        sales_ord[0].wallet_used = request.data["use_wallet"]                   # lines 
+    sales_ord[0].wallet_amount = order_amount/100                               # should
+    sales_ord[0].save()                                                         # be added
 
     print(order_amount)
     print(response['id'])

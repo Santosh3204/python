@@ -321,7 +321,7 @@ class wallet(models.Model):
     previous_balance=models.FloatField(default=0)
     amount_changed=models.FloatField(default=0)
     txn_order_id=models.CharField(max_length=100)
-    status=models.SmallIntegerField()
+    status=models.SmallIntegerField()  # 1 - created, 2 - money added and active row
     voice_id=models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

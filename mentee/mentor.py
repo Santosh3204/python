@@ -568,7 +568,7 @@ def Create_Order_API_func(request):
                                                      Start_datetime=row.Start_datetime,
                                                      Status=1, Is_scheduled__in=[0,2])
 
-        wt = wallet.objects.filter(mentee_id=user_in_db).order_by('-updated_at')
+        wt = wallet.objects.filter(mentee_id=user_in_db,status=2).order_by('-updated_at')
 
         if len(wt) != 0:
 
@@ -581,11 +581,11 @@ def Create_Order_API_func(request):
                 row.save()
 
                 print("row updated in sales order table")
-                for i in range(len(mentor_objs)):
-                    mentor_objs[i].Is_scheduled = 0
-                    mentor_objs[i].Status = 0
-                    mentor_objs[i].order_id = None
-                    mentor_objs[i].save()
+                for sch_obj in mentor_objs:
+                    sch_obj.Is_scheduled = 0
+                    sch_obj.Status = 0
+                    sch_obj.order_id = None
+                    sch_obj.save()
 
                 order_id = str(uuid.uuid1())
                 sales_ord[0].User_order_id = order_id
@@ -636,9 +636,9 @@ def Create_Order_API_func(request):
         row.mentee_id = user_in_db.id
         row.save()
 
-        for i in range(len(mentor_objs)):
-            mentor_objs[i].Is_scheduled=2                                     #progress
-            mentor_objs[i].save()
+        for sch_obj in mentor_objs:
+            sch_obj.Is_scheduled=2                                     #progress
+            sch_obj.save()
 
         order_currency = 'INR'
         order_receipt = str(sales_ord[0].id)
@@ -935,8 +935,8 @@ def RP_Sign_Verification_func(request):
         curr_bal = 0
         if len(mth) != 0:
             curr_bal = mth[0].current_balance
-            row.previous_balance = mth[0].current_balance
-            row.current_balance = mth[0].current_balance + sales_ord.wallet_amount
+            row.previous_balance = curr_bal
+            row.current_balance = curr_bal + sales_ord.wallet_amount
 
         else:
             row.mentee_id = user_in_db.id
@@ -1993,7 +1993,6 @@ def Wallet_API_func(request):
         row.amount_changed=request.data['amount']
         row.status=1                                #created
         row.save()
-
 
     return response['id']
 

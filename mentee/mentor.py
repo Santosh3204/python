@@ -521,7 +521,7 @@ def Mentor_Schedule_API_func(request, mentor_id):  # API to schedule for mentor.
                 request.data["Mentor_id"] = mentor_id
                 if request.data['charge'] <= 200:
                     request.data['mentor_charge'] = request.data['charge']
-                    request.data['session_charge'] = 400
+                    request.data['session_charge'] = request.data['charge']*1
                 else:
                     request.data['mentor_charge'] = request.data['charge']
                     request.data['session_charge'] = request.data['charge'] * 2
@@ -646,8 +646,8 @@ def Create_Order_API_func(request):
 
         try:
 
-            # client = razorpay.Client(auth=('rzp_test_JAObx3Y47SmBhB', 'RKxq0NX3rGgEZ3HEKt5cr5BT'))
-            client = razorpay.Client(auth=('rzp_test_A5QQVVWf0eMog1', 'mwIcHdj1fIDGVi44N6BoUX0W'))
+            #client = razorpay.Client(auth=('rzp_live_rvoEOlgo2PAfxL', 'VqIKwKR8Q10sAdwGNhaOsw1W'))  # live
+            client = razorpay.Client(auth=('rzp_test_A5QQVVWf0eMog1', 'mwIcHdj1fIDGVi44N6BoUX0W')) # test
 
             response = client.order.create(
                 dict(amount=order_amount, currency=order_currency, receipt=order_receipt, notes=notes))
@@ -821,8 +821,8 @@ def RP_Sign_Verification_func(request):
         # generated_signature = hmac_sha256(request.data['razorpay_order_id'] + "|" + request.data['razorpay_payment_id'], 'RKxq0NX3rGgEZ3HEKt5cr5BT')
         s1 = request.data['razorpay_order_id'] + "|" + request.data['razorpay_payment_id']
 
-        key = 'RKxq0NX3rGgEZ3HEKt5cr5BT'
-        key= 'mwIcHdj1fIDGVi44N6BoUX0W'
+        #key = 'VqIKwKR8Q10sAdwGNhaOsw1W'  # live 
+        key= 'mwIcHdj1fIDGVi44N6BoUX0W'   # test
         hex_str = key.encode()
         message = s1.encode()
 
@@ -861,8 +861,8 @@ def RP_Sign_Verification_func(request):
 
     try:
 
-        # client = razorpay.Client(auth=('rzp_test_JAObx3Y47SmBhB', 'RKxq0NX3rGgEZ3HEKt5cr5BT'))
-        client = razorpay.Client(auth=('rzp_test_A5QQVVWf0eMog1', 'mwIcHdj1fIDGVi44N6BoUX0W'))
+        #client = razorpay.Client(auth=('rzp_live_rvoEOlgo2PAfxL', 'VqIKwKR8Q10sAdwGNhaOsw1W'))  # live
+        client = razorpay.Client(auth=('rzp_test_A5QQVVWf0eMog1', 'mwIcHdj1fIDGVi44N6BoUX0W'))  # test
         status = client.utility.verify_payment_signature(request.data)
         print(status,"payment statusssss")
         check=1
@@ -1653,7 +1653,9 @@ def Mentee_My_Order_API_func(request):
                 "created_at": row.Created_at.strftime("%d %b %Y, %I:%M %p"),
                 "created_at_sorting": row.Created_at,
                 "is_feedback": is_feedback,
-                "schedule_id": sch_obj.id
+                "schedule_id": sch_obj.id,
+                "is_session":True
+
             }
 
             msg = False
@@ -1726,7 +1728,8 @@ def Mentee_My_Order_API_func(request):
                 "created_at": row.created_at.strftime("%d %b %Y, %I:%M %p"),
                 "created_at_sorting": row.created_at,
                 "is_feedback": is_feedback,
-                "event_id": event_row.id
+                "schedule_id":row.id,
+                "is_session":False
             }
 
             msg = False
@@ -1892,20 +1895,40 @@ def Mentor_Payment_History_func(request):
 
 def Mentee_Feedback_func(request):
 
-    try:
-        sales_ord=sales_order.objects.filter(Schedule_id=request.data['schedule_id']).order_by("-Status_updated_at")
-    except Exception as e:
-        print(e)
-        print("Order_id doesnot exists in sales_order table")
-        return Response("Order_id doesnot exists in sales_order table", status=500)
+    if request.data['is_session']:
+        print("session feedback type")
 
-    obj=mentee_feedback()
-    obj.Sales_Order=sales_ord[0]
-    obj.mentor_id=sales_ord[0].Mentor_id
-    obj.star_rating=request.data['star_rating']
-    obj.comments=request.data['comments']
+        try:
+            sales_ord=sales_order.objects.filter(Schedule_id=request.data['schedule_id']).order_by("-Status_updated_at")
+        except Exception as e:
+            print(e)
+            print("Order_id doesnot exists in sales_order table")
+            return Response("Order_id doesnot exists in sales_order table", status=500)
 
-    obj.save()
+        obj=mentee_feedback()
+        obj.Sales_Order=sales_ord[0]
+        obj.mentor_id=sales_ord[0].Mentor_id
+        obj.star_rating=request.data['star_rating']
+        obj.comments=request.data['comments']
+
+        obj.save()
+    else:
+        print("event feedback type")
+        try:
+            sales_ord=event_sales_order.objects.get(id=request.data['schedule_id'])
+        except Exception as e:
+            print(e)
+            print("event booked details doesn't exists in event_sales_order table")
+            return Response("event booked details doesn't exists in event_sales_order table")
+
+        obj=event_feedback()
+        obj.event_order=sales_ord
+        obj.event_id=sales_ord.event_id
+        obj.star_rating=request.data['star_rating']
+        obj.comments=request.data['comments']
+
+        obj.save()
+
 
 
 

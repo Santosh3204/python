@@ -1257,12 +1257,13 @@ class Mentee_Feedback(APIView):
         if type(request.data) != dict:
             return Response("Request body not in Dictionary format", status=400)
 
-        elif len(request.data) != 3:
+        elif len(request.data) != 4:
             return Response("No. of keys is mis-matched, it should be 3", status=400)
 
         actual_dict = {"schedule_id":int,
                        "star_rating": int,
-                       "comments": str
+                       "comments": str,
+                       "is_session":bool
                        }
 
         for i in actual_dict:

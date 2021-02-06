@@ -136,7 +136,7 @@ class mentor_profile(models.Model):
 
 
 def img_url(path):
-    host="http://ec2-13-233-21-6.ap-south-1.compute.amazonaws.com:8000/"
+    host="http://ec2-65-1-116-219.ap-south-1.compute.amazonaws.com:8000/"
     return host+str(path)
 
 
@@ -246,6 +246,7 @@ class payment_details(models.Model):
     razorpay_order_id = models.CharField(max_length=100)
     razorpay_payment_id = models.CharField(max_length=100)
     razorpay_signature = models.CharField(max_length=100,null=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
 
     def __str__(self):
         return self.razorpay_payment_id
@@ -295,6 +296,7 @@ class mentee_feedback(models.Model):
     mentor_id=models.IntegerField()
     star_rating=models.SmallIntegerField(null=True)
     comments=models.TextField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
 
     def __str__(self):
         return self.mentor_id
@@ -331,6 +333,7 @@ class wallet(models.Model):
 class favourite_mentors(models.Model):
     mentee_id=models.IntegerField()
     mentor_id=models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
 
 class request_sessions(models.Model):
     mentee_id=models.IntegerField()
@@ -417,9 +420,11 @@ class profile_picture(models.Model):
     user_id = models.IntegerField(null=True)
     image = models.ImageField(upload_to='profile_picture/', max_length=200)
     image_link = models.URLField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
 
 class event_feedback(models.Model):
     event_order=models.OneToOneField(event_sales_order, on_delete=models.CASCADE, null=True)
     event_id=models.IntegerField()
     star_rating=models.SmallIntegerField(null=True)
     comments=models.TextField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True,null=True)

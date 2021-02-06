@@ -10,7 +10,7 @@
       console.log('Logged in as: ' + googleUser.getBasicProfile().getName());
       var id_token = googleUser.getAuthResponse().id_token;
       var xhr = new XMLHttpRequest();
-<!--      xhr.open('POST', 'http://ec2-13-233-21-6.ap-south-1.compute.amazonaws.com:8000/mentee/login/callback');-->
+<!--      xhr.open('POST', 'http://ec2-65-1-116-219.ap-south-1.compute.amazonaws.com:8000/mentee/login/callback');-->
       xhr.open('POST', 'http://localhost:8000/mentee/login/callback');
       xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       xhr.onload = function() {

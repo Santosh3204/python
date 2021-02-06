@@ -2147,7 +2147,7 @@ def submit_event_info(request):
             row.save()
 
             # host = "http://localhost:8000/media/"
-            host = "http://ec2-13-233-21-6.ap-south-1.compute.amazonaws.com:8000/media/"
+            host = "http://ec2-65-1-116-219.ap-south-1.compute.amazonaws.com:8000/media/"
             row.image_link = host + str(row.image)
             row.save()
 
@@ -2422,7 +2422,7 @@ class profile_pic(APIView):
         row.image = request.FILES['image']
         row.save()
 
-        link = "http://ec2-13-233-21-6.ap-south-1.compute.amazonaws.com:8000/media/" + str(row.image)
+        link = "http://ec2-65-1-116-219.ap-south-1.compute.amazonaws.com:8000/media/" + str(row.image)
         row.image_link = link
         row.save()
 

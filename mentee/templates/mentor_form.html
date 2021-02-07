@@ -163,6 +163,10 @@
 
                             </td>
                     </tr>
+                    <tr>
+                        <td>Duration:</td>
+                        <td><input type="text" name="company_duration_0" id="c_duration"></td>
+                    </tr>
 
                     <tr>
                         <td>Location:</td>
@@ -437,6 +441,10 @@
 
                 prof_s+=options;
                 prof_s+="</select> </td> </tr>";
+
+                prof_s=prof_s.concat('<tr>\
+                    <td>Duration:</td>\
+                    <td><input type="text" name="company_duration_',prof_num.toString() ,'" id="c_duration"></td></tr>');
 
                 prof_s=prof_s.concat('<tr>\
                     <td>Location:</td>\

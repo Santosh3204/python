@@ -1,5 +1,4 @@
-
-import math,re
+import math, re
 from .mentor import *
 from mentee.agora.call import *
 from django.db import connection
@@ -8,7 +7,7 @@ from rest_framework.decorators import api_view
 from rest_framework.generics import RetrieveAPIView
 from django.views.generic.detail import DetailView
 
-from django.http.response import Http404,HttpResponse
+from django.http.response import Http404, HttpResponse
 from .forms import SignUpForm
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -18,16 +17,16 @@ import datetime
 from django.shortcuts import render
 import uuid
 # Create your views here.
-from django.http import HttpResponse,HttpResponseRedirect,JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from google.oauth2 import id_token
 from dateutil.relativedelta import relativedelta
 import io
 from PIL import Image
 import urllib.request
-import jwt,json
+import jwt, json
 
-#from django.shortcuts import redirect, render , render_to_response         #server
-from django.shortcuts import redirect, render                               #local
+# from django.shortcuts import redirect, render , render_to_response         #server
+from django.shortcuts import redirect, render  # local
 
 import requests
 from google.auth.transport import requests
@@ -56,16 +55,18 @@ from rest_framework import status
 from mentee.elastic_db import ElasticDB
 from firebase_admin import auth, credentials, initialize_app
 import time
+
 # from sqlalchemy import create_engine                    #local
 # import sqlalchemy                                       #local
-cred=credentials.Certificate("mentee/firebase/mentorbox-inida-firebase-adminsdk-mnxz4-e883fceca5.json")
+cred = credentials.Certificate("mentee/firebase/mentorbox-inida-firebase-adminsdk-mnxz4-e883fceca5.json")
 initialize_app(cred)
-import razorpay                                         #local
+import razorpay  # local
 
 es_ob = ElasticDB()
 
 JWT_PAYLOAD_HANDLER = api_settings.JWT_PAYLOAD_HANDLER
 JWT_ENCODE_HANDLER = api_settings.JWT_ENCODE_HANDLER
+
 
 def index(request):
     return render(request, 'login.html')
@@ -81,8 +82,9 @@ class UserLoginView(RetrieveAPIView):
         gmail_token = request.data['g_token']
         mobile_token = request.data['m_token']
 
-        print(gmail_token,"-----------------")
-        idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(), '242017925852-adacce81ou3vqqaiu6bpv2bg53571s5r.apps.googleusercontent.com')
+        print(gmail_token, "-----------------")
+        idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(),
+                                              '242017925852-adacce81ou3vqqaiu6bpv2bg53571s5r.apps.googleusercontent.com')
         # idinfo = id_token.verify_oauth2_token(gmail_token, requests.Request(),
         #                                     '824991669873-4uvhv8anug1h4hv2gjo2g0hiclrcvvbn.apps.googleusercontent.com')
         print(idinfo, "id info")
@@ -119,11 +121,10 @@ class UserLoginView(RetrieveAPIView):
         user_in_db.mobile_token = mobile_token
         user_in_db.save()
 
-
         payload = JWT_PAYLOAD_HANDLER(user_in_db)
         jwt_token = JWT_ENCODE_HANDLER(payload)
         update_last_login(None, user_in_db)
-        #jwt_token = jwt.encode(payload, "SECRET_KEY").decode('utf-8')
+        # jwt_token = jwt.encode(payload, "SECRET_KEY").decode('utf-8')
         response["message"] = message
         response["status_code"] = status_code
         response['token'] = jwt_token
@@ -146,11 +147,10 @@ class DashboardView(RetrieveAPIView):
         is_mentee = user_in_db.is_mentee
         is_mentor = user_in_db.is_mentor
 
-
         response = {
             'success': True,
-            "status_code":200,
-            "is_mentee":True
+            "status_code": 200,
+            "is_mentee": True
 
         }
 
@@ -167,22 +167,21 @@ class DashboardView(RetrieveAPIView):
                     # "College": user_detail.college,
                     #                 "Course": user_detail.course,
                     #                 "Degree": user_detail.degree,
-                                    "fields": json.loads(user_detail.career_list),
-                                    "Skills": json.loads(user_detail.skills)}
+                    "fields": json.loads(user_detail.career_list),
+                    "Skills": json.loads(user_detail.skills)}
                 mentors = es_ob.search_mentor_for_student(user_detail_dict)
             else:
                 user_detail_dict = {
                     # "College": user_detail.college,
                     #                 "Degree": user_detail.degree,
                     "fields": json.loads(user_detail.career_list),
-                                    "Skills": json.loads(user_detail.skills),
-                                    "CurrentDesignation": user_detail.designation,
-                                    # "CurrentCompany": user_detail.company
+                    "Skills": json.loads(user_detail.skills),
+                    "CurrentDesignation": user_detail.designation,
+                    # "CurrentCompany": user_detail.company
                 }
                 mentors = es_ob.search_mentors_for_prof(user_detail_dict)
 
-
-            so_rows = sales_order.objects.filter(Mentee_id=user_in_db.pk,Is_active=1,Status=1)
+            so_rows = sales_order.objects.filter(Mentee_id=user_in_db.pk, Is_active=1, Status=1)
 
             upcoming_sessions = []
             for row in so_rows:
@@ -199,31 +198,34 @@ class DashboardView(RetrieveAPIView):
 
                 diff_time = datetime.datetime.now() - start_time
                 minutes_diff = diff_time.total_seconds() / 60
-                print(minutes_diff,start_time,diff_time,"---------------------")
+                print(minutes_diff, start_time, diff_time, "---------------------")
                 if minutes_diff >= 60:
-                    print("skipped some older sessions",start_time)
+                    print("skipped some older sessions", start_time)
                     continue
-                upcoming_sessions.append({"schedule_id":schedule_id,"id_":mentor_id,"name":name,"industry_exp":industry_exp,"avatar":avatar,
-                 "position":position,"session_at":start_time.strftime("%d %b, %I:%M %p"),"session_name":session_name,"sort_key":str(start_time)})
+                upcoming_sessions.append(
+                    {"schedule_id": schedule_id, "id_": mentor_id, "name": name, "industry_exp": industry_exp,
+                     "avatar": avatar,
+                     "position": position, "session_at": start_time.strftime("%d %b, %I:%M %p"),
+                     "session_name": session_name, "sort_key": str(start_time)})
 
-            upcoming_sessions.sort(key=lambda x: x['sort_key'],reverse=False)
+            upcoming_sessions.sort(key=lambda x: x['sort_key'], reverse=False)
 
-            response["data"] = {'recommended_mentors': mentors,"upcoming_sessions":upcoming_sessions,
-                               "profile_verified":True}
-            #print(user_in_db.pk,user_in_db.id,"-------------------------")
+            response["data"] = {'recommended_mentors': mentors, "upcoming_sessions": upcoming_sessions,
+                                "profile_verified": True}
+            # print(user_in_db.pk,user_in_db.id,"-------------------------")
             req_sessions = mentee_notifications_func(user_in_db.id)
-            print(req_sessions,"req_sessions")
-            response["data"].update({"requested_sessions":req_sessions})
+            print(req_sessions, "req_sessions")
+            response["data"].update({"requested_sessions": req_sessions})
             # print(user_detail_dict)
-            
+
         elif is_mentor:
-            mentor_dict = {"mentor_id":user_in_db.pk,"is_scheduled":1}
-            upcoming_sessions =fetch_booked_sessions(mentor_dict)
+            mentor_dict = {"mentor_id": user_in_db.pk, "is_scheduled": 1}
+            upcoming_sessions = fetch_booked_sessions(mentor_dict)
             response["is_mentee"] = False
             response["data"] = {"upcoming_sessions": upcoming_sessions}
             message = "success"
             request_sessions = mentor_notifications_func(user_in_db.id)
-            response["data"].update({"requested_sessions":request_sessions})
+            response["data"].update({"requested_sessions": request_sessions})
 
             response["data"].update({"profile_verified": MentorFlow.objects.get(user=user_in_db).details_filled})
         else:
@@ -240,45 +242,52 @@ class DashboardView(RetrieveAPIView):
         response["user_profile_pic"] = user_in_db.picture
 
         if not response["data"]['profile_verified']:
-            response["data"].update({"message" :"Verification is pending, We will notify you once it gets completed"})
+            response["data"].update({"message": "Verification is pending, We will notify you once it gets completed"})
 
         # adding mentorbox videos to dashboard
-        #suffix = "&controls=0&modestbranding=1&rel=0"
-        #prefix = "https://www.youtube.com/embed?"
+        # suffix = "&controls=0&modestbranding=1&rel=0"
+        # prefix = "https://www.youtube.com/embed?"
         prefix = ''
-        suffix=""
-        videos = [{"Glimpse of our previous webinars":[
-            {"Mentorbox proudly collaborates with Techniche,IIT Guwahati : Speed mentoring session":prefix+"oJHbDDcO-Qw"+suffix},
-            {"Meet Our Mentor - Mr. David Meltzer | Consultant & Business Coach, Mentor": prefix+"2OxTDDqjO2g"+suffix},
-            {"Want to prepare for Google with Dhruv Chandok":prefix+"IaaXA_LMa0Y"+suffix},
-            {"Emotional Intelligence with Mentor Pratibha Tiwari":prefix+"oOZSGk8EeX8"+suffix},
-            {"Why soft skills are key to become successful person by Anapurna Monga":prefix+"y24wuSK-A6M"+suffix},
-            {"Workshop on AI and Data Science By Alumunus of IIT Madras mentor Kashish":prefix+"ZAGXyy-vLjw"+suffix},
-            {"How to make an amazing professional CV/Resume? by Mentor Priyank Ahuja":prefix+"1AI4z3BnFRo"+suffix}
+        suffix = ""
+        videos = [{"Glimpse of our previous webinars": [
+            {
+                "Mentorbox proudly collaborates with Techniche,IIT Guwahati : Speed mentoring session": prefix + "oJHbDDcO-Qw" + suffix},
+            {
+                "Meet Our Mentor - Mr. David Meltzer | Consultant & Business Coach, Mentor": prefix + "2OxTDDqjO2g" + suffix},
+            {"Want to prepare for Google with Dhruv Chandok": prefix + "IaaXA_LMa0Y" + suffix},
+            {"Emotional Intelligence with Mentor Pratibha Tiwari": prefix + "oOZSGk8EeX8" + suffix},
+            {"Why soft skills are key to become successful person by Anapurna Monga": prefix + "y24wuSK-A6M" + suffix},
+            {
+                "Workshop on AI and Data Science By Alumunus of IIT Madras mentor Kashish": prefix + "ZAGXyy-vLjw" + suffix},
+            {"How to make an amazing professional CV/Resume? by Mentor Priyank Ahuja": prefix + "1AI4z3BnFRo" + suffix}
 
         ]},
-            {"Mentorbox Talks":[{"Career Building as a Data Engineer":prefix+"nLyr67LqCzo"+suffix},
-                                {"How to enhance Personal/Professional Image":prefix+"aEfBHdLj74k"+suffix},
-                                {"Telling Stories: How Leaders Can Influence, Teach, and Inspire":prefix+"hxZGq6hADmQ"+suffix},
-                                {"Learn practical strategies to maintain and cultivate self-confidence":prefix+"lGJM0rszXpw"+suffix},
-                                {"Mentorship for managerial operations": prefix+"JnbhburJ834"+suffix},
-                                {"Develop optimal human behavior for work relationships and work performance​":prefix+"6D--fbQzQgo"+suffix}
-                                ]},
-            {"About us": [{"What can Mentorbox do for your career?": prefix+"P6bLy-6PNY0"+suffix},
+            {"Mentorbox Talks": [{"Career Building as a Data Engineer": prefix + "nLyr67LqCzo" + suffix},
+                                 {"How to enhance Personal/Professional Image": prefix + "aEfBHdLj74k" + suffix},
+                                 {
+                                     "Telling Stories: How Leaders Can Influence, Teach, and Inspire": prefix + "hxZGq6hADmQ" + suffix},
+                                 {
+                                     "Learn practical strategies to maintain and cultivate self-confidence": prefix + "lGJM0rszXpw" + suffix},
+                                 {"Mentorship for managerial operations": prefix + "JnbhburJ834" + suffix},
+                                 {
+                                     "Develop optimal human behavior for work relationships and work performance​": prefix + "6D--fbQzQgo" + suffix}
+                                 ]},
+            {"About us": [{"What can Mentorbox do for your career?": prefix + "P6bLy-6PNY0" + suffix},
                           {"What Mentees have to say about us": prefix + "g9wppAMf8Qg" + suffix}]
              }
 
-
-                              ]
-        response["data"].update({"videos":videos})
+        ]
+        response["data"].update({"videos": videos})
 
         now = datetime.datetime.now()
-        all_events = events.objects.filter(status=1,start_datetime__gt=now).order_by('start_datetime')
+        all_events = events.objects.filter(status=1, start_datetime__gt=now).order_by('start_datetime')
         event_list = []
         for event in all_events:
             event_date = event.start_datetime.date().strftime("%d %b %y")
             event_time = event.start_datetime.time().strftime('%I:%M %p')
-            event_list.append({"id_":event.id,"title":event.title.strip(),"event_date":event_date,"event_time":event_time,"image":event.image_link})
+            event_list.append(
+                {"id_": event.id, "title": event.title.strip(), "event_date": event_date, "event_time": event_time,
+                 "image": event.image_link})
 
         response["data"].update({"events": event_list})
 
@@ -286,7 +295,6 @@ class DashboardView(RetrieveAPIView):
 
 
 class UserProfileView(RetrieveAPIView):
-
     permission_classes = (IsAuthenticated,)
     authentication_class = JSONWebTokenAuthentication
 
@@ -324,7 +332,7 @@ class UserProfileView(RetrieveAPIView):
         # try:
 
         data = json.loads(request.body.decode("utf-8"))
-        print(data,"---------------------------")
+        print(data, "---------------------------")
 
         status_code = status.HTTP_200_OK
         mentors = []
@@ -344,7 +352,7 @@ class UserProfileView(RetrieveAPIView):
 
                 user_details = MenteeDetails(user, profile=data["subProfile"],
                                              # college=data["College"],
-                                             #degree=data["Degree"],
+                                             # degree=data["Degree"],
                                              # course=data["Course"],
                                              education_level=data["Degree"],
                                              # goal_defined=data['careerGoals'],
@@ -363,7 +371,7 @@ class UserProfileView(RetrieveAPIView):
 
                 user_details = MenteeDetails(user, profile=data["subProfile"],
                                              # college=data["College"],
-                                             #degree=data["Degree"],
+                                             # degree=data["Degree"],
                                              # industry_exp=data["IndustryExperience"],
                                              education_level=data["Degree"],
                                              skills=json.dumps(data["Skills"]),
@@ -390,9 +398,9 @@ class UserProfileView(RetrieveAPIView):
             else:
                 contact_no = data["contact_no"]
             mentor_flow = MentorFlow(user, linkedin_url=data["linkedin_url"], skills=json.dumps(data["skills"]),
-                                     session_121=data["session_121"],contact_no=contact_no,
+                                     session_121=data["session_121"], contact_no=contact_no,
                                      webinar=data["webinar"], webinar_topics=json.dumps(data["webinar_topics"]),
-                                     #webinar_min=data["webinar_min"],
+                                     # webinar_min=data["webinar_min"],
                                      webinar_charge=data["webinar_max"], user_id=user.pk)
 
             mentor_flow.save()
@@ -421,14 +429,15 @@ class AddMentorData(RetrieveAPIView):
     permission_classes = (IsAuthenticated,)
     authentication_class = JSONWebTokenAuthentication
 
+
 @csrf_exempt
 def insert_mentor_data(request):
     # mentor_data = json.loads(request.body.decode("utf-8"))
     mentor_data = request
     request_keys = set(mentor_data.keys())
 
-    required_keys = {"mentor_id", "professional_details", "educational_details"
-                     ,"location","skills","name", "avatar", "email", "languages","about"}
+    required_keys = {"mentor_id", "professional_details", "educational_details", "duration"
+        , "location", "skills", "name", "avatar", "email", "languages", "about"}
 
     keys_diff = required_keys.difference(request_keys)
 
@@ -458,7 +467,7 @@ def insert_mentor_data(request):
     industry_exp = es_ob.add_mentor_data(mentor_data)
 
     men_pro = mentor_profile(user_row, name=mentor_data["name"], avatar=mentor_data["avatar"],
-                             languages=json.dumps(mentor_data["languages"]),industry_exp=industry_exp,
+                             languages=json.dumps(mentor_data["languages"]), industry_exp=industry_exp,
                              about=mentor_data["about"], email=mentor_data["email"], location=mentor_data["location"],
                              professional_details=json.dumps(mentor_data["professional_details"]), status=1,
                              educational_details=json.dumps(mentor_data["educational_details"]),
@@ -527,8 +536,7 @@ class MentorView(APIView):
 # API for to create schedule for mentor.
 
 
-class Mentor_Topics_API(APIView):                                           # Adding topics of webinar for a mentor in DB.
-
+class Mentor_Topics_API(APIView):  # Adding topics of webinar for a mentor in DB.
 
     permission_classes = (AllowAny,)
 
@@ -563,6 +571,7 @@ class Mentor_Topics_API(APIView):                                           # Ad
 class FetchMentorProfile(APIView):
     permission_classes = (IsAuthenticated,)
     authentication_class = JSONWebTokenAuthentication
+
     # permission_classes = (AllowAny,)
 
     def get(self, request):
@@ -591,7 +600,6 @@ class FetchMentorProfile(APIView):
 
         data = mentor_profile.objects.get(user_id=mentor_id)
 
-
         prof_details = json.loads(data.professional_details)
         edu_details = json.loads(data.educational_details)
         name = data.name
@@ -602,11 +610,11 @@ class FetchMentorProfile(APIView):
 
         languages = json.loads(data.languages)
 
-        fav_ment_ob = favourite_mentors.objects.filter(mentee_id=mentee_id,mentor_id=mentor_id)
+        fav_ment_ob = favourite_mentors.objects.filter(mentee_id=mentee_id, mentor_id=mentor_id)
 
         fav = 0
-        if len(fav_ment_ob)>0:
-            fav=1
+        if len(fav_ment_ob) > 0:
+            fav = 1
 
         current_company = None
         current_designation = None
@@ -615,18 +623,19 @@ class FetchMentorProfile(APIView):
             current_company = prof["company_name"]
             current_designation = prof["position"]
             break
-        
-        session_names = list(mentor_schedule.objects.filter(Mentor_id=mentor_id).values_list('Session_name',flat=True).distinct())
+
+        session_names = list(
+            mentor_schedule.objects.filter(Mentor_id=mentor_id).values_list('Session_name', flat=True).distinct())
         session_names = [x.title() for x in session_names]
-        print(session_names,one2one_topics,"=====================")
+        print(session_names, one2one_topics, "=====================")
         session_names.remove(one2one_topics[0].title())
         session_topics = [one2one_topics[0].title()]
 
         session_topics.extend(session_names)
-        
+
         session_topics = [x.title() for x in session_topics]
-        
-        schedule = fetch_mentors_schedule(mentor_id,0,one2one_topics[0])
+
+        schedule = fetch_mentors_schedule(mentor_id, 0, one2one_topics[0])
         view_count = mentor_profile_clicks.objects.filter(mentor_id=mentor_id).values_list(
             'mentee_id').distinct().count()
         resp = {"mentor_id": mentor_id,
@@ -640,10 +649,10 @@ class FetchMentorProfile(APIView):
                 "languages": languages,
                 "professional_details": prof_details,
                 "educational_details": edu_details,
-                "session_topics":session_topics,
-                "schedule":schedule,
-                "fav":fav,
-                "view_count":view_count}
+                "session_topics": session_topics,
+                "schedule": schedule,
+                "fav": fav,
+                "view_count": view_count}
 
         return JsonResponse(resp, status=200)
 
@@ -691,17 +700,14 @@ class Fetch_Mentor_Schedule_Api(APIView):
 
         response_dict.update({"schedule": schedule})
 
-
         return Response(response_dict)
 
 
 class Mentor_Calender_API(APIView):
-
     permission_classes = (IsAuthenticated,)
     authentication_class = JSONWebTokenAuthentication
 
     def get(self, request):
-
         resp_list = Mentor_Calender_API_func(request)
         resp_dict = {
             "status": status.HTTP_200_OK,
@@ -803,13 +809,13 @@ class Mentor_Profile_API(APIView):
 
         return Response(resp_dict)
 
+
 class Mentor_Schedule_API(APIView):  # API to schedule for mentor.
 
-    permission_classes = (IsAuthenticated,)                             #server
+    permission_classes = (IsAuthenticated,)  # server
     authentication_class = JSONWebTokenAuthentication
-    
 
-    #permission_classes = [AllowAny,]                                    #local
+    # permission_classes = [AllowAny,]                                    #local
 
     # def get(self, request):
 
@@ -858,20 +864,19 @@ class Mentor_Schedule_API(APIView):  # API to schedule for mentor.
 
     def post(self, request):
 
-        
-        user_in_db = User.objects.get(email=request.user)                   #server
+        user_in_db = User.objects.get(email=request.user)  # server
         mentor_id = user_in_db.id
-        
+
         if type(request.data) != dict:
             return Response("Request body not in Dictionary format", status=400)
 
-        
-        elif len(request.data) != 6:                                                        #server
+
+        elif len(request.data) != 6:  # server
             return Response("No. of keys is mis-matched, it should be 6", status=400)
-        
-        #elif len(request.data) != 7:                                                        #local
+
+        # elif len(request.data) != 7:                                                        #local
         #    return Response("No. of keys is mis-matched, it should be 7", status=400)
-        
+
         actual_dict = {
             "session_names": list,
             "Days": list,
@@ -888,8 +893,8 @@ class Mentor_Schedule_API(APIView):  # API to schedule for mentor.
             if type(request.data[i]) != actual_dict[i]:
                 return Response("Values datatype in Request body is mis-matched", status=400)
 
-        #mentor_id = 2                                 #local
-        text = Mentor_Schedule_API_func(request,mentor_id)
+        # mentor_id = 2                                 #local
+        text = Mentor_Schedule_API_func(request, mentor_id)
 
         cursor = connection.cursor()
         query = "SELECT distinct(Session_name) FROM mbox.mentee_mentor_schedule where mentor_id=" + str(
@@ -904,15 +909,15 @@ class Mentor_Schedule_API(APIView):  # API to schedule for mentor.
         # increase charge by 100% for mentorbox
         mb_charge = 2 * request.data["charge"]
         try:
-           es_ob.update_mentor_topics_in_es(o2o_topics, mentor_id, mb_charge)
+            es_ob.update_mentor_topics_in_es(o2o_topics, mentor_id, mb_charge)
         except:
-           text = "Profile verification pending"
+            text = "Profile verification pending"
 
         return Response(text)
 
 
-#class excel_to_table(APIView):
-#    
+# class excel_to_table(APIView):
+#
 #    permission_classes = [AllowAny, ]
 #
 #    def post(self, request):
@@ -941,14 +946,13 @@ class Mentor_Schedule_API(APIView):  # API to schedule for mentor.
 #        #df.to_sql(con=conn, name="mentee_companies_list", if_exists="append", index=True, index_label="id")
 #        #df.to_sql(con=conn, name="mentee_degree_list", if_exists="append", index=False)
 #        return Response("Done see results")
-    
+
 
 class Create_Order_API(APIView):
-
-    permission_classes = (IsAuthenticated,)                                 #server
+    permission_classes = (IsAuthenticated,)  # server
     authentication_class = JSONWebTokenAuthentication
 
-    #permission_classes=(AllowAny,)                                           #local
+    # permission_classes=(AllowAny,)                                           #local
 
     def post(self, request):
 
@@ -960,8 +964,8 @@ class Create_Order_API(APIView):
 
         actual_dict = {
             "Schedule_id": int,
-            "amount_to_add":int,
-            "use_wallet":bool
+            "amount_to_add": int,
+            "use_wallet": bool
         }
 
         for i in actual_dict:
@@ -971,7 +975,7 @@ class Create_Order_API(APIView):
             # if type(request.data[i]) != actual_dict[i]:                       ######################################## bug
             #     return Response("Values datatype in Request body is mis-matched", status=400)
 
-        order_id,order_amount = Create_Order_API_func(request)
+        order_id, order_amount = Create_Order_API_func(request)
 
         message = "Success"
         status_code = status.HTTP_200_OK
@@ -981,23 +985,21 @@ class Create_Order_API(APIView):
             status_code = status.HTTP_208_ALREADY_REPORTED
 
         resp_dict = {
-        "status": status_code,
-        "order_amount": order_amount,
-        "order_id":order_id,
-            "message":message
+            "status": status_code,
+            "order_amount": order_amount,
+            "order_id": order_id,
+            "message": message
 
         }
 
-        return Response(resp_dict,status=status_code)
+        return Response(resp_dict, status=status_code)
 
 
 class RP_Sign_Verification(APIView):
-
-    permission_classes = (IsAuthenticated,)                                #server
+    permission_classes = (IsAuthenticated,)  # server
     authentication_class = JSONWebTokenAuthentication
 
-    #permission_classes=(AllowAny,)                                          #local
-
+    # permission_classes=(AllowAny,)                                          #local
 
     def post(self, request):
         if type(request.data) != dict:
@@ -1030,7 +1032,6 @@ class RP_Sign_Verification(APIView):
 
 
 class Booked_Sessions(APIView):
-
     permission_classes = [AllowAny, ]
 
     def post(self, request):
@@ -1064,7 +1065,7 @@ class Search_API(APIView):
     permission_classes = [AllowAny, ]
 
     def post(self, request):
-        t1=time.time()
+        t1 = time.time()
         if type(request.data) != dict:
             return Response("Request body not in Dictionary format", status=400)
 
@@ -1084,10 +1085,10 @@ class Search_API(APIView):
 
         resp_list = Search_API_func(request)
         resp_dict = {
-                "status": status.HTTP_200_OK,
-                "data": resp_list
+            "status": status.HTTP_200_OK,
+            "data": resp_list
         }
-        print(time.time()-t1)
+        print(time.time() - t1)
         return Response(resp_dict)
 
 
@@ -1153,10 +1154,10 @@ class Mentor_Details_API(APIView):
 
 
 class Coupon_API(APIView):
-    permission_classes = (IsAuthenticated,)                                   #server
+    permission_classes = (IsAuthenticated,)  # server
     authentication_class = JSONWebTokenAuthentication
 
-    #permission_classes = [AllowAny, ]                                          #local
+    # permission_classes = [AllowAny, ]                                          #local
 
     def post(self, request):
 
@@ -1189,14 +1190,12 @@ class Coupon_API(APIView):
 
 
 class Mentee_My_Orders_API(APIView):
-        
-    permission_classes = (IsAuthenticated,)                             #server
+    permission_classes = (IsAuthenticated,)  # server
     authentication_class = JSONWebTokenAuthentication
 
-    #permission_classes = (AllowAny,)                               #local
+    # permission_classes = (AllowAny,)                               #local
 
     def get(self, request):
-        
         resp_dict = {
             "status": status.HTTP_200_OK
         }
@@ -1207,52 +1206,49 @@ class Mentee_My_Orders_API(APIView):
 
         return Response(resp_dict)
 
+
 class Mentor_My_Orders_API(APIView):
-        
-    permission_classes = (IsAuthenticated,)                             #server
+    permission_classes = (IsAuthenticated,)  # server
     authentication_class = JSONWebTokenAuthentication
-        
-    #permission_classes = (AllowAny,)                               #local
+
+    # permission_classes = (AllowAny,)                               #local
 
     def get(self, request):
-        
+        data_lst, mentee_status = Mentor_My_Orders_API_func(request)
 
-        data_lst,mentee_status = Mentor_My_Orders_API_func(request)
-        
         resp_dict = {
             "status": status.HTTP_200_OK,
-            "is_mentee":mentee_status,
-            "data":data_lst
+            "is_mentee": mentee_status,
+            "data": data_lst
         }
-        
-        
+
         return Response(resp_dict)
 
+
 class Mentor_Payment_History(APIView):
+    permission_classes = (IsAuthenticated,)  # server
+    authentication_class = JSONWebTokenAuthentication
 
-    permission_classes=(IsAuthenticated,)                                   #server
-    authentication_class=JSONWebTokenAuthentication
-
-    #permission_classes=(AllowAny,)                                          #local
+    # permission_classes=(AllowAny,)                                          #local
 
     def get(self, request):
-        resp_dict={
-            "status":status.HTTP_200_OK
+        resp_dict = {
+            "status": status.HTTP_200_OK
         }
 
-        data_list=Mentor_Payment_History_func(request)
-        
-        resp_dict.update({"data":data_list})
-        
+        data_list = Mentor_Payment_History_func(request)
+
+        resp_dict.update({"data": data_list})
+
         return Response(resp_dict)
 
 
 class Mentee_Feedback(APIView):
+    # permission_classes=(IsAuthenticated,)               #server
+    # authentication_classes=JSONWebTokenAuthentication
 
-    #permission_classes=(IsAuthenticated,)               #server
-    #authentication_classes=JSONWebTokenAuthentication
+    permission_classes = (AllowAny,)  # local
 
-    permission_classes=(AllowAny,)                      #local
     def post(self, request):
         if type(request.data) != dict:
             return Response("Request body not in Dictionary format", status=400)
@@ -1260,10 +1256,10 @@ class Mentee_Feedback(APIView):
         elif len(request.data) != 4:
             return Response("No. of keys is mis-matched, it should be 3", status=400)
 
-        actual_dict = {"schedule_id":int,
+        actual_dict = {"schedule_id": int,
                        "star_rating": int,
                        "comments": str,
-                       "is_session":bool
+                       "is_session": bool
                        }
 
         for i in actual_dict:
@@ -1274,17 +1270,17 @@ class Mentee_Feedback(APIView):
                 return Response("Values datatype in Request body is mis-matched", status=400)
 
         Mentee_Feedback_func(request)
-    
+
         return Response("Feedback Saved", status=200)
 
 
 class VoiceCalling(APIView):
     permission_classes = (IsAuthenticated,)
     authentication_class = JSONWebTokenAuthentication
+
     # permission_classes = [AllowAny, ]
 
-    def post(self,request):
-
+    def post(self, request):
         data = request.data
 
         if "schedule_id" not in data:
@@ -1292,39 +1288,37 @@ class VoiceCalling(APIView):
 
         schedule_id = data["schedule_id"]
 
-        voice_det = generate_voice_token(schedule_id,request)
+        voice_det = generate_voice_token(schedule_id, request)
 
-        return Response(voice_det,status=status.HTTP_200_OK)
+        return Response(voice_det, status=status.HTTP_200_OK)
 
 
 class DisconnectCall(APIView):
-
     permission_classes = (IsAuthenticated,)
     authentication_class = JSONWebTokenAuthentication
 
     # permission_classes = [AllowAny, ]
-    def post(self,request):
+    def post(self, request):
         data = request.data
 
-        request_struc = {"schedule_id":int,"channel_name":str,"call_completed":bool}
+        request_struc = {"schedule_id": int, "channel_name": str, "call_completed": bool}
 
         for req_key in request_struc:
             if req_key not in data:
-                return Response(req_key+" not present", status=400)
+                return Response(req_key + " not present", status=400)
 
-        disconnect_call(request,data)
+        disconnect_call(request, data)
 
         return Response(status=200)
 
 
 class ChannelEventListener(APIView):
-
     permission_classes = (IsAuthenticated,)
     authentication_class = JSONWebTokenAuthentication
 
     # permission_classes = [AllowAny, ]
 
-    def post(self,request):
+    def post(self, request):
 
         data = request.data
 
@@ -1340,10 +1334,10 @@ class ChannelEventListener(APIView):
 
 
 class Wallet_API(APIView):
+    permission_classes = (IsAuthenticated,)  # server
+    authentication_class = JSONWebTokenAuthentication
 
-    permission_classes=(IsAuthenticated,)                           #server
-    authentication_class=JSONWebTokenAuthentication
-    #permission_classes=(AllowAny,)                                  #local
+    # permission_classes=(AllowAny,)                                  #local
 
     def post(self, request):
         if type(request.data) != dict:
@@ -1352,7 +1346,7 @@ class Wallet_API(APIView):
         elif len(request.data) != 1:
             return Response("No. of keys is mis-matched, it should be 1", status=400)
 
-        actual_dict = {"amount":int
+        actual_dict = {"amount": int
                        }
 
         for i in actual_dict:
@@ -1362,34 +1356,33 @@ class Wallet_API(APIView):
             if type(request.data[i]) != actual_dict[i]:
                 return Response("Values datatype in Request body is mis-matched", status=400)
 
-        order_id=Wallet_API_func(request)
+        order_id = Wallet_API_func(request)
 
-        resp_dict={
-            "status":200,
-            "message":"success",
-            "order_id":order_id
-            
+        resp_dict = {
+            "status": 200,
+            "message": "success",
+            "order_id": order_id
+
         }
         return Response(resp_dict)
-    
-    
+
+
 class wallet_verification(APIView):
-    
-    permission_classes=(IsAuthenticated,)                               #server
-    authentication_class=JSONWebTokenAuthentication
+    permission_classes = (IsAuthenticated,)  # server
+    authentication_class = JSONWebTokenAuthentication
 
-    #permission_classes=(AllowAny,)
+    # permission_classes=(AllowAny,)
 
-    def post(self,request):
+    def post(self, request):
         if type(request.data) != dict:
             return Response("Request body not in Dictionary format", status=400)
 
         elif len(request.data) != 3:
             return Response("No. of keys is mis-matched, it should be 3", status=400)
 
-        actual_dict = {"razorpay_order_id":str,
-                        "razorpay_payment_id":str,
-                        "razorpay_signature":str
+        actual_dict = {"razorpay_order_id": str,
+                       "razorpay_payment_id": str,
+                       "razorpay_signature": str
                        }
 
         for i in actual_dict:
@@ -1399,11 +1392,10 @@ class wallet_verification(APIView):
             if type(request.data[i]) != actual_dict[i]:
                 return Response("Values datatype in Request body is mis-matched", status=400)
 
-        data_dict=wallet_verification_func(request)
+        data_dict = wallet_verification_func(request)
 
-
-        resp_dict={
-            "status":200,
+        resp_dict = {
+            "status": 200,
         }
 
         resp_dict.update(data_dict)
@@ -1411,43 +1403,41 @@ class wallet_verification(APIView):
 
 
 class wallet_history(APIView):
-    permission_classes=(IsAuthenticated,)                           #server
-    authentication_class=JSONWebTokenAuthentication
-    
-    
-    #permission_classes=(AllowAny,)                                  #local
+    permission_classes = (IsAuthenticated,)  # server
+    authentication_class = JSONWebTokenAuthentication
+
+    # permission_classes=(AllowAny,)                                  #local
 
     def get(self, request):
-
-        resp_dict={
-            "status":200
+        resp_dict = {
+            "status": 200
         }
 
-        data_dict=wallet_history_func(request)
+        data_dict = wallet_history_func(request)
 
         resp_dict.update(data_dict)
         return Response(resp_dict)
 
 
 class make_payment(APIView):
-    permission_classes=(IsAuthenticated,)                           #server
-    authentication_class=JSONWebTokenAuthentication
+    permission_classes = (IsAuthenticated,)  # server
+    authentication_class = JSONWebTokenAuthentication
 
     # permission_classes=(AllowAny,)
 
-    def post(self,request):
+    def post(self, request):
         if type(request.data) != dict:
             return Response("Request body not in Dictionary format", status=400)
 
         elif len(request.data) != 6:
             return Response("No. of keys is mis-matched, it should be 7", status=400)
 
-        actual_dict = {"Schedule_id":int,
-                        "name":str,
-                        "phone_number":str,
-                        "email":str,
-                        "is_coupon_valid":bool,
-                        "Coupon_id":str
+        actual_dict = {"Schedule_id": int,
+                       "name": str,
+                       "phone_number": str,
+                       "email": str,
+                       "is_coupon_valid": bool,
+                       "Coupon_id": str
                        }
 
         for i in actual_dict:
@@ -1457,13 +1447,10 @@ class make_payment(APIView):
             # if type(request.data[i]) != actual_dict[i]: ########################################################### bug ??????
             #     return Response("Values datatype in Request body is mis-matched", status=400)
 
-        data_dict=make_payment_func(request)
+        data_dict = make_payment_func(request)
 
-
-
-
-        resp_dict={
-            "status":200,
+        resp_dict = {
+            "status": 200,
         }
 
         resp_dict.update(data_dict)
@@ -1471,34 +1458,34 @@ class make_payment(APIView):
 
 
 class update_favourite_mentors(APIView):
-    permission_classes=(IsAuthenticated,)                   #server
-    authentication_class=JSONWebTokenAuthentication
+    permission_classes = (IsAuthenticated,)  # server
+    authentication_class = JSONWebTokenAuthentication
 
-    #permission_classes=(AllowAny,)                          #local
+    # permission_classes=(AllowAny,)                          #local
 
-    def post(self,request):
-        print(request.data,"------",type(request.data["mentor_id"]))
+    def post(self, request):
+        print(request.data, "------", type(request.data["mentor_id"]))
         if type(request.data) != dict:
             return Response("Request body not in Dictionary format", status=400)
 
         elif len(request.data) != 1:
             return Response("No. of keys is mis-matched, it should be 1", status=400)
 
-        actual_dict = {"mentor_id":str,
+        actual_dict = {"mentor_id": str,
                        }
 
         for i in actual_dict:
             if i not in request.data:
                 return Response("Keys in Request body mis-matched", status=400)
 
-            #if type(request.data[i]) != actual_dict[i]:
+            # if type(request.data[i]) != actual_dict[i]:
             #    return Response("Values datatype in Request body is mis-matched", status=400)
 
-        added_status=favourite_mentor_functions(request)
+        added_status = favourite_mentor_functions(request)
 
-        resp_dict={
-            "status":200,
-            "added":added_status
+        resp_dict = {
+            "status": 200,
+            "added": added_status
 
         }
 
@@ -1506,45 +1493,42 @@ class update_favourite_mentors(APIView):
 
 
 class profile_page(APIView):
-    permission_classes=(IsAuthenticated,)                   #server
-    authentication_class=JSONWebTokenAuthentication
+    permission_classes = (IsAuthenticated,)  # server
+    authentication_class = JSONWebTokenAuthentication
 
-    #permission_classes=(AllowAny,)                          #local
+    # permission_classes=(AllowAny,)                          #local
 
-    def get(self,request):
+    def get(self, request):
+        data_dict = profile_page_func(request)
 
-        data_dict=profile_page_func(request)
-
-        resp_dict={
-            "status":200
+        resp_dict = {
+            "status": 200
         }
         resp_dict.update(data_dict)
-
 
         return Response(resp_dict)
 
 
 class FindMentors(APIView):
+    permission_classes = (AllowAny,)
 
-    permission_classes=(AllowAny,)
-
-    def post(self,request):
+    def post(self, request):
 
         search_data = request.data
 
-        mandatory_fileds = {"career_profile","languages","exp","min_charge","max_charge"}
+        mandatory_fileds = {"career_profile", "languages", "exp", "min_charge", "max_charge"}
 
-        if len(mandatory_fileds.difference(set(search_data.keys())))>0:
-            return Response("request fields missing",status=400)
+        if len(mandatory_fileds.difference(set(search_data.keys()))) > 0:
+            return Response("request fields missing", status=400)
 
         profiles = es_ob.find_mentor(search_data)
 
         if profiles is None:
-            return Response("Please select profile or skills",status=400)
+            return Response("Please select profile or skills", status=400)
 
         resp_dict = {
             "status": 200,
-            "data":profiles
+            "data": profiles
         }
         # resp_dict.update(data_dict)
 
@@ -1555,7 +1539,7 @@ class FindMentors(APIView):
 class Razorpay_test(APIView):
     permission_classes=(AllowAny,)
     def post(self, request):
-        
+
 
         client=razorpay.Client(auth=("rzp_test_A5QQVVWf0eMog1", "mwIcHdj1fIDGVi44N6BoUX0W"))
         #client = razorpay.Client(auth=('rzp_test_JAObx3Y47SmBhB', 'RKxq0NX3rGgEZ3HEKt5cr5BT'))
@@ -1571,7 +1555,7 @@ class Pay_test(APIView):
     permission_classes=(AllowAny,)
 
     def post(self, request):
-        
+
 
         order_amount = 3000
         order_currency = 'INR'
@@ -1591,38 +1575,38 @@ class Pay_test(APIView):
 
 
 class fetch_favourite_mentors(APIView):
-    permission_classes=(IsAuthenticated,)           #server
-    authentication_class=JSONWebTokenAuthentication
+    permission_classes = (IsAuthenticated,)  # server
+    authentication_class = JSONWebTokenAuthentication
 
-    def get(self,request):
-        data_list=fetch_favourite_mentors_func(request)
+    def get(self, request):
+        data_list = fetch_favourite_mentors_func(request)
 
-        resp_dict={
-            "status":200,
-             "data": data_list
+        resp_dict = {
+            "status": 200,
+            "data": data_list
         }
         print(resp_dict)
-        #resp_dict.update(data_dict)
+        # resp_dict.update(data_dict)
 
         return Response(resp_dict)
 
+
 class request_session(APIView):
-    
-    permission_classes=(IsAuthenticated,)           #server
-    authentication_class=JSONWebTokenAuthentication
+    permission_classes = (IsAuthenticated,)  # server
+    authentication_class = JSONWebTokenAuthentication
 
-    #permission_classes=(AllowAny,)                      #local
+    # permission_classes=(AllowAny,)                      #local
 
-    def post(self,request):
-        print(request.data,"request dataaaaaaaa")
+    def post(self, request):
+        print(request.data, "request dataaaaaaaa")
         if type(request.data) != dict:
             return Response("Request body not in Dictionary format", status=400)
 
         elif len(request.data) != 2:
             return Response("No. of keys is mis-matched, it should be 1", status=400)
 
-        actual_dict = {"mentor_id":int,
-                        "session_name":str
+        actual_dict = {"mentor_id": int,
+                       "session_name": str
                        }
 
         for i in actual_dict:
@@ -1632,11 +1616,11 @@ class request_session(APIView):
             # if type(request.data[i]) != actual_dict[i]:
             #     return Response("Values datatype in Request body is mis-matched", status=400)
 
-        msg=request_session_func(request)
+        msg = request_session_func(request)
 
-        resp_dict={
-            "status":200,
-            "message":msg
+        resp_dict = {
+            "status": 200,
+            "message": msg
 
         }
 
@@ -1644,14 +1628,12 @@ class request_session(APIView):
 
 
 class mentor_notifications(APIView):
+    permission_classes = (IsAuthenticated,)  # server
+    authentication_class = JSONWebTokenAuthentication
 
-    permission_classes=(IsAuthenticated,)                   #server
-    authentication_class=JSONWebTokenAuthentication
+    # permission_classes=(AllowAny,)
 
-    #permission_classes=(AllowAny,)
-
-
-    def get(self,request):
+    def get(self, request):
 
         try:  # server
             user_in_db = User.objects.get(email=request.user)
@@ -1661,29 +1643,30 @@ class mentor_notifications(APIView):
             print("Requested user doesn't exist in db")
             return Response("Requested user doesn't exist in db", status=500)
 
-        data_lst=mentor_notifications_func(user_in_db.id)
+        data_lst = mentor_notifications_func(user_in_db.id)
 
-        resp_dict={
-            "status":200,
-            "requested_sessions":data_lst
+        resp_dict = {
+            "status": 200,
+            "requested_sessions": data_lst
         }
 
         return Response(resp_dict)
 
+
 class notify_mentee(APIView):
-    permission_classes=(IsAuthenticated,)                   #server
-    authentication_class=JSONWebTokenAuthentication
+    permission_classes = (IsAuthenticated,)  # server
+    authentication_class = JSONWebTokenAuthentication
 
-    #permission_classes=(AllowAny,)
+    # permission_classes=(AllowAny,)
 
-    def post(self,request):
+    def post(self, request):
         if type(request.data) != dict:
             return Response("Request body not in Dictionary format", status=400)
 
         elif len(request.data) != 1:
             return Response("No. of keys is mis-matched, it should be 1", status=400)
 
-        actual_dict = {"req_session_id":int,
+        actual_dict = {"req_session_id": int,
                        }
 
         for i in actual_dict:
@@ -1693,21 +1676,20 @@ class notify_mentee(APIView):
             if type(request.data[i]) != actual_dict[i]:
                 return Response("Values datatype in Request body is mis-matched", status=400)
 
-        success_msg,reload_status=notify_mentee_func(request)
-        resp_dict={
-            "status":200,
-            "message":success_msg,
-            "reload_status":reload_status
+        success_msg, reload_status = notify_mentee_func(request)
+        resp_dict = {
+            "status": 200,
+            "message": success_msg,
+            "reload_status": reload_status
 
         }
 
         if success_msg is None:
-           resp_dict={
-            "status":200,
-            "message":"Please schedule session first"
+            resp_dict = {
+                "status": 200,
+                "message": "Please schedule session first"
 
-           }
-        
+            }
 
         return Response(resp_dict)
 
@@ -1718,8 +1700,7 @@ class CancelSessionRequest(APIView):
 
     # permission_classes=(AllowAny,)
 
-    def post(self,request):
-
+    def post(self, request):
         data = request.data
 
         actual_dict = {"req_session_id": int,
@@ -1728,30 +1709,30 @@ class CancelSessionRequest(APIView):
         if 'req_session_id' not in data:
             return Response("req_session_id not present in request data", status=400)
 
-        remove_session_request(request,data["req_session_id"])
+        remove_session_request(request, data["req_session_id"])
 
         return Response(status=200)
 
+
 class mentee_notifications(APIView):
-    permission_classes=(IsAuthenticated,)                   #server
-    authentication_class=JSONWebTokenAuthentication
+    permission_classes = (IsAuthenticated,)  # server
+    authentication_class = JSONWebTokenAuthentication
 
-    #permission_classes=(AllowAny,)
+    # permission_classes=(AllowAny,)
 
-
-    def get(self,request):
-        try:                                                                    #server
-            user_in_db=User.objects.get(email=request.user)
+    def get(self, request):
+        try:  # server
+            user_in_db = User.objects.get(email=request.user)
         except Exception as e:
             print(e)
             print("Current user doesn't exist in db")
-            return Response("Current user doesn't exist in db",status=500)
+            return Response("Current user doesn't exist in db", status=500)
 
-        data_lst=mentee_notifications_func(user_in_db.id)
+        data_lst = mentee_notifications_func(user_in_db.id)
 
-        resp_dict={
-            "status":200,
-            "mentors":data_lst
+        resp_dict = {
+            "status": 200,
+            "mentors": data_lst
         }
 
         return Response(resp_dict)
@@ -1812,7 +1793,7 @@ def submit_mentor_form(request):
     comp_st_yr_lst = multi_value(request, "c_start_year_", request.POST['prof_count'])
     comp_end_mth_lst = multi_value(request, "c_end_month_", request.POST['prof_count'])
     comp_end_yr_lst = multi_value(request, "c_end_year_", request.POST['prof_count'])
-
+    comp_duration = multi_value(request, "duration_duration_", request.POST['prof_count'])
     comp_location = multi_value(request, "company_location_", request.POST['prof_count'])
 
     inst_name_lst = multi_value(request, "institute_name_", request.POST['edu_count'])
@@ -1903,6 +1884,7 @@ def submit_mentor_form(request):
                 "company_name": comp_name_lst[i],
                 "company_logo": comp_logo_lst[i],
                 "position": comp_pos_lst[i],
+                "duration": comp_duration[i],
                 "location": comp_location[i],
                 "period": period,
                 "duration": duration
@@ -2010,7 +1992,7 @@ def linkedin_image(url, file_path, file_name):
     return full_path
 
 
-def verify_captcha(request,captcha):
+def verify_captcha(request, captcha):
     # first calling this function to display unfilled urls
 
     import requests
@@ -2023,27 +2005,29 @@ def verify_captcha(request,captcha):
     #     ('key', 'AIzaSyC6UsWLr0-yCkAJEQjGvv-qDTf9Vuywsy0'),
     # )
 
-    data = { "phoneNumber": "+917988344254", "recaptchaToken":  captcha}
+    data = {"phoneNumber": "+917988344254", "recaptchaToken": captcha}
     data = json.dumps(data)
     #
     # response = requests.post('https://www.googleapis.com/identitytoolkit/v3/relyingparty/sendVerificationCode',
     #                          headers=headers, params=params, data=data)
 
-
     # NB. Original query string below. It seems impossible to parse and
     # reproduce query strings 100% accurately so the one below is given
     # in case the reproduced version is not "correct".
-    response = requests.post('https://www.googleapis.com/identitytoolkit/v3/relyingparty/sendVerificationCode?key=AIzaSyC6UsWLr0-yCkAJEQjGvv-qDTf9Vuywsy0', headers=headers, data=data)
+    response = requests.post(
+        'https://www.googleapis.com/identitytoolkit/v3/relyingparty/sendVerificationCode?key=AIzaSyC6UsWLr0-yCkAJEQjGvv-qDTf9Vuywsy0',
+        headers=headers, data=data)
 
-    print(response.text,"-----------------")
+    print(response.text, "-----------------")
 
     return "success"
 
-class phone_num_check(APIView):
-    permission_classes=(IsAuthenticated,)
-    authentication_class=JSONWebTokenAuthentication
 
-    #permission_classes=(AllowAny,)
+class phone_num_check(APIView):
+    permission_classes = (IsAuthenticated,)
+    authentication_class = JSONWebTokenAuthentication
+
+    # permission_classes=(AllowAny,)
 
     def post(self, request):
         if type(request.data) != dict:
@@ -2054,7 +2038,7 @@ class phone_num_check(APIView):
 
         actual_dict = {
             "phone_number": str,
-            
+
         }
 
         for i in actual_dict:
@@ -2063,20 +2047,21 @@ class phone_num_check(APIView):
 
             if type(request.data[i]) != actual_dict[i]:
                 return Response("Values datatype in Request body is mis-matched", status=400)
-        
+
         msg, status_code = phone_num_check_func(request)
-        
+
         resp_dict = {
             "message": msg
         }
 
-        return Response(resp_dict,status=status_code)
+        return Response(resp_dict, status=status_code)
 
 
 class otp_verify(APIView):
-    permission_classes=(IsAuthenticated,)
-    authentication_class=JSONWebTokenAuthentication
-    #permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
+    authentication_class = JSONWebTokenAuthentication
+
+    # permission_classes = (AllowAny,)
 
     def post(self, request):
 
@@ -2098,11 +2083,11 @@ class otp_verify(APIView):
 
         print(user.uid)
 
-        #user_in_db=User.objects.get(email=request.user)
+        # user_in_db=User.objects.get(email=request.user)
 
-        #row=MentorFlow.objects.get(user_id=user_in_db.pk)
-        #row.contact_no=request.data['phone_number']
-        #row.save()
+        # row=MentorFlow.objects.get(user_id=user_in_db.pk)
+        # row.contact_no=request.data['phone_number']
+        # row.save()
 
         auth.delete_user(user.uid)
 
@@ -2130,7 +2115,7 @@ def submit_event_info(request):
             row.about_the_event = request.POST['webinar_about']
             row.key_takeaways = request.POST['key_takeaways']
             # row.start_datetime=request.POST['start_datetime']
-            row.status=1
+            row.status = 1
             dt = request.POST['start_datetime']
             print(dt)
             dt = dt.split("T")
@@ -2174,7 +2159,7 @@ class fetch_event_info(APIView):
     permission_classes = (IsAuthenticated,)
     authentication_class = JSONWebTokenAuthentication
 
-    #permission_classes = (AllowAny,)
+    # permission_classes = (AllowAny,)
 
     def post(self, request):
         if type(request.data) != dict:
@@ -2210,7 +2195,7 @@ class AccountDetails(APIView):
     permission_classes = (IsAuthenticated,)  # server
     authentication_class = JSONWebTokenAuthentication
 
-    def post(self,request):
+    def post(self, request):
 
         if type(request.data) != dict:
             return Response("Request body not in Dictionary format", status=400)
@@ -2218,7 +2203,7 @@ class AccountDetails(APIView):
         elif len(request.data) != 3:
             return Response("No. of keys is mis-matched, it should be 3", status=400)
 
-        actual_dict = {"account_name": str,"account_number":str,"ifsc_code":str
+        actual_dict = {"account_name": str, "account_number": str, "ifsc_code": str
                        }
 
         for i in actual_dict:
@@ -2233,54 +2218,51 @@ class AccountDetails(APIView):
 
         mentor_id = user_in_db.id
 
-        save_account_details(request.data,mentor_id)
+        save_account_details(request.data, mentor_id)
 
         return Response(status=200)
 
 
 class mentee_profile(APIView):
-    
+    permission_classes = (IsAuthenticated,)
+    authentication_classes = JSONWebTokenAuthentication
 
-    permission_classes=(IsAuthenticated,)
-    authentication_classes=JSONWebTokenAuthentication
-
-    #permission_classes=(AllowAny,)
+    # permission_classes=(AllowAny,)
 
     def get(self, request):
         try:
-            user_in_db=User.objects.get(email=request.email)
-            #user_in_db=User.objects.get(id=2)
+            user_in_db = User.objects.get(email=request.email)
+            # user_in_db=User.objects.get(id=2)
         except Exception as e:
             print(e)
             print("mentee doesn't exists in db")
             return Response("mentee doesn't exists in db", status=500)
 
         try:
-            row=MenteeDetails.objects.get(user=user_in_db)                  
+            row = MenteeDetails.objects.get(user=user_in_db)
         except Exception as e:
             print(e)
             print("Mentee details table doesn't contain any details of mentee")
             return Response("Mentee details table doesn't contain any details of mentee", status=500)
 
-        resp_dict={
-            'status':200,
-            'name':user_in_db.name,
-            'image':user_in_db.picture,
-            'joined_date':user_in_db.date_joined.strftime("%d/%m/%Y"),
-            "level_of_education":row.education_level,
-            "college":row.college,
-            "degree":row.degree,
-            "school":row.school_name,
-            "current_designation":row.designation,
-            "company":row.company,
-            "experience":row.industry_exp,
-            "skills":row.skills,
-            "field_of_interest":row.career1
+        resp_dict = {
+            'status': 200,
+            'name': user_in_db.name,
+            'image': user_in_db.picture,
+            'joined_date': user_in_db.date_joined.strftime("%d/%m/%Y"),
+            "level_of_education": row.education_level,
+            "college": row.college,
+            "degree": row.degree,
+            "school": row.school_name,
+            "current_designation": row.designation,
+            "company": row.company,
+            "experience": row.industry_exp,
+            "skills": row.skills,
+            "field_of_interest": row.career1
 
         }
 
         return Response(resp_dict)
-
 
     def post(self, request):
         if type(request.data) != dict:
@@ -2291,17 +2273,16 @@ class mentee_profile(APIView):
 
         actual_dict = {
 
-            "level_of_education":str,
-            "college":str,
-            "degree":str,
-            "school":str,
-            "current_designation":str,
-            "company":str,
-            "experience":int,
-            "skills":list,
-            "field_of_interest":str
+            "level_of_education": str,
+            "college": str,
+            "degree": str,
+            "school": str,
+            "current_designation": str,
+            "company": str,
+            "experience": int,
+            "skills": list,
+            "field_of_interest": str
 
-            
         }
 
         for i in actual_dict:
@@ -2312,55 +2293,55 @@ class mentee_profile(APIView):
                 return Response("Values datatype in Request body is mis-matched", status=400)
 
         msg = mentee_profile_func(request)
-        
+
         resp_dict = {
             "status": 200,
             "message": msg
         }
 
         return Response(resp_dict)
+
+
 class mentee_profile(APIView):
+    # permission_classes=(IsAuthenticated,)
+    # authentication_classes=JSONWebTokenAuthentication
 
-    #permission_classes=(IsAuthenticated,)
-    #authentication_classes=JSONWebTokenAuthentication
-
-    permission_classes=(AllowAny,)
+    permission_classes = (AllowAny,)
 
     def get(self, request):
         try:
-            user_in_db=User.objects.get(email=request.user)
-            #user_in_db=User.objects.get(id=2)
+            user_in_db = User.objects.get(email=request.user)
+            # user_in_db=User.objects.get(id=2)
         except Exception as e:
             print(e)
             print("mentee doesn't exists in db")
             return Response("mentee doesn't exists in db", status=500)
 
         try:
-            row=MenteeDetails.objects.get(user=user_in_db)
+            row = MenteeDetails.objects.get(user=user_in_db)
         except Exception as e:
             print(e)
             print("Mentee details table doesn't contain any details of mentee")
             return Response("Mentee details table doesn't contain any details of mentee", status=500)
 
-        resp_dict={
-            'status':200,
-            'name':user_in_db.name,
-            'image':user_in_db.picture,
-            'joined_on':user_in_db.date_joined.strftime("%d/%m/%Y"),
-            "level_of_education":row.education_level,
-            "college":row.college,
-            "degree":row.degree,
-            "school":row.school_name,
-            "current_designation":row.designation,
-            "company":row.company,
-            "experience":row.industry_exp,
-            "skills":json.loads(row.skills),
-            "field_of_interest":row.career1
+        resp_dict = {
+            'status': 200,
+            'name': user_in_db.name,
+            'image': user_in_db.picture,
+            'joined_on': user_in_db.date_joined.strftime("%d/%m/%Y"),
+            "level_of_education": row.education_level,
+            "college": row.college,
+            "degree": row.degree,
+            "school": row.school_name,
+            "current_designation": row.designation,
+            "company": row.company,
+            "experience": row.industry_exp,
+            "skills": json.loads(row.skills),
+            "field_of_interest": row.career1
 
         }
 
         return Response(resp_dict)
-
 
     def post(self, request):
         if type(request.data) != dict:
@@ -2371,15 +2352,15 @@ class mentee_profile(APIView):
 
         actual_dict = {
 
-            "level_of_education":str,
-            "college":str,
-            "degree":str,
-            "school":str,
-            "current_designation":str,
-            "company":str,
-            "experience":int,
-            "skills":list,
-            "field_of_interest":str
+            "level_of_education": str,
+            "college": str,
+            "degree": str,
+            "school": str,
+            "current_designation": str,
+            "company": str,
+            "experience": int,
+            "skills": list,
+            "field_of_interest": str
 
         }
 
@@ -2429,7 +2410,6 @@ class profile_pic(APIView):
         print(row.image)
         print(row.image_link)
 
-        
         user_in_db.picture = row.image_link
         user_in_db.save()
         print("mentee link: ", user_in_db.picture)
@@ -2444,10 +2424,10 @@ class profile_pic(APIView):
 
 
 class event_make_payment(APIView):
-    permission_classes=(IsAuthenticated,)
-    authentication_class=JSONWebTokenAuthentication
+    permission_classes = (IsAuthenticated,)
+    authentication_class = JSONWebTokenAuthentication
 
-    #permission_classes=(AllowAny,)
+    # permission_classes=(AllowAny,)
 
     def post(self, request):
         if type(request.data) != dict:
@@ -2456,12 +2436,12 @@ class event_make_payment(APIView):
         elif len(request.data) != 6:
             return Response("No. of keys is mis-matched, it should be 1", status=400)
 
-        actual_dict = {"event_id":int,
-                        "name":str,
-                        "phone_number":str,
-                        "email":str,
-                        "is_coupon_valid":bool,
-                        "coupon_code":str
+        actual_dict = {"event_id": int,
+                       "name": str,
+                       "phone_number": str,
+                       "email": str,
+                       "is_coupon_valid": bool,
+                       "coupon_code": str
                        }
 
         for i in actual_dict:
@@ -2471,25 +2451,23 @@ class event_make_payment(APIView):
             if type(request.data[i]) != actual_dict[i]:
                 return Response("Values datatype in Request body is mis-matched", status=400)
 
-        
-        resp_dict={
-            "status":200,
+        resp_dict = {
+            "status": 200,
 
         }
 
-        data_dict=event_make_payment_func(request)
-        
+        data_dict = event_make_payment_func(request)
+
         resp_dict.update(data_dict)
 
         return Response(resp_dict)
 
 
-
 class event_order_api(APIView):
-    permission_classes=(IsAuthenticated,)
-    authentication_class=JSONWebTokenAuthentication
+    permission_classes = (IsAuthenticated,)
+    authentication_class = JSONWebTokenAuthentication
 
-    #permission_classes=(AllowAny,)
+    # permission_classes=(AllowAny,)
 
     def post(self, request):
         if type(request.data) != dict:
@@ -2498,9 +2476,9 @@ class event_order_api(APIView):
         elif len(request.data) != 3:
             return Response("No. of keys is mis-matched, it should be 1", status=400)
 
-        actual_dict = {"event_id":int,
-                        #"amount_to_add":int and float,
-                        "use_wallet":bool
+        actual_dict = {"event_id": int,
+                       # "amount_to_add":int and float,
+                       "use_wallet": bool
                        }
 
         for i in actual_dict:
@@ -2510,27 +2488,26 @@ class event_order_api(APIView):
             if type(request.data[i]) != actual_dict[i]:
                 return Response("Values datatype in Request body is mis-matched", status=400)
 
-        
         print(request.data['amount_to_add'], type(request.data['amount_to_add']))
-        resp_dict={
-            "status":200,
+        resp_dict = {
+            "status": 200,
         }
 
-        order_id, order_amount=event_order_api_func(request)
+        order_id, order_amount = event_order_api_func(request)
 
         resp_dict.update({
-            "order_amount":order_amount,
-            "order_id":order_id
+            "order_amount": order_amount,
+            "order_id": order_id
         })
 
         return Response(resp_dict)
 
 
 class event_sign_verify(APIView):
-    permission_classes=(IsAuthenticated,)
-    authenticate_class=JSONWebTokenAuthentication
+    permission_classes = (IsAuthenticated,)
+    authenticate_class = JSONWebTokenAuthentication
 
-    #permission_classes=(AllowAny,)
+    # permission_classes=(AllowAny,)
 
     def post(self, request):
         if type(request.data) != dict:
@@ -2560,5 +2537,5 @@ class event_sign_verify(APIView):
         }
 
         return Response(resp_dict)
-        
+
 

@@ -2,6 +2,7 @@ from elasticsearch import Elasticsearch
 import uuid
 import math,re
 from mentee.models import mentor_profile_clicks
+import datetime
 
 class ElasticDB:
 
@@ -274,7 +275,8 @@ class ElasticDB:
                 locations.append(prof["location"])
             if 'period' in prof:
                 period = prof["period"]
-                if period.split("-")[-1].strip()=='present':
+                now = datetime.datetime.now()
+                if period.split("-")[-1].strip()=='present' or period == now.strftime("%b %Y"):
                     current_prof.append(prof)
                     st_year = int(period.split("-")[0].split()[-1])
                     start_year.append(st_year)

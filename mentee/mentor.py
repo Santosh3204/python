@@ -519,12 +519,10 @@ def Mentor_Schedule_API_func(request, mentor_id):  # API to schedule for mentor.
                 request.data["Session_name"] = request.data["session_names"][i]
                 n_sessions -= 1
                 request.data["Mentor_id"] = mentor_id
-                if request.data['charge'] <= 200:
-                    request.data['mentor_charge'] = request.data['charge']
-                    request.data['session_charge'] = request.data['charge']*1
-                else:
-                    request.data['mentor_charge'] = request.data['charge']
-                    request.data['session_charge'] = request.data['charge'] * 2
+
+                request.data['mentor_charge'] = request.data['charge']
+                request.data['session_charge'] = request.data['charge']+200
+
                 serializer = mentor_schedule_serializer(data=request.data)
                 if serializer.is_valid():
                     serializer.save()

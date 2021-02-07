@@ -1793,7 +1793,7 @@ def submit_mentor_form(request):
     comp_st_yr_lst = multi_value(request, "c_start_year_", request.POST['prof_count'])
     comp_end_mth_lst = multi_value(request, "c_end_month_", request.POST['prof_count'])
     comp_end_yr_lst = multi_value(request, "c_end_year_", request.POST['prof_count'])
-    comp_duration = multi_value(request, "duration_duration_", request.POST['prof_count'])
+    comp_duration = multi_value(request, "company_duration_", request.POST['prof_count'])
     comp_location = multi_value(request, "company_location_", request.POST['prof_count'])
 
     inst_name_lst = multi_value(request, "institute_name_", request.POST['edu_count'])

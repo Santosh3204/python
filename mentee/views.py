@@ -436,7 +436,7 @@ def insert_mentor_data(request):
     mentor_data = request
     request_keys = set(mentor_data.keys())
 
-    required_keys = {"mentor_id", "professional_details", "educational_details", "duration"
+    required_keys = {"mentor_id", "professional_details", "educational_details"
         , "location", "skills", "name", "avatar", "email", "languages", "about"}
 
     keys_diff = required_keys.difference(request_keys)

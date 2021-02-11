@@ -95,7 +95,7 @@ class ElasticDB:
                              "company_name": company_name, "avatar": avatar, "session_names": one2one_topics,
                              "charge": mb_charge,"view_count":view_count})
 
-
+        profiles = sorted(profiles, key = lambda i: i['industry_exp'],reverse=True)
         return profiles
 
 
@@ -169,7 +169,7 @@ class ElasticDB:
                 profiles.append({"name": name, "id_": id_, "designation": desgnation, "industry_exp": industry_exp,
                                  "company_name": company_name, "avatar": avatar, "session_names": one2one_topics,
                                  "charge":mb_charge,"view_count":view_count})
-
+            profiles = sorted(profiles, key = lambda i: i['industry_exp'],reverse=True)
             return profiles
 
     @staticmethod

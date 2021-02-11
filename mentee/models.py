@@ -39,6 +39,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     id = models.AutoField(primary_key=True)
     email = models.EmailField(max_length=254, unique=True)
     name = models.CharField(max_length=500, blank=True)
+    contact_no = models.CharField(max_length=20,blank=True,default=False)
     picture = models.CharField(max_length=200, blank=True)
     is_staff = models.BooleanField(default=False)
     is_mentee = models.BooleanField(default=False, blank=True)

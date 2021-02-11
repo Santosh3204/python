@@ -530,9 +530,9 @@ def Mentor_Schedule_API_func(request, mentor_id):  # API to schedule for mentor.
 
     if n_sessions == 0:
 
-        return "All Dates and Time given are SCHEDULED SUCCESSFULLY !!!"
+        return'All dates and time given are scheduled successfully !!!'
     elif n_sessions < av_dates_count * len(request.data["session_names"]):
-        return "Some Sessions are not scheduled due to TIME on particular DATES are either coincide with already SCHEDULED SESSIONS or given past time or sessions are under booking!!!"
+        return "Some sessions are not scheduled due to TIME on particular DATES are either coincide with already SCHEDULED SESSIONS or given past time or sessions are under booking!!!"
     else:
         return "No Schedule had Created because, TIME on all matching DATES are coincide with already SCHEDULED SESSIONS or given past time or sessions are under booking!!!"
     return "Created successfully"
@@ -2223,7 +2223,7 @@ def profile_page_func(request):
     obj=mentor_schedule.objects.filter(Mentor_id=user_in_db.id,Is_scheduled=1)
 
     bank_det= mentor_bank_details.objects.filter(mentor_id=user_in_db.id).order_by('-created_at')
-    mentor_prof = mentor_profile.objects.get(id=user_in_db.id)
+    #mentor_prof = mentor_profile.objects.get(id=user_in_db.id)
 
     account_name = ""
     account_number = ""
@@ -2263,7 +2263,7 @@ def profile_page_func(request):
             "account_number":account_number,
             "ifsc_code":ifsc_code,
             "email":user_in_db.email,
-            "contact_no":mentor_prof.contact_no
+            "contact_no":user_in_db.contact_no
     }
 
     return data_dict
@@ -2610,10 +2610,10 @@ def mentee_profile_func(request):
 
 def phone_num_check_func(request):
     
-    ph_num=request.data['phone_number']
+    ph_num=request.data['phone_number'].strip().replace(" ","")
     
-    row=MentorFlow.objects.filter(contact_no=ph_num)
-    print(row,"---------------------")  
+    row=User.objects.filter(contact_no=ph_num)
+    number_verified = False
     if len(row)==0:
         
         msg="success"
@@ -2622,7 +2622,10 @@ def phone_num_check_func(request):
     else:
         msg="Given number is already registered"
         status_code=400
-    return msg, status_code
+        user_in_db=User.objects.get(email=request.user)
+        if row[0].id==user_in_db.id:
+           number_verified = True
+    return msg, status_code,number_verified
 
 
 def event_make_payment_func(request):

@@ -242,7 +242,7 @@ class DashboardView(RetrieveAPIView):
         response["user_profile_pic"] = user_in_db.picture
 
         if not response["data"]['profile_verified']:
-            response["data"].update({"message": "Verification is pending, We will notify you once it gets completed"})
+            response["data"].update({"message": "Profile verification is pending, We will notify you once it gets completed"})
 
         # adding mentorbox videos to dashboard
         # suffix = "&controls=0&modestbranding=1&rel=0"
@@ -2048,10 +2048,10 @@ class phone_num_check(APIView):
             if type(request.data[i]) != actual_dict[i]:
                 return Response("Values datatype in Request body is mis-matched", status=400)
 
-        msg, status_code = phone_num_check_func(request)
+        msg, status_code,number_verified = phone_num_check_func(request)
 
         resp_dict = {
-            "message": msg
+            "message": msg,"number_verified":number_verified
         }
 
         return Response(resp_dict, status=status_code)
@@ -2065,7 +2065,7 @@ class otp_verify(APIView):
 
     def post(self, request):
 
-        phone_number = request.data['phone_number']
+        phone_number = request.data['phone_number'].strip().replace(" ","")
 
         resp_dict = {
             "status": 200
@@ -2083,11 +2083,10 @@ class otp_verify(APIView):
 
         print(user.uid)
 
-        # user_in_db=User.objects.get(email=request.user)
+        user_in_db=User.objects.get(email=request.user)
 
-        # row=MentorFlow.objects.get(user_id=user_in_db.pk)
-        # row.contact_no=request.data['phone_number']
-        # row.save()
+        user_in_db.contact_no=phone_number
+        user_in_db.save()
 
         auth.delete_user(user.uid)
 

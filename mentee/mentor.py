@@ -25,6 +25,7 @@ import uuid
 from mentee.agora.src.RtcTokenBuilder import RtcTokenBuilder # agora
 from mentee.agora.call import send_push_notification
 import operator
+import requests
 
 def fetch_booked_sessions(request):
     objects = mentor_schedule.objects.filter(Mentor_id=request['mentor_id'],
@@ -2466,14 +2467,11 @@ def notify_mentee_func(request):                                                
 def mentee_notifications_func(mentee_id):
 
     #
-    
 
-    #user_in_db=User.objects.get(id=1)                                      #local mentee
-    print(mentee_id,type(mentee_id))
     obj=request_sessions.objects.filter(mentee_id=mentee_id,mentee_notify=1).order_by("-updated_at")
 
     data_lst=[]
-    print(len(obj),"5555555555555555555555555555555555555555555555555555")
+
     for row in obj:
         try:
             mentor=mentor_profile.objects.get(user_id=row.mentor_id)
@@ -2996,4 +2994,36 @@ def event_order_api_func(request):
     return response['id'], order_amount
 
 
+def payment_status_func(request):
 
+
+    try:
+        rz_resp = requests.get("https://api.razorpay.com/v1/orders/%s/payments" % request.data['order_id'],
+                               auth=('rzp_test_JAObx3Y47SmBhB', 'RKxq0NX3rGgEZ3HEKt5cr5BT'))
+        print(rz_resp.text)
+        response = json.loads(rz_resp.text)
+        print(response, type(response))
+    except Exception as e:
+        print(e)
+        err = "error occured in fetching payment details from razorpay"
+        print(err)
+        return Response(err, status=500)
+
+    if response["count"] == 1:
+        if response["items"][0]["status"] == "captured":
+            msg = "payment successful"
+            flag = 1
+        elif response["items"][0]["status"] == "created":
+            msg = "If your order has failed, any amount debited will be auto-refunded in 5 working days."
+            flag = 2
+        elif response["items"][0]["status"] == "failed":
+            msg = "If your order has failed, any amount debited will be auto-refunded in 5 working days."
+            flag = 3
+        elif response["items"][0]["status"] == "authorized":
+            msg = "payment successful"
+            flag = 4
+        elif response["items"][0]["status"] == "refunded":
+            msg = "payment refunded"
+            flag = 5
+
+    return 200, msg, flag, response

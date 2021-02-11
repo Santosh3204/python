@@ -77,6 +77,7 @@ urlpatterns = [
     path('mentee_profile/', mentee_profile.as_view()),
 
     path('profile_pic/', profile_pic.as_view()),  # profile pic url
+    path('payment_status/', payment_status.as_view()),
 
 ]
 

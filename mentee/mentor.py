@@ -1458,12 +1458,13 @@ def Coupon_API_func(request):
 
 
 def rz_pay_id_status(status):
-    # payment_id="pay_FzkD8pX8oboCGu"
+
+    #payment_id="pay_FzkD8pX8oboCGu"
 
     print(status, type(status))
-
+    
     if status == "captured":
-        return "Payment received"
+        return "Payment Success"
 
     elif status == "created" or status == "authorized":
         return "Payment Pending"
@@ -1473,6 +1474,9 @@ def rz_pay_id_status(status):
 
     elif status == "failed":
         return "Payment Failed"
+
+    else:
+        "Payment Received"
 
 
 def Mentee_My_Order_API_func(request):
@@ -1587,13 +1591,14 @@ def Mentee_My_Order_API_func(request):
 
             payment_id = row.payment_id
             payment_mode = "Wallet"
-            payment_status = "Payment Success"
+            #payment_status = "Payment Success"
+            payment_status = "Payment Received"
             if payment_id is not None:
                 resp = client.payment.fetch(payment_id)
                 payment_status = rz_pay_id_status(resp["status"])
                 # print(resp,"--------------------------------------------------")
                 # payment_mode = resp['method']
-                payment_status = "Payment Received"
+                #payment_status = "Payment Received"
                 if 'method' in resp:
                     payment_mode = resp['method']
                 else:

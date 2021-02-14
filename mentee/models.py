@@ -207,7 +207,7 @@ class sales_order(models.Model):
     Payment_id = models.CharField(max_length=100,null=True)
     Is_active = models.SmallIntegerField(default=1)
     Session_name = models.CharField(max_length=30)
-    Status = models.SmallIntegerField(default=0)
+    Status = models.SmallIntegerField(default=0)   #
     Status_updated_at=models.DateTimeField(auto_now=True)
     mentee_feedback_id = models.IntegerField(null=True)
 

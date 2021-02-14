@@ -137,7 +137,7 @@ class mentor_profile(models.Model):
 
 
 def img_url(path):
-    host="http://ec2-65-1-116-219.ap-south-1.compute.amazonaws.com:8000/"
+    host="http://ec2-65-0-73-184.ap-south-1.compute.amazonaws.com:8000/"
     return host+str(path)
 
 

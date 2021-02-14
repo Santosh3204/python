@@ -3027,3 +3027,20 @@ def payment_status_func(request):
             flag = 5
 
     return 200, msg, flag, response
+
+
+def event_feedback_func(request):
+    try:
+        sales_ord=event_sales_order.objects.get(id=request.data['id'])
+    except Exception as e:
+        print(e)
+        print("Order_id doesnot exists in sales_order table")
+        return Response("Order_id doesnot exists in sales_order table", status=500)
+
+    obj=event_feedback()
+    obj.event_order=sales_ord
+    obj.event_id=sales_ord.event_id
+    obj.star_rating=request.data['star_rating']
+    obj.comments=request.data['comments']
+
+    obj.save()

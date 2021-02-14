@@ -137,7 +137,7 @@ class mentor_profile(models.Model):
 
 
 def img_url(path):
-    host="http://ec2-65-1-116-219.ap-south-1.compute.amazonaws.com:8000/"
+    host="http://ec2-65-0-73-184.ap-south-1.compute.amazonaws.com:8000/"
     return host+str(path)
 
 
@@ -223,7 +223,7 @@ class sales_order(models.Model):
     Payment_id = models.CharField(max_length=100,null=True)
     Is_active = models.SmallIntegerField(default=1)
     Session_name = models.CharField(max_length=30)
-    Status = models.SmallIntegerField(default=0)
+    Status = models.SmallIntegerField(default=0)   #
     Status_updated_at=models.DateTimeField(auto_now=True)
     mentee_feedback_id = models.IntegerField(null=True)
 

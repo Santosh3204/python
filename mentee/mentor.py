@@ -1461,18 +1461,20 @@ def rz_pay_id_status(status):
     # payment_id="pay_FzkD8pX8oboCGu"
 
     print(status, type(status))
-
+    failed_msg = "If your order has failed, any amount debited will be auto-refunded in 5 working days."
+    pending_msg = "We haven't received payment from your bank, any amount debited will be auto-refunded in 5 working days."
+    success_msg = ""
     if status == "captured":
-        return "Payment received"
+        return "Payment received",1,success_msg
 
     elif status == "created" or status == "authorized":
-        return "Payment Pending"
+        return "Payment Pending",2,pending_msg
 
     elif status == "refunded":
-        return "Payment Refunded"
+        return "Payment Refunded",4,success_msg
 
     elif status == "failed":
-        return "Payment Failed"
+        return "Payment Failed",0,failed_msg
 
 
 def Mentee_My_Order_API_func(request):
@@ -1509,9 +1511,11 @@ def Mentee_My_Order_API_func(request):
             payment_id = row.Payment_id
             payment_mode = "Wallet"
             payment_status = "Payment Received"
+            payment_flag = 1
+            payment_msg = ""
             if payment_id is not None:
                 resp = client.payment.fetch(payment_id)
-                payment_status = rz_pay_id_status(resp["status"])
+                payment_status,payment_flag,payment_msg = rz_pay_id_status(resp["status"])
                 # print(resp,"--------------------------------------------------")
                 # payment_mode = resp['method']
                 if 'method' in resp:
@@ -1550,7 +1554,9 @@ def Mentee_My_Order_API_func(request):
                 "is_feedback": is_feedback,
                 "schedule_id": sch_obj.id,
                 "is_session":True,
-                "payment_status": payment_status
+                "payment_status": payment_status,
+                "payment_flag":payment_flag,
+                "payment_msg":payment_msg
 
             }
 
@@ -1588,9 +1594,10 @@ def Mentee_My_Order_API_func(request):
             payment_id = row.payment_id
             payment_mode = "Wallet"
             payment_status = "Payment Success"
+            payment_msg  = ""
             if payment_id is not None:
                 resp = client.payment.fetch(payment_id)
-                payment_status = rz_pay_id_status(resp["status"])
+                payment_status,payment_flag,payment_msg = rz_pay_id_status(resp["status"])
                 # print(resp,"--------------------------------------------------")
                 # payment_mode = resp['method']
                 payment_status = "Payment Received"
@@ -1629,7 +1636,10 @@ def Mentee_My_Order_API_func(request):
                 "is_feedback": is_feedback,
                 "schedule_id":row.id,
                 "is_session":False,
-                "payment_status": payment_status
+                "payment_status": payment_status,
+                "payment_flag":payment_flag,
+                "payment_msg":payment_msg
+
             }
 
             msg = False
@@ -2900,8 +2910,8 @@ def payment_status_func(request):
 
     try:
         rz_resp = requests.get("https://api.razorpay.com/v1/orders/%s/payments" % request.data['order_id'],
-                               auth=('rzp_test_JAObx3Y47SmBhB', 'RKxq0NX3rGgEZ3HEKt5cr5BT'))
-        print(rz_resp.text)
+                               auth=('rzp_test_A5QQVVWf0eMog1', 'mwIcHdj1fIDGVi44N6BoUX0W'))
+        print(rz_resp.text,"---------------------------------------------------")
         response = json.loads(rz_resp.text)
         print(response, type(response))
     except Exception as e:
@@ -2909,7 +2919,10 @@ def payment_status_func(request):
         err = "error occured in fetching payment details from razorpay"
         print(err)
         return Response(err, status=500)
+    msg = ''
+    flag = ''
 
+    
     if response["count"] == 1:
         if response["items"][0]["status"] == "captured":
             msg = "payment successful"
@@ -2919,12 +2932,12 @@ def payment_status_func(request):
             flag = 2
         elif response["items"][0]["status"] == "failed":
             msg = "If your order has failed, any amount debited will be auto-refunded in 5 working days."
-            flag = 3
+            flag = 0
         elif response["items"][0]["status"] == "authorized":
             msg = "payment successful"
-            flag = 4
+            flag = 2
         elif response["items"][0]["status"] == "refunded":
             msg = "payment refunded"
-            flag = 5
+            flag = 3
 
     return 200, msg, flag, response

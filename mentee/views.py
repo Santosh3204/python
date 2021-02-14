@@ -2540,34 +2540,34 @@ class event_sign_verify(APIView):
 
 class payment_status(APIView):
     permission_classes = (IsAuthenticated,)
-    authentication_classes = JSONWebTokenAuthentication
+    authentication_class = JSONWebTokenAuthentication
 
     # permission_classes=(AllowAny,)
 
     def post(self, request):
+        print("111111111111111111111",request.data)
         if type(request.data) != dict:
             return Response("Request body not in Dictionary format", status=400)
-
-        elif len(request.data) != 2:
-            return Response("No. of keys is mis-matched, it should be 3", status=400)
+        elif len(request.data)!=2:
+            return Response("No. of keys is mis-matched, it should be 2", status=400)
 
         actual_dict = {"order_id": str,
-                       "error_description": str
+                       "error_description": dict
                        }
-
+        print("3333333333333")
         for i in actual_dict:
             if i not in request.data:
                 return Response("Keys in Request body mis-matched", status=400)
-
+            print("44444444444.1111111111")
             if type(request.data[i]) != actual_dict[i]:
                 return Response("Values datatype in Request body is mis-matched", status=400)
-
+        print("5555555555555555555555")
         status_code, msg, flag, response = payment_status_func(request)
 
         resp_dict = {
-            'status': status_code,
-            'message': msg,
-            'flag': flag,
+            'payment_status': status_code,
+            'payment_msg': msg,
+            'payment_flag': flag,
             'response': response
 
         }

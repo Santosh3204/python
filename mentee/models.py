@@ -165,8 +165,8 @@ class mentor_schedule(models.Model):
     Mentor_id = models.IntegerField()
     Start_datetime = models.DateTimeField()
     End_datetime = models.DateTimeField()
-    Status = models.SmallIntegerField(default=1)  # can be 0 or 1
-    Is_scheduled = models.SmallIntegerField(default=0)  # can be 0 or 1
+    Status = models.SmallIntegerField(default=1)  
+    Is_scheduled = models.SmallIntegerField(default=0)  
     Created_at = models.DateTimeField(auto_now_add=True)
     Updated_at = models.DateTimeField(auto_now=True)
     Session_name = models.CharField(max_length=100, null=False)
@@ -178,6 +178,22 @@ class mentor_schedule(models.Model):
     def __str__(self):
         a = str(self.Mentor_id)
         return a
+
+    # **** status field info ****
+    #  1 = active
+    #  0 = deactivate(delete) - if mentor clicks on remove on slot then it will be deleted 
+
+
+
+    # **** is_scheduled field info ****
+
+    # 0 = available for booking(free slot, mentee can book this) 
+    # 1 = booked slot(mentee done payment and payment is successful) 
+    # 2 = under booking slot(
+    #     - if mentee stop payment process in middle, then this value will be
+    #       there upto 10 mins until script detects this. 
+    #     - if payment status is other than "captured"(like authorized, created),
+    #       this value will be there.
 
 
 class mentor_topics(models.Model):
@@ -229,6 +245,27 @@ class sales_order(models.Model):
 
     def __str__(self):
         return self.User_order_id
+
+
+    # **** status field info ****
+
+    # 0 = payment process not started (this value will be there by default when mentee fills
+    #     name, phone_number, email details in order summary page. But payment process is not initiated.
+    #     Here only to whom this session wants to book is submiitted.)
+    # 1 = slot booked successfully (when mentee successfully paid amount to this session
+    #      then this value will be there)
+    # 2=  in the middle of payment process (when only order_id is generated succesfully from razorpay
+    #     then this value will be there. if mentee continue the process then it will change to 1, else
+    #     if mentee stops the process then it will make is_active field to 0 after a script run on this but status remains unchanged(2))
+
+
+    # **** is_active field info ****
+
+    # 0 = not active (value will be zero for two scenario
+    #     - when to razorpay signature verification fails, making is_active to 0
+    #     - if status_updated_at is passed 10 mins, then a running script will change it to zero
+
+    # 1 = active (if mentee successfully paid amount to this slot)
 
 
 class course_list(models.Model):
@@ -385,6 +422,9 @@ class events(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+
+
+
 class event_sales_order(models.Model):
     event_id=models.IntegerField()
     mentee_id=models.IntegerField()
@@ -403,6 +443,21 @@ class event_sales_order(models.Model):
     final_price = models.FloatField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     status_updated_at=models.DateTimeField(auto_now=True)
+
+    # **** status field info ****
+
+    # 0 = payment process not started (this value will be there by default when mentee fills
+    #     name, phone_number, email details in order summary page. But payment process is not initiated.
+    #     Here only to whom this session wants to book is submiitted.)
+    #
+    # 1 = event booked successfully (when mentee successfully paid amount to this event
+    #      then this value will be there)
+    #
+    # 2 =  in the middle of payment process (when only order_id is generated succesfully from razorpay
+    #     then this value will be there. if mentee continue the process then it will change to 1, else
+    #     if mentee stops the process then it will remain 2 only
+    #
+    # 3 = when signature verification fails this value will be there 
 
 class mentor_bank_details(models.Model):
     mentor_id=models.IntegerField()

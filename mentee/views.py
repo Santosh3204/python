@@ -2573,3 +2573,33 @@ class payment_status(APIView):
         }
 
         return Response(resp_dict)
+ 
+class event_feedback_api(APIView):
+
+    permission_classes=(IsAuthenticated,)               #server
+    authentication_class=JSONWebTokenAuthentication
+
+    #permission_classes=(AllowAny,)                      #local
+    def post(self, request):
+        if type(request.data) != dict:
+            return Response("Request body not in Dictionary format", status=400)
+
+        elif len(request.data) != 3:
+            return Response("No. of keys is mis-matched, it should be 3", status=400)
+
+        actual_dict = {"event_id":int,
+                       "star_rating": int,
+                       "comments": str
+                       }
+
+        for i in actual_dict:
+            if i not in request.data:
+                return Response("Keys in Request body mis-matched", status=400)
+
+            if type(request.data[i]) != actual_dict[i]:
+                return Response("Values datatype in Request body is mis-matched", status=400)
+
+        event_feedback_func(request)
+    
+        return Response("Feedback Saved", status=200)
+

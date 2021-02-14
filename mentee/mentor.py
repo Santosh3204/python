@@ -1458,14 +1458,22 @@ def Coupon_API_func(request):
 
 
 def rz_pay_id_status(status):
-    # payment_id="pay_FzkD8pX8oboCGu"
 
+<<<<<<< HEAD
     print(status, type(status))
     failed_msg = "If your order has failed, any amount debited will be auto-refunded in 5 working days."
     pending_msg = "We haven't received payment from your bank, any amount debited will be auto-refunded in 5 working days."
     success_msg = ""
     if status == "captured":
         return "Payment received",1,success_msg
+=======
+    #payment_id="pay_FzkD8pX8oboCGu"
+
+    print(status, type(status))
+    
+    if status == "captured":
+        return "Payment Success"
+>>>>>>> 944f1d808699c0dff7bf95b6a0e7b66243b6ac7e
 
     elif status == "created" or status == "authorized":
         return "Payment Pending",2,pending_msg
@@ -1475,6 +1483,9 @@ def rz_pay_id_status(status):
 
     elif status == "failed":
         return "Payment Failed",0,failed_msg
+
+    else:
+        "Payment Received"
 
 
 def Mentee_My_Order_API_func(request):
@@ -1593,14 +1604,19 @@ def Mentee_My_Order_API_func(request):
 
             payment_id = row.payment_id
             payment_mode = "Wallet"
+<<<<<<< HEAD
             payment_status = "Payment Success"
             payment_msg  = ""
+=======
+            #payment_status = "Payment Success"
+            payment_status = "Payment Received"
+>>>>>>> 944f1d808699c0dff7bf95b6a0e7b66243b6ac7e
             if payment_id is not None:
                 resp = client.payment.fetch(payment_id)
                 payment_status,payment_flag,payment_msg = rz_pay_id_status(resp["status"])
                 # print(resp,"--------------------------------------------------")
                 # payment_mode = resp['method']
-                payment_status = "Payment Received"
+                #payment_status = "Payment Received"
                 if 'method' in resp:
                     payment_mode = resp['method']
                 else:
@@ -2941,3 +2957,20 @@ def payment_status_func(request):
             flag = 3
 
     return 200, msg, flag, response
+
+def event_feedback_func(request):
+    try:
+        sales_ord=event_sales_order.objects.get(id=request.data['id'])
+    except Exception as e:
+        print(e)
+        print("Order_id doesnot exists in sales_order table")
+        return Response("Order_id doesnot exists in sales_order table", status=500)
+
+    obj=event_feedback()
+    obj.event_order=sales_ord
+    obj.event_id=sales_ord.event_id
+    obj.star_rating=request.data['star_rating']
+    obj.comments=request.data['comments']
+
+    obj.save()
+
